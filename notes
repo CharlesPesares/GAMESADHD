@@ -1,17 +1,25 @@
-POKOCALM (Game)
+OMNICADE (Game)
 
 Dashboard
 1. Simon Says
+Suggestions:
+UX Suggestion - add "watch carefully" before starting every level (fast-paced)
+
 2. Battle Game
-3. None
+Suggestions:
+Add single player mode (AI enemy)
+
+3. Block Sort Game
+Suggestions:
+
 4. None
 
 Add quest on every game (points go to the POKO Tree)
 
 Point System:
-Simon Says - 3points per 5 levels
+Simon Says - 2points per 5 levels
 
-POKO Tree
+OMNI Tree
 1. Progress bar:
 Level 1 (50points)
 Level 2 (100poinnts)
@@ -23,3 +31,5 @@ Level 7 (1250points)
 Level 8 (1500points)
 Level 9 (1750points)
 Level 10 (2000points)
+
+Every level upgrade the fruit glows then another fruit in black in white / colorless pops up
