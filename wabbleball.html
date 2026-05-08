@@ -13,11 +13,11 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            background-color: #050505;
-            background-image: linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
-            background-size: 30px 30px;
+            background-color: #fff7fb;
+            background-image: linear-gradient(rgba(255, 166, 203, 0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(160, 218, 255, 0.32) 1px, transparent 1px);
+            background-size: 32px 32px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: white;
+            color: #66466d;
         }
         
         .header {
@@ -29,21 +29,21 @@
         h1 {
             font-size: 3rem;
             margin: 0 0 5px 0;
-            text-shadow: 0 0 15px #ff00ff, 0 0 30px #ff00ff;
-            color: #fff;
+            text-shadow: 0 4px 0 #ffd4ea, 0 0 24px rgba(255, 139, 190, 0.45);
+            color: #ff6eb1;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
         .back-link {
-            color: #a6c1ee;
+            color: #8d77c7;
             text-decoration: none;
             font-size: 1.1rem;
             display: inline-block;
             transition: color 0.3s;
             margin-bottom: 10px;
         }
-        .back-link:hover { color: #fbc2eb; }
+        .back-link:hover { color: #ff6eb1; }
 
         .game-wrapper {
             display: flex;
@@ -57,32 +57,33 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: rgba(10, 10, 10, 0.8);
+            background: rgba(255, 253, 255, 0.88);
             padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #00ffff;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+            border-radius: 18px;
+            border: 2px solid #ffaad0;
+            box-shadow: 0 12px 30px rgba(255, 150, 197, 0.24);
         }
         .controls h3 {
             margin: 0 0 15px 0;
             font-size: 1.2rem;
         }
-        .p1-controls h3 { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
-        .p2-controls h3 { color: #ff00ff; text-shadow: 0 0 10px #ff00ff; }
+        .p1-controls h3 { color: #5ab9f4; text-shadow: 0 0 10px rgba(90, 185, 244, 0.35); }
+        .p2-controls h3 { color: #ff6eb1; text-shadow: 0 0 10px rgba(255, 110, 177, 0.35); }
         
         .key {
             width: 50px;
             height: 50px;
-            background: #111;
-            border: 2px solid #fff;
-            border-radius: 8px;
+            background: #fff9fd;
+            border: 2px solid #ffc6df;
+            border-radius: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 1.5rem;
             font-weight: bold;
             margin: 5px 0;
-            box-shadow: 0 4px 0 #111820;
+            color: #6b4c70;
+            box-shadow: 0 4px 0 #f5bfd7;
             transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, color 0.12s ease;
         }
         .key.small {
@@ -95,10 +96,10 @@
             font-size: 0.9rem;
         }
         .key.active {
-            color: #111820;
-            background: #13ff7c;
-            border-color: #13ff7c;
-            box-shadow: 0 0 18px rgba(19, 255, 124, 0.9);
+            color: #5b3b61;
+            background: #bff7df;
+            border-color: #77eab1;
+            box-shadow: 0 0 18px rgba(119, 234, 177, 0.65);
             transform: translateY(3px);
         }
         .mini-keys {
@@ -111,11 +112,11 @@
             position: relative;
             width: 800px;
             height: 550px;
-            border-radius: 10px;
-            border: 4px solid #ff00ff;
-            box-shadow: 0 0 30px #ff00ff, inset 0 0 30px #ff00ff;
+            border-radius: 22px;
+            border: 4px solid #ff9ccf;
+            box-shadow: 0 18px 48px rgba(255, 139, 190, 0.34), inset 0 0 24px rgba(255, 180, 213, 0.24);
             overflow: hidden;
-            background: rgba(0,0,0,0.6);
+            background: rgba(255, 252, 255, 0.72);
         }
 
         .game-hud {
@@ -130,16 +131,16 @@
             pointer-events: none;
         }
         .hud-item {
-            background: rgba(5, 5, 5, 0.74);
-            border: 1px solid rgba(0, 255, 255, 0.42);
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(255, 156, 207, 0.62);
+            border-radius: 12px;
             padding: 8px 10px;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.18);
+            box-shadow: 0 8px 18px rgba(255, 170, 208, 0.2);
         }
         .hud-label {
             display: block;
             font-size: 0.68rem;
-            color: #9ff;
+            color: #8d77c7;
             text-transform: uppercase;
             letter-spacing: 0;
         }
@@ -148,7 +149,7 @@
             margin-top: 2px;
             font-size: 1.15rem;
             font-weight: 900;
-            color: #fff;
+            color: #66466d;
         }
         .status-message {
             position: absolute;
@@ -158,10 +159,10 @@
             z-index: 40;
             min-height: 24px;
             text-align: center;
-            color: #13ff7c;
+            color: #4bbf83;
             font-size: 1rem;
             font-weight: 800;
-            text-shadow: 0 0 12px rgba(19, 255, 124, 0.8);
+            text-shadow: 0 2px 0 #ddffe9;
             pointer-events: none;
         }
         .paused-banner {
@@ -169,12 +170,12 @@
             inset: 0;
             display: none;
             place-items: center;
-            background: rgba(0, 0, 0, 0.55);
+            background: rgba(255, 243, 250, 0.72);
             z-index: 90;
             font-size: 4rem;
             font-weight: 900;
-            color: #13ff7c;
-            text-shadow: 0 0 22px #13ff7c;
+            color: #ff6eb1;
+            text-shadow: 0 4px 0 #ffd4ea;
             pointer-events: none;
         }
         .paused-banner.show {
@@ -184,8 +185,8 @@
         /* Arcade CRT Scanlines */
         .game-container::after {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-            background-size: 100% 4px;
+            background: linear-gradient(rgba(255, 255, 255, 0) 50%, rgba(255, 200, 225, 0.13) 50%);
+            background-size: 100% 6px;
             pointer-events: none; z-index: 50;
         }
 
@@ -196,10 +197,10 @@
             left: 0;
             width: 100%;
             height: 50px;
-            background: linear-gradient(to top, rgba(255, 76, 76, 0.6), transparent);
+            background: linear-gradient(to top, rgba(255, 183, 210, 0.65), transparent);
             pointer-events: none;
             z-index: 10;
-            border-bottom: 5px solid #ff4c4c;
+            border-bottom: 5px solid #ff9ccf;
         }
 
         /* Win/Loss Overlays */
@@ -225,7 +226,7 @@
         .overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(255, 247, 251, 0.94);
             display: none;
             flex-direction: column;
             justify-content: center;
@@ -234,25 +235,25 @@
         }
         .overlay h2 {
             font-size: 3.5rem;
-            color: #13ff7c;
+            color: #4bbf83;
             margin-bottom: 30px;
-            text-shadow: 0 0 20px #13ff7c;
+            text-shadow: 0 4px 0 #ddffe9;
             text-align: center;
         }
         .btn {
-            background: linear-gradient(135deg, #13ff7c 0%, #00b894 100%);
+            background: linear-gradient(135deg, #bff7df 0%, #ffcae0 100%);
             border: none;
             padding: 15px 40px;
             font-size: 1.5rem;
             font-weight: 900;
             border-radius: 30px;
-            color: #111820;
+            color: #66466d;
             cursor: pointer;
-            box-shadow: 0 6px 0 #009c7a, 0 15px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 6px 0 #f0aaca, 0 15px 20px rgba(255, 150, 197, 0.28);
         }
         .btn:active {
             transform: translateY(4px);
-            box-shadow: 0 0 0 #009c7a, 0 5px 10px rgba(0,0,0,0.4);
+            box-shadow: 0 0 0 #f0aaca, 0 5px 10px rgba(255, 150, 197, 0.22);
         }
 
         @media (max-width: 1180px) {
@@ -281,7 +282,7 @@
     <div class="header">
         <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
         <h1>Wobble Ball</h1>
-        <h2 id="level-display" style="color: #13ff7c; margin: 0 0 10px 0;">Level 1</h2>
+        <h2 id="level-display" style="color: #4bbf83; margin: 0 0 10px 0;">Level 1</h2>
         <div>P1 uses W/S. P2 uses UP/DOWN. Work together to balance the labyrinth!</div>
     </div>
 
@@ -291,12 +292,12 @@
             <h3>Player 1</h3>
             <div class="key" data-control-key="w">W</div>
             <div class="key" data-control-key="s">S</div>
-            <div style="font-size: 0.9rem; margin-top: 8px; color: #00ffff;">UP / DOWN</div>
+            <div style="font-size: 0.9rem; margin-top: 8px; color: #5ab9f4;">UP / DOWN</div>
             <div class="mini-keys">
                 <div class="key small" data-control-key="r">R</div>
                 <div class="key small" data-control-key="p">P</div>
             </div>
-            <div style="font-size: 0.8rem; margin-top: 8px; color: #9ff;">RESET / PAUSE</div>
+            <div style="font-size: 0.8rem; margin-top: 8px; color: #8d77c7;">RESET / PAUSE</div>
         </div>
 
         <!-- Game Canvas -->
@@ -320,7 +321,7 @@
                 </div>
             </div>
             <div class="lava-zone"></div>
-            <div class="status-message" id="status-message">Reach the green gate. Red hazards cost lives.</div>
+            <div class="status-message" id="status-message">Reach the green goal. Pink hazards cost lives.</div>
             <div class="paused-banner" id="paused-banner">PAUSED</div>
             <div class="impact-text" id="impact-text"></div>
             
@@ -335,11 +336,11 @@
             <h3>Player 2</h3>
             <div class="key" data-control-key="ArrowUp">▲</div>
             <div class="key" data-control-key="ArrowDown">▼</div>
-            <div style="font-size: 0.9rem; margin-top: 8px; color: #ff00ff;">UP / DOWN</div>
+            <div style="font-size: 0.9rem; margin-top: 8px; color: #ff6eb1;">UP / DOWN</div>
             <div class="mini-keys">
                 <div class="key small space-key" data-control-key=" ">SPACE</div>
             </div>
-            <div style="font-size: 0.8rem; margin-top: 8px; color: #fbc2eb;">CONTINUE</div>
+            <div style="font-size: 0.8rem; margin-top: 8px; color: #ff6eb1;">CONTINUE</div>
         </div>
     </div>
 
@@ -366,8 +367,8 @@
         // --- Game State & Variables ---
         const BOARD_WIDTH = 700; // Physical length of the board
         const BOARD_CENTER_Y = 315;
-        const MAX_TILT = 0.23;
-        const STARTING_LIVES = 3;
+        const MAX_TILT = 0.2;
+        const STARTING_LIVES = 4;
         const FALL_LIMIT = 575;
         let leftY = BOARD_CENTER_Y;
         let rightY = BOARD_CENTER_Y;
@@ -447,7 +448,7 @@
             friction: 0.001,  // Less friction, rolls effortlessly
             frictionAir: 0.001,
             density: 0.08,    // Feels heavier and more substantial
-            render: { fillStyle: '#ffff00', strokeStyle: '#ffffff', lineWidth: 2 } 
+            render: { fillStyle: '#ffd96a', strokeStyle: '#fff6b8', lineWidth: 3 }
         });
 
         World.add(engine.world, [ball]);
@@ -465,8 +466,8 @@
             let spacing = 65;
             let startY = -145;
             let platformWidth = 640;
-            let gapSize = Math.max(85, 150 - currentLevel * 6);
-            const floorColors = ['#8a2cff', '#ff00c8', '#0b63ff', '#9d35ff', '#00e5ff', '#ff2b2b'];
+            let gapSize = Math.max(95, 155 - currentLevel * 4);
+            const floorColors = ['#c7a7ff', '#ff9fcb', '#91cfff', '#d3b2ff', '#8ff0e4', '#ffb0b0'];
 
             for (let i = 0; i < numFloors; i++) {
                 let gapSide = i % 2 === 0 ? 'right' : 'left';
@@ -487,18 +488,18 @@
             // Goal sits on the safe end of the last platform instead of a random spot.
             let lastFloor = segmentsData[5];
             let goalX = lastFloor.gapSide === 'left' ? lastFloor.x + lastFloor.w / 2 - 80 : lastFloor.x - lastFloor.w / 2 + 80;
-            segmentsData.push({ x: goalX, y: lastFloor.y - 28, w: 58, h: 42, type: 'goal', isSensor: true, color: '#00ff00' });
+            segmentsData.push({ x: goalX, y: lastFloor.y - 28, w: 58, h: 42, type: 'goal', isSensor: true, color: '#9dffb2' });
 
-            // Portals act as traps, placed on known platform floors so they are fair.
-            if (currentLevel >= 2) {
+            // Portals are delayed to later levels and kept away from the needed exits.
+            if (currentLevel >= 5) {
                 let portalFloor = segmentsData[2];
                 let portalX = portalFloor.gapSide === 'left' ? portalFloor.x + 110 : portalFloor.x - 110;
-                segmentsData.push({ x: portalX, y: portalFloor.y - 26, w: 50, h: 18, type: 'portal-in', isSensor: true, color: '#ff9900' });
+                segmentsData.push({ x: portalX, y: portalFloor.y - 26, w: 46, h: 16, type: 'portal-in', isSensor: true, color: '#ffd17a' });
             }
-            if (currentLevel >= 4) {
+            if (currentLevel >= 8) {
                 let portalFloor = segmentsData[4];
                 let portalX = portalFloor.gapSide === 'left' ? portalFloor.x + 90 : portalFloor.x - 90;
-                segmentsData.push({ x: portalX, y: portalFloor.y - 26, w: 50, h: 18, type: 'portal-in', isSensor: true, color: '#ff9900' });
+                segmentsData.push({ x: portalX, y: portalFloor.y - 26, w: 46, h: 16, type: 'portal-in', isSensor: true, color: '#ffd17a' });
             }
 
             boardBodies = segmentsData.map(s => Bodies.rectangle(400 + s.x, 300 + s.y, s.w, s.h, { 
@@ -521,32 +522,34 @@
                 obstacleCooldowns.clear();
             }
 
-            // Start spawning obstacles at Level 2
+            // Easy obstacle rules: fewer pieces, one per floor, and never near the route exits.
             if (currentLevel >= 2) {
-                let obsCount = Math.min(12, currentLevel + 2);
-                const obstacleTypes = ['bumper', 'blocker', 'hazard'];
+                let obsCount = Math.min(5, Math.ceil(currentLevel / 2));
+                let floorOrder = [1, 2, 3, 4].sort(() => Math.random() - 0.5);
                 
                 for (let i = 0; i < obsCount; i++) {
-                    // Pick a middle floor so hazards challenge the route without blocking the goal.
-                    let floorIndex = Math.floor(Math.random() * 4) + 1;
+                    let floorIndex = floorOrder[i % floorOrder.length];
                     let floor = segmentsData[floorIndex];
                     let floorY = floor.y;
-                    let type = obstacleTypes[Math.min(obstacleTypes.length - 1, Math.floor(Math.random() * (1.6 + currentLevel * 0.24)))];
-                    if (currentLevel < 3 && type === 'hazard') type = 'blocker';
+                    let type = 'bumper';
+                    if (currentLevel >= 4 && i === obsCount - 1) type = 'hazard';
+                    else if (currentLevel >= 3 && i % 3 === 1) type = 'blocker';
 
-                    let color = type === 'hazard' ? '#ff315a' : type === 'bumper' ? '#00f5ff' : '#ffd23f';
-                    let isSlider = type !== 'bumper' && Math.random() > 0.25;
-                    let isSpinner = type !== 'hazard' || Math.random() > 0.45;
-                    let usableWidth = Math.max(120, floor.w - 160);
+                    let color = type === 'hazard' ? '#ff8aa7' : type === 'bumper' ? '#93dfff' : '#ffe08a';
+                    let isSlider = type !== 'hazard' && currentLevel >= 3 && Math.random() > 0.55;
+                    let isSpinner = type !== 'hazard' && Math.random() > 0.65;
+                    let safeLeft = floor.x - floor.w / 2 + 175;
+                    let safeRight = floor.x + floor.w / 2 - 175;
+                    let relX = safeLeft < safeRight ? safeLeft + Math.random() * (safeRight - safeLeft) : floor.x;
                     
                     let data = {
                         type: type,
-                        relX: floor.x + (Math.random() - 0.5) * usableWidth,
+                        relX: relX,
                         relY: floorY - 24,
-                        slideAmp: isSlider ? 35 + Math.random() * (30 + currentLevel * 6) : 0,
-                        slideSpeed: isSlider ? 0.001 + Math.random() * (0.0014 + currentLevel * 0.00008) : 0,
+                        slideAmp: isSlider ? 18 + Math.random() * 22 : 0,
+                        slideSpeed: isSlider ? 0.00055 + Math.random() * 0.00075 : 0,
                         phase: Math.random() * Math.PI * 2,
-                        spinSpeed: isSpinner ? (Math.random() > 0.5 ? 1 : -1) * (0.008 + currentLevel * 0.002) : 0,
+                        spinSpeed: isSpinner ? (Math.random() > 0.5 ? 1 : -1) * (0.004 + currentLevel * 0.001) : 0,
                         color: color
                     };
                     obstacleData.push(data);
@@ -554,11 +557,11 @@
                     let obs;
 
                     if (type === 'bumper') {
-                        obs = Bodies.circle(400 + data.relX, 300 + data.relY, 18, { isStatic: true, label: 'obstacle', render: { fillStyle: '#050505', strokeStyle: color, lineWidth: 4 } });
+                        obs = Bodies.circle(400 + data.relX, 300 + data.relY, 14, { isStatic: true, label: 'obstacle', render: { fillStyle: '#fffafe', strokeStyle: color, lineWidth: 4 } });
                     } else if (type === 'hazard') {
-                        obs = Bodies.polygon(400 + data.relX, 300 + data.relY, 3, 22, { isStatic: true, label: 'obstacle', render: { fillStyle: '#16020a', strokeStyle: color, lineWidth: 5 } });
+                        obs = Bodies.polygon(400 + data.relX, 300 + data.relY, 3, 16, { isStatic: true, label: 'obstacle', render: { fillStyle: '#fff1f6', strokeStyle: color, lineWidth: 4 } });
                     } else {
-                        obs = Bodies.rectangle(400 + data.relX, 300 + data.relY, 54, 18, { isStatic: true, label: 'obstacle', chamfer: { radius: 6 }, render: { fillStyle: '#050505', strokeStyle: color, lineWidth: 4 } });
+                        obs = Bodies.rectangle(400 + data.relX, 300 + data.relY, 38, 14, { isStatic: true, label: 'obstacle', chamfer: { radius: 7 }, render: { fillStyle: '#fffafe', strokeStyle: color, lineWidth: 4 } });
                     }
 
                     obs.gameType = type;
@@ -588,7 +591,7 @@
             let rightTarget = BOARD_CENTER_Y + rightInput * controlRange;
 
             // A tiny wobble keeps the name honest without fighting the controls.
-            let wobbleAmount = Math.min(10, level * 1.5);
+            let wobbleAmount = Math.min(7, level * 1.1);
             leftTarget += Math.sin(time * 0.0011) * wobbleAmount;
             rightTarget += Math.cos(time * 0.001) * wobbleAmount;
 
@@ -664,13 +667,13 @@
             context.moveTo(800, rightY);
             context.lineTo(rx, ry);
             context.lineWidth = 4;
-            context.strokeStyle = '#00ffff'; // Neon cyan suspension cables
-            context.setLineDash([10, 10]); // High-tech laser tether effect
+            context.strokeStyle = '#94dfff';
+            context.setLineDash([10, 10]);
             context.stroke();
             context.setLineDash([]); // Reset
             
             // Draw the mechanical sliders on the walls
-            context.fillStyle = '#ff00ff';
+            context.fillStyle = '#ff9ccf';
             context.fillRect(0, leftY - 20, 10, 40);
             context.fillRect(790, rightY - 20, 10, 40);
         });
@@ -734,8 +737,8 @@
                         Body.setVelocity(ball, { x: 0, y: 0 }); // Zero out velocity so it doesn't glitch!
                         Body.setPosition(ball, spawn); 
                         playSound('portal');
-                        showText("TRAPPED!", "#ff9900");
-                        setStatus("Portal trap! Start from the top again.", "#ff9900");
+                        showText("BACK TO TOP!", "#d08a28");
+                        setStatus("Portal sent you back to the top.", "#d08a28");
                         setTimeout(() => {
                             document.getElementById('impact-text').classList.remove('show');
                             isTeleporting = false;
@@ -790,7 +793,7 @@
             document.getElementById('level-display').innerText = "Level " + level;
         }
 
-        function setStatus(text, color = "#13ff7c") {
+        function setStatus(text, color = "#4bbf83") {
             const statusEl = document.getElementById('status-message');
             statusEl.innerText = text;
             statusEl.style.color = color;
@@ -889,23 +892,23 @@
                 finishedElapsedSeconds = getElapsedSeconds();
                 engine.timing.timeScale = 1;
                 playSound('lose');
-                showText("Game Over!", "#ff4c4c");
-                setStatus("Run ended. Press Space or Try Again.", "#ff4c4c");
+                showText("Game Over!", "#e86f96");
+                setStatus("Run ended. Press Space or Try Again.", "#e86f96");
                 document.getElementById('overlay-title').innerText = "Game Over";
-                document.getElementById('overlay-title').style.color = "#ff4c4c";
+                document.getElementById('overlay-title').style.color = "#e86f96";
                 document.getElementById('overlay-btn').innerText = "TRY AGAIN";
                 document.getElementById('overlay').style.display = 'flex';
                 return;
             }
 
             playSound('hit');
-            showText(`${reason}\n${lives} ${lives === 1 ? 'life' : 'lives'} left`, "#ff4c4c");
-            setStatus("Respawning at the top. Watch the red hazards.", "#ff4c4c");
+            showText(`${reason}\n${lives} ${lives === 1 ? 'life' : 'lives'} left`, "#e86f96");
+            setStatus("Respawning at the top. Watch the pink hazards.", "#e86f96");
             setTimeout(() => {
                 if (gameState !== 'playing') return;
                 respawnBall();
                 clearImpactText();
-                setStatus("Reach the green gate. Red hazards cost lives.");
+                setStatus("Reach the green goal. Pink hazards cost lives.");
                 updateHud();
             }, 700);
         }
@@ -918,14 +921,14 @@
                 pausedStartedAt = performance.now();
                 engine.timing.timeScale = 0;
                 document.getElementById('paused-banner').classList.add('show');
-                setStatus("Paused. Press P to keep playing.", "#13ff7c");
+                setStatus("Paused. Press P to keep playing.", "#4bbf83");
             } else if (gameState === 'paused') {
                 gameState = 'playing';
                 pausedDuration += performance.now() - pausedStartedAt;
                 pausedStartedAt = 0;
                 engine.timing.timeScale = 1;
                 document.getElementById('paused-banner').classList.remove('show');
-                setStatus("Reach the green gate. Red hazards cost lives.");
+                setStatus("Reach the green goal. Pink hazards cost lives.");
             }
             updateHud();
         }
@@ -942,9 +945,9 @@
             Body.setStatic(ball, true); // Freeze the ball
             playSound('goal');
             updateHud();
-            setStatus(`Level bonus +${levelBonus + lifeBonus + timeBonus}`, "#13ff7c");
+            setStatus(`Level bonus +${levelBonus + lifeBonus + timeBonus}`, "#4bbf83");
             document.getElementById('overlay-title').innerText = "Level " + level + "\nCleared!";
-            document.getElementById('overlay-title').style.color = "#13ff7c";
+            document.getElementById('overlay-title').style.color = "#4bbf83";
             document.getElementById('overlay-btn').innerText = "NEXT LEVEL";
             document.getElementById('overlay').style.display = 'flex';
         }
@@ -985,7 +988,7 @@
             // Reset UI
             document.getElementById('impact-text').classList.remove('show');
             document.getElementById('overlay').style.display = 'none';
-            setStatus("Reach the green gate. Red hazards cost lives.");
+            setStatus("Reach the green goal. Pink hazards cost lives.");
             updateHud();
         }
 
