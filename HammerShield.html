@@ -71,6 +71,14 @@
             text-align: center;
         }
 
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-15px, 10px) rotate(-1deg); }
+            40% { transform: translate(15px, -10px) rotate(1deg); }
+            60% { transform: translate(-10px, -5px) rotate(-1deg); }
+            80% { transform: translate(10px, 5px) rotate(1deg); }
+        }
+
         .arena-container {
             position: relative;
             width: 700px;
@@ -83,7 +91,11 @@
             justify-content: center;
             align-items: flex-end;
             padding-bottom: 40px;
-            gap: 120px; /* Distance between players */
+            gap: 110px; /* Widened to allow players to physically step forward into their strikes! */
+        }
+
+        .arena-container.shake {
+            animation: screenShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
         }
 
         .floor {
@@ -95,6 +107,84 @@
             background: linear-gradient(to bottom, #2c3e50, #1a252f);
             border-top: 4px solid #4a6278;
             border-radius: 0 0 10px 10px;
+            z-index: 5;
+        }
+
+        /* Animated Clouds */
+        .clouds {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            overflow: hidden;
+            z-index: 1;
+            border-radius: 10px;
+        }
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+            animation: moveClouds linear infinite;
+        }
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+        .cloud1 { top: 50px; left: -150px; width: 120px; height: 35px; animation-duration: 25s; }
+        .cloud1::before { width: 60px; height: 60px; top: -30px; left: 20px; }
+        .cloud1::after { width: 50px; height: 50px; top: -20px; left: 60px; }
+        .cloud2 { top: 130px; left: -200px; width: 150px; height: 45px; animation-duration: 35s; animation-delay: 5s; }
+        .cloud2::before { width: 70px; height: 70px; top: -35px; left: 25px; }
+        .cloud2::after { width: 60px; height: 60px; top: -25px; left: 75px; }
+
+        @keyframes moveClouds {
+            from { transform: translateX(-150px); }
+            to { transform: translateX(850px); }
+        }
+
+        /* Animated Crowd */
+        .crowd {
+            position: absolute;
+            bottom: 40px; /* Sits exactly on the floor */
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: flex-end;
+            padding: 0 40px;
+            box-sizing: border-box;
+            z-index: 2; /* Behind the players */
+        }
+        .spectator {
+            position: relative;
+            width: 25px;
+            height: 35px;
+            background: #2c3e50; /* Silhouette matching the floor gradient */
+            border-radius: 10px 10px 0 0;
+            animation: crowdJump 0.4s infinite alternate ease-in-out;
+        }
+        .spectator::before {
+            content: '';
+            position: absolute;
+            top: -22px;
+            left: 2px;
+            width: 21px;
+            height: 21px;
+            background: #2c3e50;
+            border-radius: 50%;
+        }
+        /* Randomize jumping heights and speeds */
+        .s1 { animation-delay: 0.1s; animation-duration: 0.35s; transform: scale(0.9); }
+        .s2 { animation-delay: 0.4s; animation-duration: 0.4s; transform: scale(1.1); }
+        .s3 { animation-delay: 0.2s; animation-duration: 0.45s; }
+        .s4 { animation-delay: 0.5s; animation-duration: 0.38s; transform: scale(0.85); }
+        .s5 { animation-delay: 0.0s; animation-duration: 0.42s; transform: scale(1.05); }
+        .s6 { animation-delay: 0.3s; animation-duration: 0.39s; }
+        .s7 { animation-delay: 0.6s; animation-duration: 0.41s; transform: scale(0.95); }
+
+        @keyframes crowdJump {
+            from { bottom: 0; }
+            to { bottom: 15px; }
         }
 
         /* Player Base Styles */
@@ -103,11 +193,24 @@
             height: 250px;
             position: relative;
             z-index: 10;
+            transition: transform 0.06s cubic-bezier(0.1, 0.9, 0.2, 1); /* Snappy forward lunge transition */
+        }
+
+        .p1 {
+            transform: scaleX(1) translateX(0) scale(1);
         }
         
         /* P2 faces left by mirroring */
         .p2 {
-            transform: scaleX(-1);
+            transform: scaleX(-1) translateX(0) scale(1);
+        }
+
+        /* Forward Lunge when attacking */
+        .p1.lunging {
+            transform: scaleX(1) translateX(35px) scale(1.02);
+        }
+        .p2.lunging {
+            transform: scaleX(-1) translateX(35px) scale(1.02);
         }
 
         /* Correct mirrored text on P2 */
@@ -118,38 +221,73 @@
         .body {
             width: 100px;
             height: 110px;
-            background-color: var(--p-color);
+            background: linear-gradient(to bottom, #7f8c8d, #34495e); /* Metallic armor */
             position: absolute;
             bottom: 0;
             border-radius: 20px 20px 10px 10px;
-            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.4), 0 5px 15px rgba(0,0,0,0.5);
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.6), inset 5px 5px 10px rgba(255,255,255,0.2), 0 5px 15px rgba(0,0,0,0.5);
             z-index: 3;
+            border: 2px solid #1a252f;
+            box-sizing: border-box;
+        }
+        
+        /* Player colored tabard / chest plate */
+        .body::before {
+            content: '';
+            position: absolute;
+            top: 20px; left: 15px; right: 15px; bottom: 0;
+            background: var(--p-color);
+            border-radius: 10px 10px 0 0;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+            border: 2px solid #1a252f;
+            border-bottom: none;
         }
 
         .head {
             width: 70px;
             height: 70px;
-            background-color: var(--p-color);
+            background: linear-gradient(135deg, #bdc3c7, #7f8c8d); /* Metallic helmet */
             position: absolute;
             bottom: 115px;
             left: 15px;
-            border-radius: 50%;
-            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.4);
+            border-radius: 40%;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.6), inset 5px 5px 10px rgba(255,255,255,0.4);
             transition: bottom 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), transform 0.4s;
             z-index: 4;
+            border: 2px solid #1a252f;
+            box-sizing: border-box;
+        }
+        
+        /* Knight Plume/Crest */
+        .head::before {
+            content: '';
+            position: absolute;
+            top: -15px; left: 13px;
+            width: 40px; height: 20px;
+            background: var(--p-color);
+            border-radius: 20px 20px 0 0;
+            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.4);
+            border: 2px solid #1a252f;
         }
 
-        .eye {
-            width: 12px;
-            height: 12px;
-            background: white;
-            border-radius: 50%;
-            position: absolute;
-            top: 20px;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        /* Glowing Visor */
+        .visor {
+            width: 40px; height: 14px;
+            background: #111;
+            border-radius: 4px;
+            position: absolute; top: 25px; left: 18px;
+            box-shadow: inset 0 3px 5px rgba(0,0,0,0.8), 0 0 10px var(--p-color);
+            border: 2px solid #2c3e50;
+            display: flex; justify-content: center; align-items: center;
+            box-sizing: border-box;
         }
-        .eye.left { left: 35px; } /* Looking forward */
-        .eye.right { left: 55px; }
+        .visor::after {
+            content: '';
+            width: 25px; height: 4px;
+            background: var(--p-color);
+            border-radius: 2px;
+            box-shadow: 0 0 10px var(--p-color), 0 0 20px #fff;
+        }
 
         .spring {
             width: 20px;
@@ -176,51 +314,96 @@
 
         .arm-hammer {
             position: absolute;
-            bottom: 40px;
+            bottom: 60px; /* Lifted up to guard the head */
             left: 45px;
-            width: 14px;
+            width: 16px;
             height: 130px;
-            background: #7f8c8d;
+            background: repeating-linear-gradient(to bottom, #8a4b08, #8a4b08 8px, #5c3306 8px, #5c3306 12px); /* Leather Grip */
+            border: 1px solid #1a252f;
             transform-origin: bottom center;
-            transform: rotate(-25deg); /* Idle State: Resting back */
-            transition: transform 0.15s ease-in; /* Retraction speed */
+            transform: rotate(-10deg); /* Idle State: Guarding up */
+            transition: transform 0.05s ease-in; /* Lightning fast Retraction speed */
             z-index: 5;
             border-radius: 5px;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
         }
 
         .arm-hammer.attacking {
-            transform: rotate(85deg); /* Attack State: Swinging forward */
-            transition: transform 0.08s cubic-bezier(0.1, 0.9, 0.2, 1); /* Snappy forward strike */
+            transform: rotate(50deg); /* Block State: Stops earlier and rests precisely on the higher shield! */
+            transition: transform 0.04s cubic-bezier(0.1, 0.9, 0.2, 1); /* Faster strike */
+        }
+
+        .arm-hammer.whacking {
+            transform: rotate(105deg); /* Hit State: Swings all the way down to crush the exposed head! */
+            transition: transform 0.04s cubic-bezier(0.1, 0.9, 0.2, 1); /* Faster strike */
+            z-index: 7;
         }
 
         .hammer-head {
             position: absolute;
             top: -15px;
-            left: -20px;
-            width: 54px;
-            height: 40px;
-            background: #34495e;
+            left: -25px;
+            width: 66px;
+            height: 45px;
+            background: linear-gradient(135deg, #bdc3c7, #7f8c8d);
             border-radius: 5px;
-            border: 2px solid #2c3e50;
+            border: 2px solid #1a252f;
+            box-shadow: inset 2px 2px 5px rgba(255,255,255,0.4), inset -2px -2px 5px rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+        
+        /* Back Spike on the Warhammer */
+        .hammer-head::after {
+            content: '';
+            position: absolute;
+            top: 10px; left: -15px;
+            width: 15px; height: 20px;
+            background: #7f8c8d;
+            clip-path: polygon(100% 0, 0 50%, 100% 100%);
         }
 
         .shield {
             position: absolute;
-            bottom: 25px;
+            bottom: 65px; /* Lifted up further to fully guard the head */
             right: -25px;
-            width: 30px;
-            height: 85px;
-            background: #bdc3c7;
+            width: 34px;
+            height: 100px; /* Made slightly taller to look more imposing */
+            background: linear-gradient(135deg, #d35400 0%, #a04000 100%);
             border: 4px solid #7f8c8d;
-            border-radius: 15px;
-            transition: bottom 0.1s ease-in-out;
+            border-radius: 10px 10px 30px 30px;
+            transition: all 0.04s ease-out; /* Lightning fast recovery */
             z-index: 6;
-            box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 3px 3px 10px rgba(0,0,0,0.5);
+            transform: rotate(-15deg); /* Angling upward/backward to guard the head */
+            transform-origin: bottom center;
+            box-sizing: border-box;
+        }
+
+        .shield::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: -4px;
+            right: -4px;
+            height: 6px;
+            background: #7f8c8d; /* Metal band across the shield */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Reinforcement rivets around the shield */
+        .shield::before {
+            content: '';
+            position: absolute;
+            top: 10px; left: 4px; right: 4px; bottom: 10px;
+            border: 2px dashed rgba(0,0,0,0.3);
+            border-radius: 5px 5px 20px 20px;
+            pointer-events: none;
         }
 
         .shield.attacking {
-            bottom: -35px; /* Drops down instantly to expose player */
+            bottom: 21px; /* Lands perfectly on the floor without clipping through it! */
+            transform: rotate(90deg); /* Falls over completely flat */
+            transition: all 0.02s ease-in; /* Instant drop for fastest fingers! */
         }
 
         .key-label {
@@ -233,7 +416,86 @@
             color: rgba(255,255,255,0.3);
             z-index: 10;
             pointer-events: none;
+            transition: all 0.1s;
         }
+
+        .key-label.pressed {
+            color: #fff;
+            transform: scale(1.3);
+            text-shadow: 0 0 15px currentColor;
+        }
+        .p2 .key-label.pressed {
+            transform: scaleX(-1) scale(1.3);
+        }
+
+        /* Impact / Block Text Animation */
+        .impact-text {
+            position: absolute;
+            top: 180px;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffdf3f;
+            text-shadow: 2px 2px 0 #111, -2px -2px 0 #111, 2px -2px 0 #111, -2px 2px 0 #111, 0 10px 20px rgba(0,0,0,0.8);
+            z-index: 100;
+            opacity: 0;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .impact-text.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        /* Blocking Pushback Animations */
+        .shield.blocked {
+            filter: brightness(1.5);
+            box-shadow: 0 0 30px #3a9fff;
+        }
+        .p1.blocked { animation: pushback-p1 0.15s; }
+        .p2.blocked { animation: pushback-p2 0.15s; }
+
+        @keyframes pushback-p1 { 
+            0%, 100% { transform: scaleX(1) translateX(0); } 
+            50% { transform: scaleX(1) translateX(-15px); } 
+        }
+        @keyframes pushback-p2 { 
+            0%, 100% { transform: scaleX(-1) translateX(0); } 
+            50% { transform: scaleX(-1) translateX(-15px); } 
+        }
+
+        /* Spark Particles */
+        .spark {
+            position: absolute;
+            bottom: 110px;
+            right: -5px;
+            width: 6px;
+            height: 6px;
+            background: #ffdf3f;
+            box-shadow: 0 0 8px #ffdf3f, 0 0 15px #ffaa00;
+            border-radius: 50%;
+            z-index: 25;
+            pointer-events: none;
+            animation: spark-fly 0.4s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes spark-fly {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        /* Jammed / Struggle Animations */
+        @keyframes playerJam { 0%, 100% { transform: scaleX(1) translateX(0); } 25% { transform: scaleX(1) translateX(-3px) rotate(-1deg); } 75% { transform: scaleX(1) translateX(3px) rotate(1deg); } }
+        @keyframes playerJamP2 { 0%, 100% { transform: scaleX(-1) translateX(0); } 25% { transform: scaleX(-1) translateX(-3px) rotate(-1deg); } 75% { transform: scaleX(-1) translateX(3px) rotate(1deg); } }
+        .p1.jammed { animation: playerJam 0.15s; }
+        .p2.jammed { animation: playerJamP2 0.15s; }
+
+        @keyframes pinningStruggle {
+            0%, 100% { transform: rotate(50deg); }
+            25% { transform: rotate(46deg); }
+            75% { transform: rotate(54deg); }
+        }
+        .arm-hammer.struggling { animation: pinningStruggle 0.15s cubic-bezier(.36,.07,.19,.97); }
 
         /* Game Over Overlay */
         .overlay {
@@ -285,19 +547,34 @@
 
     <div class="scoreboard">
         <div class="score p1-text">P1 (Key 'A'): <span id="score1">0</span></div>
-        <div class="status-text" id="status-text">First to 5 Wins!<br>Attack when their shield is down!</div>
+        <div class="status-text" id="status-text">First to 5 Wins!<br>Pin their shield, then strike!</div>
         <div class="score p2-text">P2 (Key 'L'): <span id="score2">0</span></div>
     </div>
 
     <div class="arena-container">
+        <div class="clouds">
+            <div class="cloud cloud1"></div>
+            <div class="cloud cloud2"></div>
+        </div>
+        
+        <!-- Animated Crowd Background -->
+        <div class="crowd">
+            <div class="spectator s1"></div>
+            <div class="spectator s2"></div>
+            <div class="spectator s3"></div>
+            <div class="spectator s4"></div>
+            <div class="spectator s5"></div>
+            <div class="spectator s6"></div>
+            <div class="spectator s7"></div>
+        </div>
+
         <div class="floor"></div>
 
         <!-- Player 1 (Left) -->
         <div class="player p1" id="p1" style="--p-color: #3a9fff;">
             <div class="spring"></div>
             <div class="head">
-                <div class="eye left"></div>
-                <div class="eye right"></div>
+                <div class="visor"></div>
             </div>
             <div class="body"></div>
             <div class="arm-hammer"><div class="hammer-head"></div></div>
@@ -309,14 +586,16 @@
         <div class="player p2" id="p2" style="--p-color: #ff4c4c;">
             <div class="spring"></div>
             <div class="head">
-                <div class="eye left"></div>
-                <div class="eye right"></div>
+                <div class="visor"></div>
             </div>
             <div class="body"></div>
             <div class="arm-hammer"><div class="hammer-head"></div></div>
             <div class="shield"></div>
             <div class="key-label">L</div>
         </div>
+
+        <!-- Impact Text (WHACK / BLOCK) -->
+        <div class="impact-text" id="impact-text"></div>
 
         <!-- Game Over Screen -->
         <div class="overlay" id="overlay">
@@ -329,60 +608,250 @@
         const P1_KEY = 'a';
         const P2_KEY = 'l';
         
-        let p1State = 'idle'; // States: idle, attacking, cooldown, dead
+        let p1State = 'idle'; // States: idle, swinging, pinning, cooldown, dead
         let p2State = 'idle';
         let p1Score = 0;
         let p2Score = 0;
         let roundActive = true;
         let gameOver = false;
 
+        const keysHeld = { a: false, l: false }; // Track held keys
+
+        // Setup Audio Context for high-performance synthesized sound effects
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playBlockSound() {
+            if (!audioCtx) return;
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc1.connect(gainNode);
+            osc2.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            // Thick Wooden/Shield "CHUNK" Block Sound
+            osc1.type = 'triangle';
+            osc1.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc1.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            
+            osc1.start(); osc1.stop(audioCtx.currentTime + 0.1);
+
+            // High-frequency "crack" on impact
+            osc2.type = 'square';
+            osc2.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc2.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.05);
+            
+            const gain2 = audioCtx.createGain();
+            osc2.connect(gain2); gain2.connect(audioCtx.destination);
+            gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain2.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.01);
+            gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            
+            osc2.start(); osc2.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function playWhackSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            // Deep Thud/Bonk
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+        }
+
+        function playJamSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            // Short metallic/wooden clink when weapon is jammed
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        }
+
         document.addEventListener('keydown', (e) => {
-            if (!roundActive || gameOver) return;
+            initAudio(); // Initialize audio on first keypress
+            
             const key = e.key.toLowerCase();
+            if (e.repeat) return; // Prevent browser key-repeat from spamming
+
+            if (key === P1_KEY) {
+                keysHeld[P1_KEY] = true;
+                document.querySelector('.p1 .key-label').classList.add('pressed');
+            }
+            if (key === P2_KEY) {
+                keysHeld[P2_KEY] = true;
+                document.querySelector('.p2 .key-label').classList.add('pressed');
+            }
+
+            if (!roundActive || gameOver) return;
 
             if (key === P1_KEY && p1State === 'idle') triggerAttack(1);
             if (key === P2_KEY && p2State === 'idle') triggerAttack(2);
         });
 
+        document.addEventListener('keyup', (e) => {
+            const key = e.key.toLowerCase();
+
+            if (key === P1_KEY) {
+                keysHeld[P1_KEY] = false;
+                document.querySelector('.p1 .key-label').classList.remove('pressed');
+                if (roundActive && !gameOver && (p1State === 'swinging' || p1State === 'pinning')) releaseAttack(1);
+            }
+            if (key === P2_KEY) {
+                keysHeld[P2_KEY] = false;
+                document.querySelector('.p2 .key-label').classList.remove('pressed');
+                if (roundActive && !gameOver && (p2State === 'swinging' || p2State === 'pinning')) releaseAttack(2);
+            }
+        });
+
         function triggerAttack(playerNum) {
             const setMyState = playerNum === 1 ? (s) => p1State = s : (s) => p2State = s;
+            const myState = playerNum === 1 ? p1State : p2State;
+            const opponentState = playerNum === 1 ? p2State : p1State;
+            const opponentNum = playerNum === 1 ? 2 : 1;
             
-            setMyState('attacking');
-            updateVisuals(playerNum, 'attacking');
+            // If the opponent is pinning our shield down, we are physically jammed!
+            if (opponentState === 'pinning') {
+                const myPlayerEl = document.getElementById(`p${playerNum}`);
+                myPlayerEl.classList.add('jammed');
+                setTimeout(() => myPlayerEl.classList.remove('jammed'), 150);
+                
+                const oppPlayerEl = document.getElementById(`p${opponentNum}`);
+                const oppHammer = oppPlayerEl.querySelector('.arm-hammer');
+                oppHammer.classList.add('struggling');
+                setTimeout(() => oppHammer.classList.remove('struggling'), 150);
+                
+                playJamSound();
+                return;
+            }
 
-            // 1. Hit Check Timing
-            // The hammer takes roughly 80ms to visually travel to the opponent. 
-            // We check for collision exactly at that moment.
-            setTimeout(() => {
-                if (!roundActive) return; // Disregard if someone already won the round
+            setMyState('swinging');
+            updateVisuals(playerNum, 'swinging');
 
-                // If opponent's shield is currently down (they are attacking), they get hit!
-                const opponentState = playerNum === 1 ? p2State : p1State;
-                if (opponentState === 'attacking') {
-                    processHit(playerNum === 1 ? 2 : 1);
-                }
-            }, 80);
-
-            // 2. Cooldown Phase 
-            // Retract the hammer after the swing finishes (200ms) and enforce the 500ms delay.
+            // Wait 40ms for hammer to physically land (Incredibly fast!)
             setTimeout(() => {
                 if (!roundActive) return;
                 
-                setMyState('cooldown');
-                updateVisuals(playerNum, 'cooldown');
+                const currentState = playerNum === 1 ? p1State : p2State;
+                if (currentState !== 'swinging') return; // Released early
 
-                // Re-enable attacks after cooldown expires (total 500ms between swings)
-                setTimeout(() => {
-                    if (!roundActive) return;
+                const currentOppState = playerNum === 1 ? p2State : p1State;
+                
+                // If opponent's shield is down (swinging, pinning, or recovering)
+                if (currentOppState === 'swinging' || currentOppState === 'pinning' || currentOppState === 'cooldown') {
+                    updateVisuals(playerNum, 'whacking');
+                    processHit(opponentNum);
+                    showImpact('WHACK!', '#ff4c4c');
+                    playWhackSound();
+                } else {
+                    // Shield is up! We rest on their shield (Pinning them)
+                    setMyState('pinning');
+                    updateVisuals(playerNum, 'pinning');
+                    processBlock(opponentNum);
+                }
+            }, 40);
+        }
+
+        function releaseAttack(playerNum) {
+            const setMyState = playerNum === 1 ? (s) => p1State = s : (s) => p2State = s;
+            const myState = playerNum === 1 ? p1State : p2State;
+            
+            if (myState === 'idle' || myState === 'cooldown' || myState === 'dead') return;
+            
+            setMyState('cooldown');
+            updateVisuals(playerNum, 'cooldown');
+
+            // Re-enable attacks after cooldown expires
+            setTimeout(() => {
+                if (!roundActive) return;
+                const currentState = playerNum === 1 ? p1State : p2State;
+                if (currentState === 'cooldown') {
                     setMyState('idle');
-                }, 300); 
+                    updateVisuals(playerNum, 'idle');
+                    // If they quickly pressed again during cooldown, trigger it
+                    const key = playerNum === 1 ? P1_KEY : P2_KEY;
+                    if (keysHeld[key]) triggerAttack(playerNum);
+                }
+            }, 50); // 50ms recovery window where you can be counter-attacked! (Extremely tight)
+        }
 
-            }, 200);
+        function processBlock(defenderNum) {
+            // Normal block visuals for defender
+            const pEl = document.getElementById(`p${defenderNum}`);
+            const shield = pEl.querySelector('.shield');
+            
+            pEl.classList.add('blocked');
+            shield.classList.add('blocked');
+            
+            showImpact('BLOCKED!', '#3a9fff');
+            playBlockSound();
+            spawnSparks(defenderNum);
+            
+            setTimeout(() => {
+                pEl.classList.remove('blocked');
+                shield.classList.remove('blocked');
+            }, 150);
+        }
+
+        function spawnSparks(defenderNum) {
+            const pEl = document.getElementById(`p${defenderNum}`);
+            for(let i = 0; i < 10; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'spark';
+                // Randomly scatter sparks upward and outward
+                const tx = (Math.random() - 0.5) * 100 + 'px';
+                const ty = (Math.random() * -100 - 20) + 'px'; 
+                spark.style.setProperty('--tx', tx);
+                spark.style.setProperty('--ty', ty);
+                pEl.appendChild(spark);
+                setTimeout(() => spark.remove(), 400); // Cleanup DOM
+            }
+        }
+
+        function showImpact(text, color) {
+            const impactEl = document.getElementById('impact-text');
+            impactEl.innerText = text;
+            impactEl.style.color = color;
+            
+            // Reset animation to allow spamming
+            impactEl.classList.remove('show');
+            void impactEl.offsetWidth; // Force browser reflow
+            impactEl.classList.add('show');
         }
 
         function processHit(loserNum) {
             roundActive = false; // Freeze further actions
             
+            // Screen Shake effect
+            const arena = document.querySelector('.arena-container');
+            arena.classList.add('shake');
+            setTimeout(() => arena.classList.remove('shake'), 400);
+
             if (loserNum === 1) {
                 p1State = 'dead';
                 p2Score++;
@@ -410,15 +879,24 @@
             const head = pEl.querySelector('.head');
             const spring = pEl.querySelector('.spring');
 
-            if (state === 'attacking') {
-                hammer.classList.add('attacking');
+            if (state === 'swinging' || state === 'pinning') {
                 shield.classList.add('attacking');
-            } else if (state === 'cooldown' || state === 'idle') {
+                hammer.classList.add('attacking');
+                hammer.classList.remove('whacking');
+                pEl.classList.add('lunging');
+            } else if (state === 'whacking') {
+                shield.classList.add('attacking');
+                hammer.classList.add('whacking');
                 hammer.classList.remove('attacking');
+                pEl.classList.add('lunging');
+            } else if (state === 'cooldown' || state === 'idle') {
+                hammer.classList.remove('attacking', 'whacking');
                 shield.classList.remove('attacking');
+                pEl.classList.remove('lunging');
             } else if (state === 'dead') {
                 head.classList.add('popped');
                 spring.classList.add('popped');
+                pEl.classList.remove('lunging');
             }
         }
 
@@ -429,8 +907,11 @@
             
             document.querySelectorAll('.head').forEach(el => el.classList.remove('popped'));
             document.querySelectorAll('.spring').forEach(el => el.classList.remove('popped'));
-            document.querySelectorAll('.arm-hammer').forEach(el => el.classList.remove('attacking'));
+            document.querySelectorAll('.arm-hammer').forEach(el => {
+                el.classList.remove('attacking', 'whacking');
+            });
             document.querySelectorAll('.shield').forEach(el => el.classList.remove('attacking'));
+            document.querySelectorAll('.player').forEach(el => el.classList.remove('lunging'));
         }
 
         function showGameOver(winnerNum) {
