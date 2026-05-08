@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hammer & Shield</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #2c3e50 0%, #0f171e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .header {
+            margin-top: 30px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin: 0 0 10px 0;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+
+        .back-link {
+            color: #a6c1ee;
+            text-decoration: none;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: color 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .back-link:hover {
+            color: #fbc2eb;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 600px;
+            margin-bottom: 20px;
+            background: #1a252f;
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            border: 4px solid #34495e;
+            box-sizing: border-box;
+        }
+
+        .score {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .score.p1-text { color: #3a9fff; }
+        .score.p2-text { color: #ff4c4c; }
+
+        .status-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #bdc3c7;
+            text-align: center;
+        }
+
+        .arena-container {
+            position: relative;
+            width: 700px;
+            height: 400px;
+            background: #111820;
+            border: 10px solid #34495e;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 40px;
+            gap: 120px; /* Distance between players */
+        }
+
+        .floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to bottom, #2c3e50, #1a252f);
+            border-top: 4px solid #4a6278;
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* Player Base Styles */
+        .player {
+            width: 100px;
+            height: 250px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* P2 faces left by mirroring */
+        .p2 {
+            transform: scaleX(-1);
+        }
+
+        /* Correct mirrored text on P2 */
+        .p2 .key-label {
+            transform: scaleX(-1);
+        }
+
+        .body {
+            width: 100px;
+            height: 110px;
+            background-color: var(--p-color);
+            position: absolute;
+            bottom: 0;
+            border-radius: 20px 20px 10px 10px;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.4), 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 3;
+        }
+
+        .head {
+            width: 70px;
+            height: 70px;
+            background-color: var(--p-color);
+            position: absolute;
+            bottom: 115px;
+            left: 15px;
+            border-radius: 50%;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.4);
+            transition: bottom 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), transform 0.4s;
+            z-index: 4;
+        }
+
+        .eye {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 20px;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+        .eye.left { left: 35px; } /* Looking forward */
+        .eye.right { left: 55px; }
+
+        .spring {
+            width: 20px;
+            height: 0;
+            background: repeating-linear-gradient(-45deg, #7f8c8d, #7f8c8d 4px, #bdc3c7 4px, #bdc3c7 8px);
+            position: absolute;
+            bottom: 110px;
+            left: 40px;
+            transition: height 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 2;
+            border-left: 1px solid #555;
+            border-right: 1px solid #555;
+            box-sizing: border-box;
+        }
+
+        /* Animation classes for getting hit */
+        .head.popped {
+            bottom: 250px;
+            transform: rotate(25deg);
+        }
+        .spring.popped {
+            height: 140px;
+        }
+
+        .arm-hammer {
+            position: absolute;
+            bottom: 40px;
+            left: 45px;
+            width: 14px;
+            height: 130px;
+            background: #7f8c8d;
+            transform-origin: bottom center;
+            transform: rotate(-25deg); /* Idle State: Resting back */
+            transition: transform 0.15s ease-in; /* Retraction speed */
+            z-index: 5;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .arm-hammer.attacking {
+            transform: rotate(85deg); /* Attack State: Swinging forward */
+            transition: transform 0.08s cubic-bezier(0.1, 0.9, 0.2, 1); /* Snappy forward strike */
+        }
+
+        .hammer-head {
+            position: absolute;
+            top: -15px;
+            left: -20px;
+            width: 54px;
+            height: 40px;
+            background: #34495e;
+            border-radius: 5px;
+            border: 2px solid #2c3e50;
+        }
+
+        .shield {
+            position: absolute;
+            bottom: 25px;
+            right: -25px;
+            width: 30px;
+            height: 85px;
+            background: #bdc3c7;
+            border: 4px solid #7f8c8d;
+            border-radius: 15px;
+            transition: bottom 0.1s ease-in-out;
+            z-index: 6;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+        }
+
+        .shield.attacking {
+            bottom: -35px; /* Drops down instantly to expose player */
+        }
+
+        .key-label {
+            position: absolute;
+            bottom: 30px;
+            width: 100px;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 900;
+            color: rgba(255,255,255,0.3);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Game Over Overlay */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 10px;
+        }
+
+        .overlay h2 {
+            font-size: 3.5rem;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.6);
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            border-radius: 30px;
+            color: #1a252f;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 6px 0 #8fa7d4, 0 15px 20px rgba(0,0,0,0.4);
+        }
+
+        .restart-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #8fa7d4, 0 5px 10px rgba(0,0,0,0.4);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
+        <h1>Hammer & Shield</h1>
+    </div>
+
+    <div class="scoreboard">
+        <div class="score p1-text">P1 (Key 'A'): <span id="score1">0</span></div>
+        <div class="status-text" id="status-text">First to 5 Wins!<br>Attack when their shield is down!</div>
+        <div class="score p2-text">P2 (Key 'L'): <span id="score2">0</span></div>
+    </div>
+
+    <div class="arena-container">
+        <div class="floor"></div>
+
+        <!-- Player 1 (Left) -->
+        <div class="player p1" id="p1" style="--p-color: #3a9fff;">
+            <div class="spring"></div>
+            <div class="head">
+                <div class="eye left"></div>
+                <div class="eye right"></div>
+            </div>
+            <div class="body"></div>
+            <div class="arm-hammer"><div class="hammer-head"></div></div>
+            <div class="shield"></div>
+            <div class="key-label">A</div>
+        </div>
+
+        <!-- Player 2 (Right) -->
+        <div class="player p2" id="p2" style="--p-color: #ff4c4c;">
+            <div class="spring"></div>
+            <div class="head">
+                <div class="eye left"></div>
+                <div class="eye right"></div>
+            </div>
+            <div class="body"></div>
+            <div class="arm-hammer"><div class="hammer-head"></div></div>
+            <div class="shield"></div>
+            <div class="key-label">L</div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div class="overlay" id="overlay">
+            <h2 id="winner-text">Player 1 Wins!</h2>
+            <button class="restart-btn" onclick="resetGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const P1_KEY = 'a';
+        const P2_KEY = 'l';
+        
+        let p1State = 'idle'; // States: idle, attacking, cooldown, dead
+        let p2State = 'idle';
+        let p1Score = 0;
+        let p2Score = 0;
+        let roundActive = true;
+        let gameOver = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (!roundActive || gameOver) return;
+            const key = e.key.toLowerCase();
+
+            if (key === P1_KEY && p1State === 'idle') triggerAttack(1);
+            if (key === P2_KEY && p2State === 'idle') triggerAttack(2);
+        });
+
+        function triggerAttack(playerNum) {
+            const setMyState = playerNum === 1 ? (s) => p1State = s : (s) => p2State = s;
+            
+            setMyState('attacking');
+            updateVisuals(playerNum, 'attacking');
+
+            // 1. Hit Check Timing
+            // The hammer takes roughly 80ms to visually travel to the opponent. 
+            // We check for collision exactly at that moment.
+            setTimeout(() => {
+                if (!roundActive) return; // Disregard if someone already won the round
+
+                // If opponent's shield is currently down (they are attacking), they get hit!
+                const opponentState = playerNum === 1 ? p2State : p1State;
+                if (opponentState === 'attacking') {
+                    processHit(playerNum === 1 ? 2 : 1);
+                }
+            }, 80);
+
+            // 2. Cooldown Phase 
+            // Retract the hammer after the swing finishes (200ms) and enforce the 500ms delay.
+            setTimeout(() => {
+                if (!roundActive) return;
+                
+                setMyState('cooldown');
+                updateVisuals(playerNum, 'cooldown');
+
+                // Re-enable attacks after cooldown expires (total 500ms between swings)
+                setTimeout(() => {
+                    if (!roundActive) return;
+                    setMyState('idle');
+                }, 300); 
+
+            }, 200);
+        }
+
+        function processHit(loserNum) {
+            roundActive = false; // Freeze further actions
+            
+            if (loserNum === 1) {
+                p1State = 'dead';
+                p2Score++;
+                document.getElementById('score2').innerText = p2Score;
+            } else {
+                p2State = 'dead';
+                p1Score++;
+                document.getElementById('score1').innerText = p1Score;
+            }
+
+            updateVisuals(loserNum, 'dead');
+
+            // Check overall game win condition
+            if (p1Score >= 5 || p2Score >= 5) {
+                setTimeout(() => showGameOver(loserNum === 1 ? 2 : 1), 1000); // 1s delay so they can enjoy the popped head
+            } else {
+                setTimeout(resetRound, 2000); // 2 seconds between rounds
+            }
+        }
+
+        function updateVisuals(playerNum, state) {
+            const pEl = document.getElementById(`p${playerNum}`);
+            const hammer = pEl.querySelector('.arm-hammer');
+            const shield = pEl.querySelector('.shield');
+            const head = pEl.querySelector('.head');
+            const spring = pEl.querySelector('.spring');
+
+            if (state === 'attacking') {
+                hammer.classList.add('attacking');
+                shield.classList.add('attacking');
+            } else if (state === 'cooldown' || state === 'idle') {
+                hammer.classList.remove('attacking');
+                shield.classList.remove('attacking');
+            } else if (state === 'dead') {
+                head.classList.add('popped');
+                spring.classList.add('popped');
+            }
+        }
+
+        function resetRound() {
+            p1State = 'idle';
+            p2State = 'idle';
+            roundActive = true;
+            
+            document.querySelectorAll('.head').forEach(el => el.classList.remove('popped'));
+            document.querySelectorAll('.spring').forEach(el => el.classList.remove('popped'));
+            document.querySelectorAll('.arm-hammer').forEach(el => el.classList.remove('attacking'));
+            document.querySelectorAll('.shield').forEach(el => el.classList.remove('attacking'));
+        }
+
+        function showGameOver(winnerNum) {
+            gameOver = true;
+            const overlay = document.getElementById('overlay');
+            const winnerText = document.getElementById('winner-text');
+            
+            winnerText.innerText = `Player ${winnerNum} Wins!`;
+            winnerText.style.color = winnerNum === 1 ? '#3a9fff' : '#ff4c4c';
+            overlay.style.display = 'flex';
+        }
+
+        function resetGame() {
+            p1Score = 0;
+            p2Score = 0;
+            document.getElementById('score1').innerText = p1Score;
+            document.getElementById('score2').innerText = p2Score;
+            document.getElementById('overlay').style.display = 'none';
+            gameOver = false;
+            resetRound();
+        }
+    </script>
+</body>
+</html>
