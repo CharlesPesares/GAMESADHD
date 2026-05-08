@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit Pop</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #2c3e50 0%, #0f171e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+        
+        .header {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin: 0 0 5px 0;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            color: #a6c1ee;
+        }
+
+        .back-link {
+            color: #fbc2eb;
+            text-decoration: none;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: color 0.3s;
+            margin-bottom: 5px;
+        }
+
+        .back-link:hover {
+            color: #fff;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 800px;
+            margin-bottom: 15px;
+            background: #1a252f;
+            padding: 10px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            border: 4px solid #34495e;
+            box-sizing: border-box;
+        }
+
+        .score-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #13ff7c;
+        }
+
+        .level-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffdf3f;
+        }
+
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: #111820;
+            border: 8px solid #34495e;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.9);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 10px;
+        }
+
+        .overlay h2 {
+            font-size: 4rem;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 15px rgba(255,255,255,0.4);
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            border-radius: 30px;
+            color: #1a252f;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 6px 0 #8fa7d4, 0 15px 20px rgba(0,0,0,0.4);
+        }
+
+        .restart-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #8fa7d4, 0 5px 10px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
+        <h1>Orbit Pop</h1>
+    </div>
+
+    <div class="scoreboard">
+        <div class="score-text">SCORE: <span id="score-display">0</span></div>
+        <div class="level-text">LEVEL <span id="level-display">1</span></div>
+    </div>
+
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="overlay" id="start-overlay">
+            <h2 style="color: #ffdf3f;">Ready to Pop?</h2>
+            <button class="restart-btn" onclick="startGame()">START GAME</button>
+        </div>
+
+        <div class="overlay" id="overlay" style="display: none;">
+            <h2 id="overlay-title">Game Over</h2>
+            <button class="restart-btn" id="overlay-btn" onclick="nextAction()">TRY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const COLORS = {
+            red: '#ff4c4c',
+            blue: '#3a9fff',
+            green: '#13ff7c',
+            yellow: '#ffdf3f',
+            purple: '#e056fd'
+        };
+        const COLOR_KEYS = Object.keys(COLORS);
+
+        let pathPoints = [];
+        let marbles = [];
+        let projectiles = [];
+        let particles = [];
+        
+        let level = 1;
+        let score = 0;
+        let ballsToSpawn = 0;
+        let gameState = 'start'; // start, playing, won, lost
+        
+        let shooterAngle = 0;
+        let currentMarbleColor = 'red';
+        let nextMarbleColor = 'blue';
+        let shootCooldown = 0;
+
+        // --- Audio Context ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            
+            if (type === 'shoot') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.1, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'pop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'thud') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            }
+        }
+
+        // --- Setup Logic ---
+        function initPath() {
+            pathPoints = [];
+            let cx = 400, cy = 300;
+            
+            let b = 9.0; // Slightly tighter gap spacing to fit the larger center
+            let a = Math.PI * 7.5; // 3.75 full loops
+            let r = 80 + a * b; // Base radius 80 keeps sinkhole safely away from the center turret
+            
+            pathPoints.push({
+                x: cx + r * Math.cos(a),
+                y: cy + r * Math.sin(a)
+            });
+            
+            while (a > 0) {
+                // Calculus arc length: ds = sqrt(r^2 + (dr/da)^2) * da. 
+                // We calculate exactly how much 'a' to step to move perfectly 1 pixel forward.
+                let da = 1 / Math.sqrt(r * r + b * b);
+                a -= da;
+                
+                if (a < 0) break;
+                
+                r = 80 + a * b;
+                pathPoints.push({
+                    x: cx + r * Math.cos(a),
+                    y: cy + r * Math.sin(a)
+                });
+            }
+        }
+
+        function getLevelColor() {
+            let maxColors = Math.min(3 + Math.floor((level - 1) / 2), 5);
+            let pool = COLOR_KEYS.slice(0, maxColors);
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        function getShooterColor() {
+            if (marbles.length > 0) {
+                let colorsOnBoard = [...new Set(marbles.map(m => m.color))];
+                return colorsOnBoard[Math.floor(Math.random() * colorsOnBoard.length)];
+            }
+            return getLevelColor(); // Fallback for when the board is completely empty at the start
+        }
+
+        function loadLevel() {
+            initPath();
+            marbles = [];
+            projectiles = [];
+            particles = [];
+            ballsToSpawn = 30 + (level * 10);
+            currentMarbleColor = getLevelColor();
+            nextMarbleColor = getLevelColor();
+            document.getElementById('level-display').innerText = level;
+        }
+
+        function startGame() {
+            document.getElementById('start-overlay').style.display = 'none';
+            score = 0;
+            level = 1;
+            document.getElementById('score-display').innerText = score;
+            loadLevel();
+            gameState = 'playing';
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- Input Handling ---
+        canvas.addEventListener('mousemove', e => {
+            if (gameState !== 'playing') return;
+            const rect = canvas.getBoundingClientRect();
+            const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+            shooterAngle = Math.atan2(my - 300, mx - 400);
+        });
+
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (gameState !== 'playing') return;
+
+            if (e.button === 2) {
+                let temp = currentMarbleColor;
+                currentMarbleColor = nextMarbleColor;
+                nextMarbleColor = temp;
+                playSound('thud');
+                return;
+            }
+
+            if (e.button === 0 && shootCooldown <= 0) {
+                projectiles.push({
+                    x: 400 + Math.cos(shooterAngle) * 25,
+                    y: 300 + Math.sin(shooterAngle) * 25,
+                    vx: Math.cos(shooterAngle) * 16,
+                    vy: Math.sin(shooterAngle) * 16,
+                    color: currentMarbleColor
+                });
+                currentMarbleColor = nextMarbleColor;
+                nextMarbleColor = getShooterColor();
+                shootCooldown = 15; // frames
+                playSound('shoot');
+            }
+        });
+
+        // --- Game Mechanics ---
+        function createPopParticles(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = 2 + Math.random() * 4;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: color,
+                    life: 1.0,
+                    size: 3 + Math.random() * 5
+                });
+            }
+        }
+
+        function checkMatches(index) {
+            if (index < 0 || index >= marbles.length) return;
+            let color = marbles[index].color;
+            let left = index, right = index;
+            
+            // Check backwards (higher indices)
+            while(left < marbles.length - 1 && marbles[left+1].color === color && Math.abs(marbles[left+1].d - marbles[left].d) <= 35) {
+                left++;
+            }
+            // Check forwards (lower indices)
+            while(right > 0 && marbles[right-1].color === color && Math.abs(marbles[right-1].d - marbles[right].d) <= 35) {
+                right--;
+            }
+            
+            let count = left - right + 1;
+            if(count >= 3) {
+                for (let k = right; k <= left; k++) {
+                    let m = marbles[k];
+                    let pos = pathPoints[Math.floor(m.d)];
+                    if (pos) createPopParticles(pos.x, pos.y, m.color);
+                }
+                marbles.splice(right, count);
+                score += count * 10;
+                document.getElementById('score-display').innerText = score;
+                playSound('pop');
+            } else {
+                playSound('thud');
+            }
+        }
+
+        function update() {
+            if (shootCooldown > 0) shootCooldown--;
+
+            let pulling = new Array(marbles.length).fill(false);
+
+            // 1. Identify magnetic pulls (Zuma snap mechanic)
+            for (let i = 0; i < marbles.length - 1; i++) {
+                let gap = marbles[i].d - marbles[i+1].d;
+                if (gap > 29 && marbles[i].color === marbles[i+1].color) {
+                    let pullSpeed = 8.0; // Faster magnetic snap
+                    
+                    marbles[i].d -= pullSpeed;
+                    pulling[i] = true;
+                    
+                    // Pull everything physically attached in front of it backward too
+                    for (let j = i - 1; j >= 0; j--) {
+                        // Account for the fact that j+1 just moved backward by pullSpeed!
+                        if (marbles[j].d <= marbles[j+1].d + pullSpeed + 29) {
+                            marbles[j].d -= pullSpeed;
+                            pulling[j] = true;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // Check if they just physically snapped together this frame
+                    if (marbles[i].d <= marbles[i+1].d + 30) {
+                        marbles[i].d = marbles[i+1].d + 28;
+                        marbles[i].needsMatchCheck = true;
+                    }
+                }
+            }
+            
+            // 2. Move balls smoothly
+            for (let i = 0; i < marbles.length; i++) {
+                if (!pulling[i]) marbles[i].d += 0.6; // Base creeping speed
+            }
+
+            // Spawner pushes the chain
+            if (ballsToSpawn > 0) {
+                if (marbles.length === 0 || marbles[marbles.length - 1].d > 28) {
+                    let newColor;
+                    do {
+                        newColor = getLevelColor();
+                    } while (
+                        marbles.length >= 2 &&
+                        marbles[marbles.length - 1].color === newColor &&
+                        marbles[marbles.length - 2].color === newColor
+                    );
+                    marbles.push({ d: 0, color: newColor });
+                    ballsToSpawn--;
+                } else {
+                    marbles[marbles.length - 1].d += 1.2; // Extra push from the spawner
+                }
+            }
+
+            // Resolve physical pushing (back balls push front balls)
+            for(let i = marbles.length - 2; i >= 0; i--) {
+                if (marbles[i].d < marbles[i+1].d + 28) {
+                    marbles[i].d = marbles[i+1].d + 28;
+                }
+            }
+
+            // Trigger combo matches if a magnetic snap just completed!
+            for (let i = marbles.length - 1; i >= 0; i--) {
+                if (marbles[i] && marbles[i].needsMatchCheck) {
+                    marbles[i].needsMatchCheck = false;
+                    checkMatches(i);
+                }
+            }
+
+            // Update Projectiles
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                let p = projectiles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > 800 || p.y < 0 || p.y > 600) {
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+
+                let hit = false;
+                for (let m = 0; m < marbles.length; m++) {
+                    let mb = marbles[m];
+                    let pos = pathPoints[Math.floor(mb.d)];
+                    if (!pos) continue;
+
+                    if (Math.hypot(p.x - pos.x, p.y - pos.y) < 30) {
+                        hit = true;
+                        
+                        // Figure out which side of the hit marble to insert into
+                        let pos_f = pathPoints[Math.min(pathPoints.length - 1, Math.floor(mb.d + 14))] || pos;
+                        let pos_b = pathPoints[Math.max(0, Math.floor(mb.d - 14))] || pos;
+                        
+                        let dist_f = Math.hypot(p.x - pos_f.x, p.y - pos_f.y);
+                        let dist_b = Math.hypot(p.x - pos_b.x, p.y - pos_b.y);
+
+                        let newObj = {d: mb.d, color: p.color};
+                        if (dist_f < dist_b) {
+                            newObj.d = mb.d + 28;
+                            marbles.splice(m, 0, newObj);
+                            checkMatches(m);
+                        } else {
+                            newObj.d = mb.d - 28;
+                            marbles.splice(m + 1, 0, newObj);
+                            checkMatches(m + 1);
+                        }
+                        break;
+                    }
+                }
+                if (hit) projectiles.splice(i, 1);
+            }
+
+            // Update Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.05;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            // End Game Checks
+            if (marbles.length > 0 && marbles[0].d >= pathPoints.length - 15) {
+                gameState = 'lost';
+                showOverlay("Game Over", "#ff4c4c", "TRY AGAIN");
+            } else if (marbles.length === 0 && ballsToSpawn <= 0) {
+                gameState = 'won';
+                showOverlay("Level Cleared!", "#13ff7c", "NEXT LEVEL");
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, 800, 600);
+            
+            if (pathPoints.length === 0) return;
+
+            // Draw Path Track
+            ctx.lineWidth = 32;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            for(let i=0; i<pathPoints.length; i+=10) {
+                let p = pathPoints[i];
+                if (i===0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            }
+            ctx.stroke();
+
+            // Draw Sinkhole
+            let endP = pathPoints[pathPoints.length - 1];
+            ctx.beginPath();
+            ctx.arc(endP.x, endP.y, 25, 0, Math.PI*2);
+            ctx.fillStyle = '#0a0f14';
+            ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#ff4c4c';
+            ctx.stroke();
+
+            // Draw Marbles
+            for (let m of marbles) {
+                let p = pathPoints[Math.floor(m.d)];
+                if (!p) continue;
+                
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 15, 0, Math.PI*2);
+                ctx.fillStyle = COLORS[m.color];
+                ctx.fill();
+                
+                // Shininess
+                ctx.beginPath();
+                ctx.arc(p.x - 5, p.y - 5, 5, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.fill();
+                
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                ctx.stroke();
+            }
+
+            // Draw Particles
+            for (let p of particles) {
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                ctx.fillStyle = COLORS[p.color];
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0; // Reset transparency for other elements
+
+            // Draw Start Tunnel (covers spawning balls)
+            let startP = pathPoints[0];
+
+            // 1. Clean outer metallic casing
+            ctx.beginPath();
+            ctx.arc(startP.x, startP.y, 34, 0, Math.PI*2);
+            ctx.fillStyle = '#34495e';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#1a252f';
+            ctx.stroke();
+
+            // 2. Inner bevel
+            ctx.beginPath();
+            ctx.arc(startP.x, startP.y, 28, 0, Math.PI*2);
+            ctx.fillStyle = '#2c3e50';
+            ctx.fill();
+
+            // 3. The dark void (where balls come out)
+            ctx.beginPath();
+            ctx.arc(startP.x, startP.y, 22, 0, Math.PI*2);
+            ctx.fillStyle = '#05080a';
+            ctx.fill();
+            
+            // 4. Inner shadow ring for smooth depth inside the hole
+            ctx.beginPath();
+            ctx.arc(startP.x, startP.y, 22, 0, Math.PI*2);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.stroke();
+
+            // Draw Projectiles
+            for (let p of projectiles) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 15, 0, Math.PI*2);
+                ctx.fillStyle = COLORS[p.color];
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(p.x - 5, p.y - 5, 5, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.fill();
+            }
+
+            // Draw Shooter
+            ctx.save();
+            ctx.translate(400, 300);
+            ctx.rotate(shooterAngle);
+            
+            // Cannon barrel
+            ctx.fillStyle = '#bdc3c7';
+            ctx.fillRect(0, -12, 40, 24);
+            
+            // Base
+            ctx.beginPath();
+            ctx.arc(0, 0, 30, 0, Math.PI*2);
+            ctx.fillStyle = '#2c3e50';
+            ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#34495e';
+            ctx.stroke();
+
+            // Loaded Marble
+            ctx.beginPath();
+            ctx.arc(0, 0, 15, 0, Math.PI*2);
+            ctx.fillStyle = COLORS[currentMarbleColor];
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(-5, -5, 5, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fill();
+            
+            ctx.restore();
+
+            // Next Marble Indicator
+            ctx.beginPath();
+            ctx.arc(380, 280, 8, 0, Math.PI*2);
+            ctx.fillStyle = COLORS[nextMarbleColor];
+            ctx.fill();
+        }
+
+        function showOverlay(title, color, btnText) {
+            document.getElementById('overlay-title').innerText = title;
+            document.getElementById('overlay-title').style.color = color;
+            document.getElementById('overlay-btn').innerText = btnText;
+            document.getElementById('overlay').style.display = 'flex';
+        }
+
+        function nextAction() {
+            document.getElementById('overlay').style.display = 'none';
+            if (gameState === 'won') {
+                level++;
+                loadLevel();
+            } else {
+                score = 0;
+                document.getElementById('score-display').innerText = score;
+                loadLevel();
+            }
+            gameState = 'playing';
+        }
+
+        function gameLoop() {
+            if (gameState === 'playing') {
+                update();
+            }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
