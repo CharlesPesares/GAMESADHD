@@ -536,12 +536,689 @@
             box-shadow: 0 0 0 #8fa7d4, 0 5px 10px rgba(0,0,0,0.4);
         }
 
+        /* Premium arena redesign */
+        :root {
+            color-scheme: dark;
+            --ink: #ffffff;
+            --muted: rgba(255, 255, 255, 0.68);
+            --line: rgba(255, 255, 255, 0.15);
+            --steel: #9fb2c3;
+            --gold: #ffd166;
+            --p1: #4dabff;
+            --p2: #ff5a76;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            padding: 22px clamp(14px, 4vw, 42px) 32px;
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+            justify-items: center;
+            gap: 12px;
+            background:
+                radial-gradient(circle at 18% 18%, rgba(77, 171, 255, 0.22), transparent 24rem),
+                radial-gradient(circle at 82% 20%, rgba(255, 90, 118, 0.20), transparent 24rem),
+                radial-gradient(circle at 50% 105%, rgba(255, 209, 102, 0.22), transparent 26rem),
+                linear-gradient(135deg, #111820 0%, #1d2d38 48%, #0d141c 100%);
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+            background-size: 52px 52px;
+            mask-image: radial-gradient(circle at center, black 0%, transparent 78%);
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.42));
+        }
+
+        .header {
+            width: min(1120px, 100%);
+            margin: 0;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 16px;
+            text-align: left;
+        }
+
+        .back-link {
+            min-height: 42px;
+            margin: 0;
+            padding: 0 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--ink);
+            font-size: 0.95rem;
+            font-weight: 850;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+        }
+
+        .back-link:hover,
+        .back-link:focus-visible {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.34);
+            transform: translateY(-2px);
+            outline: none;
+        }
+
+        h1 {
+            margin: 0;
+            color: #fff;
+            font-size: clamp(2.2rem, 6vw, 5rem);
+            line-height: 0.88;
+            font-weight: 950;
+            letter-spacing: 0;
+            text-align: right;
+            text-shadow:
+                0 0 24px rgba(255, 209, 102, 0.20),
+                0 18px 48px rgba(0, 0, 0, 0.48);
+        }
+
+        .header::after {
+            content: "Two keys. One shield. No mercy.";
+            grid-column: 1 / -1;
+            justify-self: end;
+            color: var(--gold);
+            font-size: 0.8rem;
+            font-weight: 950;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+
+        .scoreboard {
+            width: min(960px, 100%);
+            margin: 0;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr minmax(220px, 1.25fr) 1fr;
+            gap: 10px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.045));
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow:
+                0 22px 60px rgba(0, 0, 0, 0.28),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .score {
+            min-height: 62px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: clamp(0.9rem, 2vw, 1.05rem);
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .score span {
+            min-width: 44px;
+            color: #fff;
+            font-size: clamp(2rem, 5vw, 3.1rem);
+            line-height: 1;
+            font-weight: 950;
+            text-shadow: 0 0 18px currentColor;
+        }
+
+        .score.p1-text { color: var(--p1); }
+        .score.p2-text { color: var(--p2); }
+
+        .status-text {
+            min-height: 62px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.26);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.82);
+            font-size: clamp(0.88rem, 1.8vw, 1.05rem);
+            line-height: 1.4;
+        }
+
+        .arena-container {
+            width: min(960px, 100%);
+            height: clamp(360px, 48vw, 470px);
+            margin: 4px 0 0;
+            padding-bottom: clamp(46px, 8vw, 70px);
+            gap: clamp(78px, 15vw, 160px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+            background:
+                radial-gradient(circle at 22% 28%, rgba(77, 171, 255, 0.16), transparent 19rem),
+                radial-gradient(circle at 78% 28%, rgba(255, 90, 118, 0.14), transparent 19rem),
+                linear-gradient(180deg, #263b4b 0%, #15222c 54%, #111820 100%);
+            box-shadow:
+                0 34px 90px rgba(0, 0, 0, 0.46),
+                inset 0 0 0 10px rgba(255, 255, 255, 0.035),
+                inset 0 -44px 80px rgba(0, 0, 0, 0.44);
+            overflow: hidden;
+        }
+
+        .arena-container::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(90deg, transparent 0 49.8%, rgba(255, 255, 255, 0.12) 50%, transparent 50.2%),
+                radial-gradient(ellipse at center bottom, rgba(255, 209, 102, 0.16), transparent 46%);
+            z-index: 3;
+        }
+
+        .arena-container::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: 30px;
+            width: min(760px, 84%);
+            height: 120px;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(0, 0, 0, 0.40), transparent 68%);
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .floor {
+            height: clamp(46px, 8vw, 70px);
+            background:
+                linear-gradient(90deg, rgba(77, 171, 255, 0.16), transparent 34%, transparent 66%, rgba(255, 90, 118, 0.15)),
+                linear-gradient(to bottom, #455466, #202b36 62%, #121922);
+            border-top: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 0 0 8px 8px;
+            box-shadow: inset 0 18px 24px rgba(255, 255, 255, 0.06);
+        }
+
+        .cloud {
+            background: rgba(255, 255, 255, 0.08);
+            filter: blur(1px);
+        }
+
+        .cloud::before,
+        .cloud::after {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .crowd {
+            bottom: clamp(46px, 8vw, 70px);
+            opacity: 0.88;
+        }
+
+        .spectator {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05));
+            box-shadow: 0 0 16px rgba(255, 255, 255, 0.04);
+        }
+
+        .spectator::before {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .player {
+            width: clamp(84px, 11vw, 112px);
+            height: clamp(214px, 29vw, 262px);
+            filter: drop-shadow(0 26px 18px rgba(0, 0, 0, 0.38));
+        }
+
+        .body {
+            width: 100%;
+            height: 46%;
+            border-radius: 26px 26px 12px 12px;
+            background:
+                linear-gradient(90deg, transparent 0 16%, rgba(255, 255, 255, 0.18) 17% 24%, transparent 25% 74%, rgba(0, 0, 0, 0.20) 75% 82%, transparent 83%),
+                linear-gradient(135deg, #eff6f8, #81909d 58%, #2a3540);
+            border-color: rgba(0, 0, 0, 0.52);
+            box-shadow:
+                inset 9px 8px 16px rgba(255, 255, 255, 0.28),
+                inset -9px -12px 18px rgba(0, 0, 0, 0.44),
+                0 16px 26px rgba(0, 0, 0, 0.30);
+        }
+
+        .body::before {
+            top: 24%;
+            left: 18%;
+            right: 18%;
+            border-radius: 12px 12px 4px 4px;
+            background:
+                linear-gradient(120deg, transparent 0 45%, rgba(255, 255, 255, 0.18) 46% 54%, transparent 55%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 32%),
+                var(--p-color);
+            box-shadow:
+                inset 0 0 18px rgba(0, 0, 0, 0.55),
+                0 0 24px color-mix(in srgb, var(--p-color), transparent 72%);
+        }
+
+        .head {
+            left: 12%;
+            width: 76%;
+            height: 30%;
+            border-radius: 46% 46% 38% 38%;
+            background:
+                linear-gradient(90deg, transparent 0 45%, rgba(0, 0, 0, 0.20) 46% 54%, transparent 55%),
+                radial-gradient(circle at 34% 22%, #ffffff, #bbc8d1 34%, #687783 100%);
+            box-shadow:
+                inset 7px 7px 12px rgba(255, 255, 255, 0.32),
+                inset -8px -10px 14px rgba(0, 0, 0, 0.46),
+                0 8px 18px rgba(0, 0, 0, 0.32);
+        }
+
+        .head::before {
+            top: -20%;
+            left: 20%;
+            width: 60%;
+            height: 28%;
+            border-radius: 999px 999px 6px 6px;
+            background:
+                repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.22) 0 4px, transparent 4px 8px),
+                var(--p-color);
+            box-shadow:
+                inset 0 -6px 10px rgba(0, 0, 0, 0.36),
+                0 0 18px color-mix(in srgb, var(--p-color), transparent 58%);
+        }
+
+        .head::after {
+            content: "";
+            position: absolute;
+            left: 12%;
+            right: 12%;
+            bottom: 6%;
+            height: 18%;
+            border-radius: 0 0 999px 999px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(0, 0, 0, 0.18));
+            border-top: 1px solid rgba(255, 255, 255, 0.20);
+        }
+
+        .visor {
+            width: 66%;
+            height: 18%;
+            top: 38%;
+            left: 17%;
+            border-radius: 999px;
+            background: #06111a;
+            border-color: rgba(255, 255, 255, 0.16);
+            box-shadow:
+                inset 0 4px 7px rgba(0, 0, 0, 0.9),
+                0 0 15px color-mix(in srgb, var(--p-color), transparent 26%);
+        }
+
+        .visor::after {
+            width: 68%;
+            height: 38%;
+            background: linear-gradient(90deg, #fff, var(--p-color));
+        }
+
+        .arm-hammer {
+            left: 48%;
+            width: 15%;
+            height: 56%;
+            border-radius: 999px;
+            background:
+                linear-gradient(90deg, rgba(255, 255, 255, 0.20), transparent 34%),
+                repeating-linear-gradient(to bottom, #9a5a13, #9a5a13 8px, #573007 8px, #573007 12px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.40);
+        }
+
+        .hammer-head {
+            top: -14%;
+            left: -145%;
+            width: 410%;
+            height: 22%;
+            border-radius: 8px;
+            background:
+                linear-gradient(90deg, transparent 0 10%, rgba(255, 255, 255, 0.34) 11% 18%, transparent 19% 82%, rgba(0, 0, 0, 0.20) 83% 90%, transparent 91%),
+                linear-gradient(135deg, #f6fbff, #aebbc4 52%, #59656f);
+            box-shadow:
+                inset 6px 6px 9px rgba(255, 255, 255, 0.32),
+                inset -5px -6px 9px rgba(0, 0, 0, 0.44),
+                0 8px 16px rgba(0, 0, 0, 0.38);
+        }
+
+        .hammer-head::before {
+            content: "";
+            position: absolute;
+            top: 23%;
+            right: -20%;
+            width: 20%;
+            height: 54%;
+            background: #87949e;
+            clip-path: polygon(0 0, 100% 50%, 0 100%);
+            filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.35));
+        }
+
+        .shield {
+            right: -30%;
+            width: 44%;
+            height: 44%;
+            border-radius: 16px 16px 48% 48%;
+            background:
+                linear-gradient(90deg, transparent 0 45%, rgba(255, 255, 255, 0.22) 46% 54%, transparent 55%),
+                radial-gradient(circle at 36% 24%, rgba(255, 255, 255, 0.50), transparent 18%),
+                linear-gradient(135deg, #ffd166 0%, #d35400 45%, #7b2710 100%);
+            border-color: #b9c2ca;
+            box-shadow:
+                inset 0 0 14px rgba(0, 0, 0, 0.42),
+                4px 6px 14px rgba(0, 0, 0, 0.38);
+        }
+
+        .shield::before {
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.22);
+            border-radius: 12px 12px 45% 45%;
+        }
+
+        .shield::after {
+            top: 45%;
+            height: 8%;
+            background: linear-gradient(90deg, #dce5eb, #83909a);
+        }
+
+        .key-label {
+            bottom: 24px;
+            color: rgba(255, 255, 255, 0.26);
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            text-shadow: 0 10px 18px rgba(0, 0, 0, 0.36);
+        }
+
+        .key-label.pressed {
+            color: #fff;
+            text-shadow: 0 0 18px var(--p-color), 0 0 34px var(--p-color);
+        }
+
+        .impact-text {
+            top: 24%;
+            font-size: clamp(2.1rem, 7vw, 4.8rem);
+            letter-spacing: 0;
+            text-shadow:
+                0 5px 0 #111820,
+                0 20px 34px rgba(0, 0, 0, 0.72);
+        }
+
+        .spark {
+            background: #ffe08a;
+            box-shadow: 0 0 10px #ffd166, 0 0 22px #ff7b00;
+        }
+
+        .overlay {
+            border-radius: 8px;
+            background:
+                radial-gradient(circle at 50% 34%, rgba(255, 209, 102, 0.18), transparent 22rem),
+                rgba(3, 8, 13, 0.88);
+            backdrop-filter: blur(8px);
+        }
+
+        .overlay h2 {
+            margin: 0 0 26px;
+            font-size: clamp(2.8rem, 8vw, 5.5rem);
+            line-height: 0.9;
+            text-align: center;
+        }
+
+        .restart-btn {
+            min-height: 54px;
+            padding: 0 34px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ffd166, #4dabff);
+            box-shadow: 0 7px 0 #1b6b8f, 0 18px 32px rgba(0, 0, 0, 0.38);
+        }
+
+        .head.popped {
+            bottom: 76%;
+            transform-origin: 50% 90%;
+            animation: headSpringPop 0.92s cubic-bezier(0.18, 0.9, 0.24, 1.18) both;
+        }
+
+        .spring.popped {
+            height: clamp(112px, 17vw, 152px);
+            transform-origin: center bottom;
+            animation: springStretch 0.92s cubic-bezier(0.18, 0.9, 0.24, 1.18) both;
+        }
+
+        @keyframes headSpringPop {
+            0% { bottom: 46%; transform: rotate(0deg) scale(1); }
+            34% { bottom: 86%; transform: rotate(28deg) scale(1.08); }
+            52% { bottom: 70%; transform: rotate(-16deg) scale(0.96); }
+            68% { bottom: 80%; transform: rotate(12deg) scale(1.03); }
+            84% { bottom: 74%; transform: rotate(-7deg) scale(0.99); }
+            100% { bottom: 76%; transform: rotate(5deg) scale(1); }
+        }
+
+        @keyframes springStretch {
+            0% { height: 0; transform: scaleX(1); }
+            34% { height: clamp(128px, 19vw, 168px); transform: scaleX(0.78); }
+            52% { height: clamp(96px, 15vw, 132px); transform: scaleX(1.22); }
+            68% { height: clamp(120px, 18vw, 158px); transform: scaleX(0.9); }
+            84% { height: clamp(106px, 16vw, 142px); transform: scaleX(1.08); }
+            100% { height: clamp(112px, 17vw, 152px); transform: scaleX(1); }
+        }
+
+        .impact-text.show {
+            animation: impactPop 0.58s cubic-bezier(0.18, 0.9, 0.24, 1.18) both;
+        }
+
+        .stamina-row {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stamina {
+            min-height: 34px;
+            padding: 7px 10px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 10px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .stamina span {
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 0.72rem;
+            font-weight: 950;
+            letter-spacing: 0.12em;
+        }
+
+        .stamina-track {
+            height: 10px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.10);
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.45);
+        }
+
+        .stamina-fill {
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #2dfc8f, #ffd166);
+            box-shadow: 0 0 16px rgba(255, 209, 102, 0.36);
+            transition: width 120ms linear, background 140ms ease;
+        }
+
+        .stamina.p1-stamina .stamina-fill {
+            background: linear-gradient(90deg, #4dabff, #2dfc8f);
+        }
+
+        .stamina.p2-stamina .stamina-fill {
+            background: linear-gradient(90deg, #ff5a76, #ffd166);
+        }
+
+        .stamina-fill.low {
+            background: linear-gradient(90deg, #ff5a76, #ffd166);
+        }
+
+        .player.parry-window .shield {
+            animation: parryReady 0.22s ease-in-out infinite alternate;
+        }
+
+        .player.parried {
+            animation: parryBurst 0.34s ease both;
+        }
+
+        .player.stunned {
+            animation: shockStun 0.16s steps(2, end) infinite;
+            filter:
+                drop-shadow(0 0 18px rgba(255, 209, 102, 0.85))
+                drop-shadow(0 24px 18px rgba(0, 0, 0, 0.38));
+        }
+
+        .player.stunned::after {
+            content: "STUNNED";
+            position: absolute;
+            left: 50%;
+            top: -22%;
+            transform: translateX(-50%);
+            padding: 5px 8px;
+            border-radius: 999px;
+            background: rgba(255, 209, 102, 0.95);
+            color: #111820;
+            font-size: 0.68rem;
+            font-weight: 950;
+            letter-spacing: 0.12em;
+            box-shadow: 0 0 22px rgba(255, 209, 102, 0.72);
+        }
+
+        @keyframes parryReady {
+            from { filter: brightness(1.18); box-shadow: 0 0 20px rgba(255, 209, 102, 0.35); }
+            to { filter: brightness(1.55); box-shadow: 0 0 34px rgba(255, 209, 102, 0.72); }
+        }
+
+        @keyframes parryBurst {
+            0%, 100% { transform: scaleX(1) translateX(0); }
+            35% { transform: scaleX(1) translateX(18px) rotate(2deg); }
+            70% { transform: scaleX(1) translateX(-10px) rotate(-1deg); }
+        }
+
+        @keyframes shockStun {
+            0% { transform: scaleX(1) translateX(-3px) rotate(-2deg); }
+            50% { transform: scaleX(1) translateX(3px) rotate(2deg); }
+            100% { transform: scaleX(1) translateX(-2px) rotate(-1deg); }
+        }
+
+        .p2.parried {
+            animation-name: parryBurstP2;
+        }
+
+        @keyframes parryBurstP2 {
+            0%, 100% { transform: scaleX(-1) translateX(0); }
+            35% { transform: scaleX(-1) translateX(18px) rotate(2deg); }
+            70% { transform: scaleX(-1) translateX(-10px) rotate(-1deg); }
+        }
+
+        .p2.stunned {
+            animation-name: shockStunP2;
+        }
+
+        @keyframes shockStunP2 {
+            0% { transform: scaleX(-1) translateX(-3px) rotate(-2deg); }
+            50% { transform: scaleX(-1) translateX(3px) rotate(2deg); }
+            100% { transform: scaleX(-1) translateX(-2px) rotate(-1deg); }
+        }
+
+        @keyframes impactPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(-6deg); }
+            24% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(2deg); }
+            72% { opacity: 1; transform: translate(-50%, -50%) scale(1.04) rotate(0deg); }
+            100% { opacity: 0; transform: translate(-50%, -70%) scale(0.86) rotate(0deg); }
+        }
+
+        @media (max-width: 760px) {
+            .header {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                text-align: center;
+            }
+
+            h1 {
+                text-align: center;
+            }
+
+            .header::after {
+                justify-self: center;
+                text-align: center;
+            }
+
+            .scoreboard {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .status-text {
+                grid-column: 1 / -1;
+                order: -1;
+            }
+
+            .arena-container {
+                height: 390px;
+                gap: 66px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding-inline: 10px;
+            }
+
+            .scoreboard {
+                grid-template-columns: 1fr;
+            }
+
+            .stamina-row {
+                grid-template-columns: 1fr;
+            }
+
+            .arena-container {
+                height: 350px;
+                gap: 42px;
+                padding-bottom: 46px;
+            }
+
+            .player {
+                width: 78px;
+                height: 220px;
+            }
+
+            .crowd {
+                padding: 0 10px;
+            }
+        }
+
     </style>
 </head>
 <body>
 
     <div class="header">
-        <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
+        <a href="gamedashboard.html" class="back-link">&larr; Dashboard</a>
         <h1>Hammer & Shield</h1>
     </div>
 
@@ -549,6 +1226,16 @@
         <div class="score p1-text">P1 (Key 'A'): <span id="score1">0</span></div>
         <div class="status-text" id="status-text">First to 5 Wins!<br>Pin their shield, then strike!</div>
         <div class="score p2-text">P2 (Key 'L'): <span id="score2">0</span></div>
+        <div class="stamina-row" aria-label="Player stamina">
+            <div class="stamina p1-stamina">
+                <span>P1 STAMINA</span>
+                <div class="stamina-track"><div class="stamina-fill" id="stamina1"></div></div>
+            </div>
+            <div class="stamina p2-stamina">
+                <span>P2 STAMINA</span>
+                <div class="stamina-track"><div class="stamina-fill" id="stamina2"></div></div>
+            </div>
+        </div>
     </div>
 
     <div class="arena-container">
@@ -600,7 +1287,7 @@
         <!-- Game Over Screen -->
         <div class="overlay" id="overlay">
             <h2 id="winner-text">Player 1 Wins!</h2>
-            <button class="restart-btn" onclick="resetGame()">PLAY AGAIN</button>
+            <button class="restart-btn" onpointerdown="event.preventDefault(); resetGame();">PLAY AGAIN</button>
         </div>
     </div>
 
@@ -608,12 +1295,19 @@
         const P1_KEY = 'a';
         const P2_KEY = 'l';
         
-        let p1State = 'idle'; // States: idle, swinging, pinning, cooldown, dead
+        let p1State = 'idle'; // States: idle, swinging, pinning, cooldown, stunned, dead
         let p2State = 'idle';
         let p1Score = 0;
         let p2Score = 0;
         let roundActive = true;
         let gameOver = false;
+        let impactTimer = null;
+        let stamina = { 1: 100, 2: 100 };
+        let staminaTimer = null;
+        let currentPin = null;
+        let parryReady = { 1: false, 2: false };
+        let parryTimer = null;
+        let stunTimers = { 1: null, 2: null };
 
         const keysHeld = { a: false, l: false }; // Track held keys
 
@@ -693,6 +1387,21 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.05);
         }
 
+        function playParrySound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(620, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.16);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.45, audioCtx.currentTime + 0.015);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.16);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.16);
+        }
+
         document.addEventListener('keydown', (e) => {
             initAudio(); // Initialize audio on first keypress
             
@@ -737,6 +1446,10 @@
             
             // If the opponent is pinning our shield down, we are physically jammed!
             if (opponentState === 'pinning') {
+                if (parryReady[playerNum]) {
+                    performParry(playerNum, opponentNum);
+                    return;
+                }
                 const myPlayerEl = document.getElementById(`p${playerNum}`);
                 myPlayerEl.classList.add('jammed');
                 setTimeout(() => myPlayerEl.classList.remove('jammed'), 150);
@@ -773,6 +1486,7 @@
                     setMyState('pinning');
                     updateVisuals(playerNum, 'pinning');
                     processBlock(opponentNum);
+                    startPin(playerNum, opponentNum);
                 }
             }, 40);
         }
@@ -782,6 +1496,7 @@
             const myState = playerNum === 1 ? p1State : p2State;
             
             if (myState === 'idle' || myState === 'cooldown' || myState === 'dead') return;
+            stopPin();
             
             setMyState('cooldown');
             updateVisuals(playerNum, 'cooldown');
@@ -818,6 +1533,105 @@
             }, 150);
         }
 
+        function updateStaminaHud() {
+            [1, 2].forEach(playerNum => {
+                const fill = document.getElementById(`stamina${playerNum}`);
+                fill.style.width = `${Math.max(0, stamina[playerNum])}%`;
+                fill.classList.toggle('low', stamina[playerNum] <= 28);
+            });
+        }
+
+        function startPin(attackerNum, defenderNum) {
+            stopPin();
+            currentPin = { attackerNum, defenderNum };
+            parryReady[defenderNum] = true;
+            const defender = document.getElementById(`p${defenderNum}`);
+            defender.classList.add('parry-window');
+            document.getElementById('status-text').innerHTML = `Player ${defenderNum}: tap your key now to parry!`;
+
+            parryTimer = setTimeout(() => {
+                parryReady[defenderNum] = false;
+                defender.classList.remove('parry-window');
+                document.getElementById('status-text').innerHTML = `Player ${attackerNum} is draining stamina. Release to reset.`;
+            }, 520);
+
+            staminaTimer = setInterval(() => {
+                if (!currentPin || !roundActive) return;
+                stamina[attackerNum] = Math.max(0, stamina[attackerNum] - 4);
+                updateStaminaHud();
+                if (stamina[attackerNum] <= 0) {
+                    exhaustPin(attackerNum);
+                }
+            }, 120);
+        }
+
+        function stopPin() {
+            clearInterval(staminaTimer);
+            clearTimeout(parryTimer);
+            staminaTimer = null;
+            parryTimer = null;
+            currentPin = null;
+            parryReady = { 1: false, 2: false };
+            document.querySelectorAll('.player').forEach(el => el.classList.remove('parry-window'));
+        }
+
+        function recoverStamina(playerNum, amount = 18) {
+            stamina[playerNum] = Math.min(100, stamina[playerNum] + amount);
+            updateStaminaHud();
+        }
+
+        function exhaustPin(attackerNum) {
+            stopPin();
+            const setAttackerState = attackerNum === 1 ? (s) => p1State = s : (s) => p2State = s;
+            setAttackerState('cooldown');
+            updateVisuals(attackerNum, 'cooldown');
+            showImpact('TIRED!', '#ffd166');
+            playJamSound();
+            document.getElementById('status-text').innerHTML = `Player ${attackerNum} ran out of stamina!`;
+            setTimeout(() => {
+                if (!roundActive) return;
+                setAttackerState('idle');
+                updateVisuals(attackerNum, 'idle');
+            }, 420);
+        }
+
+        function performParry(defenderNum, attackerNum) {
+            stopPin();
+            recoverStamina(defenderNum, 22);
+            stamina[attackerNum] = Math.max(0, stamina[attackerNum] - 18);
+            updateStaminaHud();
+
+            const defender = document.getElementById(`p${defenderNum}`);
+            const attacker = document.getElementById(`p${attackerNum}`);
+            defender.classList.add('parried');
+            attacker.classList.add('stunned');
+            setTimeout(() => defender.classList.remove('parried'), 340);
+            clearTimeout(stunTimers[attackerNum]);
+
+            if (attackerNum === 1) p1State = 'stunned';
+            if (attackerNum === 2) p2State = 'stunned';
+            updateVisuals(attackerNum, 'cooldown');
+
+            showImpact('PARRY!', '#ffd166');
+            playParrySound();
+            spawnSparks(defenderNum);
+            document.getElementById('status-text').innerHTML = `Parry shock! Player ${attackerNum} is stunned.`;
+
+            stunTimers[attackerNum] = setTimeout(() => {
+                if (!roundActive) return;
+                attacker.classList.remove('stunned');
+                if (attackerNum === 1 && p1State === 'stunned') {
+                    p1State = 'idle';
+                    updateVisuals(1, 'idle');
+                }
+                if (attackerNum === 2 && p2State === 'stunned') {
+                    p2State = 'idle';
+                    updateVisuals(2, 'idle');
+                }
+                document.getElementById('status-text').innerHTML = `Player ${attackerNum} recovered. Fight!`;
+            }, 2200);
+        }
+
         function spawnSparks(defenderNum) {
             const pEl = document.getElementById(`p${defenderNum}`);
             for(let i = 0; i < 10; i++) {
@@ -835,6 +1649,7 @@
 
         function showImpact(text, color) {
             const impactEl = document.getElementById('impact-text');
+            clearTimeout(impactTimer);
             impactEl.innerText = text;
             impactEl.style.color = color;
             
@@ -842,10 +1657,15 @@
             impactEl.classList.remove('show');
             void impactEl.offsetWidth; // Force browser reflow
             impactEl.classList.add('show');
+            impactTimer = setTimeout(() => {
+                impactEl.classList.remove('show');
+                impactEl.innerText = '';
+            }, 620);
         }
 
         function processHit(loserNum) {
             roundActive = false; // Freeze further actions
+            stopPin();
             
             // Screen Shake effect
             const arena = document.querySelector('.arena-container');
@@ -904,14 +1724,23 @@
             p1State = 'idle';
             p2State = 'idle';
             roundActive = true;
+            stopPin();
+            stamina = { 1: 100, 2: 100 };
+            updateStaminaHud();
+            clearTimeout(impactTimer);
+            const impactEl = document.getElementById('impact-text');
+            impactEl.classList.remove('show');
+            impactEl.innerText = '';
             
             document.querySelectorAll('.head').forEach(el => el.classList.remove('popped'));
             document.querySelectorAll('.spring').forEach(el => el.classList.remove('popped'));
             document.querySelectorAll('.arm-hammer').forEach(el => {
-                el.classList.remove('attacking', 'whacking');
+                el.classList.remove('attacking', 'whacking', 'struggling');
             });
-            document.querySelectorAll('.shield').forEach(el => el.classList.remove('attacking'));
-            document.querySelectorAll('.player').forEach(el => el.classList.remove('lunging'));
+            document.querySelectorAll('.shield').forEach(el => el.classList.remove('attacking', 'blocked'));
+            document.querySelectorAll('.player').forEach(el => el.classList.remove('lunging', 'blocked', 'jammed', 'stunned'));
+            Object.values(stunTimers).forEach(timer => clearTimeout(timer));
+            stunTimers = { 1: null, 2: null };
         }
 
         function showGameOver(winnerNum) {
@@ -933,6 +1762,8 @@
             gameOver = false;
             resetRound();
         }
+
+        updateStaminaHud();
     </script>
 </body>
 </html>

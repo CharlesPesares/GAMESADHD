@@ -254,14 +254,14 @@
             <h2 id="level-display">Level 1</h2>
             <select id="level-selector" class="level-select" onchange="jumpToLevel(this.value)"></select>
         </div>
-        <button class="restart-btn" onclick="restartLevel()">Restart Level</button>
+        <button class="restart-btn" onpointerdown="event.preventDefault(); restartLevel();">Restart Level</button>
     </div>
 
     <div id="tubes-container" class="tubes-container"></div>
 
     <div class="overlay" id="overlay">
         <h2 id="overlay-title">Level Cleared!</h2>
-        <button class="next-btn" id="overlay-btn" onclick="nextLevel()">NEXT LEVEL</button>
+        <button class="next-btn" id="overlay-btn" onpointerdown="event.preventDefault(); nextLevel();">NEXT LEVEL</button>
     </div>
 
     <script>
@@ -438,7 +438,10 @@
             tubes.forEach((tube, index) => {
                 const tubeEl = document.createElement('div');
                 tubeEl.className = 'tube';
-                tubeEl.onclick = () => handleTubeClick(index);
+                tubeEl.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    handleTubeClick(index);
+                });
                 
                 const isFinished = tube.length === 4 && tube.every(x => x === tube[0]);
                 if (isFinished) {
