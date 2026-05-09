@@ -67,6 +67,31 @@
             font-size: 1.5rem;
             font-weight: bold;
             color: #ffdf3f;
+            display: flex;
+            align-items: center;
+        }
+
+        .level-select {
+            background: #2c3e50;
+            color: #a6c1ee;
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            outline: none;
+            cursor: pointer;
+            margin-left: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .level-select:hover {
+            border-color: #a6c1ee;
+        }
+
+        .level-select option {
+            background: #1a252f;
+            color: white;
         }
 
         .game-container {
@@ -135,7 +160,10 @@
 
     <div class="scoreboard">
         <div class="score-text">SCORE: <span id="score-display">0</span></div>
-        <div class="level-text">LEVEL <span id="level-display">1</span></div>
+        <div class="level-text">
+            LEVEL <span id="level-display">1</span>
+            <select id="level-selector" class="level-select" onchange="jumpToLevel(this.value)"></select>
+        </div>
     </div>
 
     <div class="game-container">
@@ -183,7 +211,8 @@
             });
         }
         
-        let level = 1;
+        let level = localStorage.getItem('orbitPopLevel') ? parseInt(localStorage.getItem('orbitPopLevel')) : 1;
+        let maxLevel = localStorage.getItem('orbitPopMaxLevel') ? parseInt(localStorage.getItem('orbitPopMaxLevel')) : level;
         let score = 0;
         let ballsToSpawn = 0;
         let gameState = 'start'; // start, playing, won, lost
@@ -193,6 +222,7 @@
         let nextMarbleColor = 'blue';
         let shootCooldown = 0;
         let recoil = 0;
+        let comboMultiplier = 1;
 
         // --- Audio Context ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -201,7 +231,7 @@
         let bgmIndex = 0;
         const bgmNotes = [146.83, 174.61, 196.00, 220.00, 261.63, 220.00, 196.00, 174.61]; // D minor pentatonic
 
-        function playSound(type) {
+        function playSound(type, combo = 1) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -210,21 +240,56 @@
             const now = audioCtx.currentTime;
             
             if (type === 'shoot') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.1, now + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'pop') {
-                osc.type = 'sine';
+                // Main punchy body of the cannon (deep thwump)
+                osc.type = 'triangle';
                 osc.frequency.setValueAtTime(600, now);
-                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+                
                 gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
+                gain.gain.linearRampToValueAtTime(0.7, now + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                
+                // Sharp transient click for impact (the crack of the launch)
+                const clickOsc = audioCtx.createOscillator();
+                const clickGain = audioCtx.createGain();
+                clickOsc.type = 'sawtooth';
+                clickOsc.frequency.setValueAtTime(1500, now);
+                clickOsc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                clickGain.gain.setValueAtTime(0, now);
+                clickGain.gain.linearRampToValueAtTime(0.4, now + 0.005);
+                clickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                clickOsc.connect(clickGain);
+                clickGain.connect(audioCtx.destination);
+                
+                clickOsc.start(now); clickOsc.stop(now + 0.05);
+                osc.start(now); osc.stop(now + 0.15);
+            } else if (type === 'pop') {
+                let pitch = Math.min(2.5, 1 + (combo - 1) * 0.15); // Max 2.5x pitch
+                
+                // A satisfying, wet bubble-pop sound
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300 * pitch, now);
+                osc.frequency.exponentialRampToValueAtTime(1200 * pitch, now + 0.08);
+                
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.8, now + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                
+                // Add a sharp percussive click at the start
+                const clickOsc = audioCtx.createOscillator();
+                const clickGain = audioCtx.createGain();
+                clickOsc.type = 'square';
+                clickOsc.frequency.setValueAtTime(2000 * pitch, now);
+                clickOsc.frequency.exponentialRampToValueAtTime(100 * pitch, now + 0.03);
+                clickGain.gain.setValueAtTime(0, now);
+                clickGain.gain.linearRampToValueAtTime(0.3, now + 0.005);
+                clickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+                clickOsc.connect(clickGain);
+                clickGain.connect(audioCtx.destination);
+                clickOsc.start(now);
+                clickOsc.stop(now + 0.03);
+
+                osc.start(now); osc.stop(now + 0.08);
             } else if (type === 'thud') {
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(150, now);
@@ -292,28 +357,74 @@
             pathPoints = [];
             let cx = 400, cy = 300;
             
-            let b = 9.0; // Slightly tighter gap spacing to fit the larger center
-            let a = Math.PI * 7.5; // 3.75 full loops
-            let r = 80 + a * b; // Base radius 80 keeps sinkhole safely away from the center turret
+            // Maps cycle every 4 levels
+            let mapType = (level - 1) % 4;
             
-            pathPoints.push({
-                x: cx + r * Math.cos(a),
-                y: cy + r * Math.sin(a)
-            });
+            // Progressive difficulty: more loops, tighter gaps
+            let loops = 3.0 + Math.min(level * 0.2, 3.0); // max 6 loops
+            let a = Math.PI * 2 * loops;
+            
+            // Base max radius we want to reach is ~260 (leaves room for edges)
+            let maxAvailable = 260;
+            let wobbleAmp = 0;
+            let wobbleFreq = 0;
+            let wobbleType = 0;
+
+            if (mapType === 1) { // Wavy Map
+                wobbleAmp = 12;
+                wobbleFreq = 6;
+                wobbleType = 1;
+                maxAvailable -= wobbleAmp;
+            } else if (mapType === 2) { // Square-ish Map
+                wobbleAmp = 16;
+                wobbleFreq = 4;
+                wobbleType = 2;
+                maxAvailable -= wobbleAmp;
+            } else if (mapType === 3) { // Tri-lobe Map
+                wobbleAmp = 16;
+                wobbleFreq = 3;
+                wobbleType = 1;
+                maxAvailable -= wobbleAmp;
+            }
+            
+            let b = (maxAvailable - 80) / a;
+            // Prevent track lines from visually overlapping (min gap ~44 pixels)
+            if (b < 7.0) { 
+                b = 7.0;
+                a = (maxAvailable - 80) / b;
+            }
+            
+            function getPoint(angle) {
+                let r = 80 + angle * b;
+                
+                if (wobbleType === 1) {
+                    r += Math.sin(angle * wobbleFreq) * wobbleAmp;
+                } else if (wobbleType === 2) {
+                    r += Math.abs(Math.sin(angle * wobbleFreq)) * wobbleAmp;
+                }
+                
+                return {
+                    x: cx + r * Math.cos(angle),
+                    y: cy + r * Math.sin(angle)
+                };
+            }
+
+            pathPoints.push(getPoint(a));
             
             while (a > 0) {
-                // Calculus arc length: ds = sqrt(r^2 + (dr/da)^2) * da. 
-                // We calculate exactly how much 'a' to step to move perfectly 1 pixel forward.
-                let da = 1 / Math.sqrt(r * r + b * b);
-                a -= da;
+                // Fixed small angle step to approximate derivative
+                let da = 0.02; 
+                let p1 = getPoint(a);
+                let p2 = getPoint(a - da);
+                let dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                
+                // Step angle to move exactly ~1 pixel
+                let step_da = da / dist;
+                a -= step_da;
                 
                 if (a < 0) break;
                 
-                r = 80 + a * b;
-                pathPoints.push({
-                    x: cx + r * Math.cos(a),
-                    y: cy + r * Math.sin(a)
-                });
+                pathPoints.push(getPoint(a));
             }
         }
 
@@ -331,6 +442,36 @@
             return getLevelColor(); // Fallback for when the board is completely empty at the start
         }
 
+        function updateLevelSelector() {
+            const selector = document.getElementById('level-selector');
+            selector.innerHTML = '';
+            for (let i = 1; i <= maxLevel; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.text = 'Jump to Level ' + i;
+                if (i === level) opt.selected = true;
+                selector.appendChild(opt);
+            }
+        }
+
+        function jumpToLevel(levelVal) {
+            let wasStart = (gameState === 'start');
+            level = parseInt(levelVal);
+            localStorage.setItem('orbitPopLevel', level);
+            score = 0;
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('start-overlay').style.display = 'none';
+            
+            loadLevel();
+            gameState = 'playing';
+            startBGM();
+            
+            if (wasStart) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
         function loadLevel() {
             initPath();
             marbles = [];
@@ -339,13 +480,14 @@
             ballsToSpawn = 30 + (level * 10);
             currentMarbleColor = getLevelColor();
             nextMarbleColor = getLevelColor();
+            comboMultiplier = 1;
             document.getElementById('level-display').innerText = level;
+            updateLevelSelector();
         }
 
         function startGame() {
             document.getElementById('start-overlay').style.display = 'none';
             score = 0;
-            level = 1;
             document.getElementById('score-display').innerText = score;
             loadLevel();
             gameState = 'playing';
@@ -376,6 +518,7 @@
             }
 
             if (e.button === 0 && shootCooldown <= 0) {
+                comboMultiplier = 1; // Reset combo multiplier for the new shot sequence
                 projectiles.push({
                     x: 400 + Math.cos(shooterAngle) * 25,
                     y: 300 + Math.sin(shooterAngle) * 25,
@@ -468,9 +611,10 @@
                     if (pos) createPopParticles(pos.x, pos.y, m.color);
                 }
                 marbles.splice(right, count);
-                score += count * 10;
+                score += count * 10 * comboMultiplier;
                 document.getElementById('score-display').innerText = score;
-                playSound('pop');
+                playSound('pop', comboMultiplier);
+                comboMultiplier++;
             } else {
                 playSound('thud');
             }
@@ -502,7 +646,7 @@
 
             if (gameState === 'losing') {
                 for (let i = marbles.length - 1; i >= 0; i--) {
-                    marbles[i].d += 8.0; // Accelerate into the abyss
+                    marbles[i].d += 30.0; // Accelerate into the abyss much faster
                     if (marbles[i].d >= pathPoints.length) {
                         marbles.splice(i, 1);
                     }
@@ -709,6 +853,19 @@
 
             if (pathPoints.length === 0) return;
 
+            // Calculate Danger Level
+            let dangerLevel = 0;
+            if (marbles.length > 0 && (gameState === 'playing' || gameState === 'losing')) {
+                let distToHole = pathPoints.length - marbles[0].d;
+                let warningDistance = 350; // Increased from 200
+                if (distToHole < warningDistance) {
+                    dangerLevel = Math.max(0, 1 - (distToHole / warningDistance));
+                }
+            }
+            let timeSec = Date.now() / 1000;
+            // Slower base pulse, but ramps up much faster as danger increases
+            let pulse = dangerLevel > 0 ? (Math.sin(timeSec * (6 + dangerLevel * 30)) + 1) / 2 : 0;
+
             // Draw Path Track
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
@@ -751,9 +908,13 @@
             ctx.fillStyle = '#111820';
             ctx.fill();
             ctx.lineWidth = 3;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ff4c4c';
-            ctx.strokeStyle = '#ff4c4c';
+            
+            ctx.shadowBlur = 15 + (dangerLevel * pulse * 25);
+            ctx.shadowColor = dangerLevel > 0 ? '#ff0000' : '#ff4c4c';
+            
+            let ringAlpha = dangerLevel > 0 ? 0.5 + (pulse * 0.5) : 1;
+            ctx.strokeStyle = dangerLevel > 0 ? `rgba(255, 0, 0, ${ringAlpha})` : '#ff4c4c';
+            
             ctx.stroke();
             ctx.shadowBlur = 0; // reset
 
@@ -939,6 +1100,23 @@
             ctx.strokeStyle = '#2c3e50';
             ctx.stroke();
             drawMarble(ctx, 380, 280, 8, COLORS[nextMarbleColor]);
+
+            // Danger Vignette Overlay
+            if (dangerLevel > 0) {
+                let grad = ctx.createRadialGradient(400, 300, 250, 400, 300, 600);
+                grad.addColorStop(0, 'rgba(255, 0, 0, 0)'); // Center is transparent
+                grad.addColorStop(1, `rgba(255, 0, 0, ${dangerLevel * pulse * 0.25})`); // Softer, less intense red pulse at the edges
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 800, 600);
+                
+                ctx.textAlign = 'center';
+                ctx.font = '900 32px "Segoe UI"';
+                ctx.fillStyle = `rgba(255, 76, 76, ${pulse * 0.5 + 0.3})`; // Less aggressive flashing on the text
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ff0000';
+                ctx.fillText("WARNING!", 400, 50);
+                ctx.shadowBlur = 0; // reset
+            }
         }
 
         function showOverlay(title, color, btnText) {
@@ -952,6 +1130,9 @@
             document.getElementById('overlay').style.display = 'none';
             if (gameState === 'won') {
                 level++;
+                maxLevel = Math.max(maxLevel, level);
+                localStorage.setItem('orbitPopLevel', level);
+                localStorage.setItem('orbitPopMaxLevel', maxLevel);
                 loadLevel();
             } else {
                 score = 0;
@@ -969,6 +1150,9 @@
             draw();
             requestAnimationFrame(gameLoop);
         }
+
+        document.getElementById('level-display').innerText = level;
+        updateLevelSelector();
     </script>
 </body>
 </html>
