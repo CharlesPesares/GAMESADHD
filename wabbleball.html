@@ -281,7 +281,10 @@
 </head>
 <body>
     <div class="header">
-        <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
+        <div style="display: flex; justify-content: center; gap: 15px;">
+            <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
+            <a href="#" class="back-link" onclick="event.preventDefault(); toggleFullscreen();">Fullscreen</a>
+        </div>
         <h1>Wobble Ball</h1>
         <h2 id="level-display" style="color: #6dff8f; margin: 0 0 10px 0;">Level 1</h2>
         <div>P1 uses W/S. P2 uses UP/DOWN. SPACE to Jump. Grab the key, reach the gate!</div>
@@ -393,6 +396,16 @@
         let lastLockedGateHit = 0;
         const obstacleCooldowns = new Map();
         let lastGrounded = 0;
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
 
         function jumpBall() {
             if (gameState !== 'playing' || respawning) return;

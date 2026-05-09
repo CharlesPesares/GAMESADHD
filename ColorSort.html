@@ -253,8 +253,12 @@
         <div class="level-info-left">
             <h2 id="level-display">Level 1</h2>
             <select id="level-selector" class="level-select" onchange="jumpToLevel(this.value)"></select>
+            <button class="level-select" onclick="toggleFullscreen()" style="margin-left: 10px;">FULLSCREEN</button>
         </div>
-        <button class="restart-btn" onpointerdown="event.preventDefault(); restartLevel();">Restart Level</button>
+        <div style="display: flex; gap: 10px;">
+            <button class="level-select" onpointerdown="event.preventDefault(); undoMove();" style="border-color: #ffd166; color: #ffd166;">UNDO</button>
+            <button class="restart-btn" onpointerdown="event.preventDefault(); restartLevel();">RESTART</button>
+        </div>
     </div>
 
     <div id="tubes-container" class="tubes-container"></div>
@@ -291,7 +295,18 @@
         let selectedTubeIndex = -1;
         let isPlaying = true;
         let isAnimating = false; // Prevents clicking during the pouring animation
+        let moveHistory = []; // Stack to track logical moves for the Undo feature
         
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function updateLevelSelector() {
@@ -531,6 +546,28 @@
             }, speed);
         }
 
+        function undoMove() {
+            if (!isPlaying || isAnimating || moveHistory.length === 0) return;
+            
+            const lastMove = moveHistory.pop();
+            isAnimating = true;
+            
+            // Visually animate in reverse: from destination back to source
+            animateTransfer(lastMove.to, lastMove.from, () => {
+                const destTube = tubes[lastMove.to];
+                const sourceTube = tubes[lastMove.from];
+                
+                // Logically pop from destination and push back to source
+                sourceTube.push(destTube.pop());
+                
+                finishedTubes[lastMove.to] = false; // Revoke finish status if we pulled a ball out
+                
+                playSound('drop');
+                render();
+                isAnimating = false;
+            });
+        }
+
         function handleTubeClick(index) {
             if (!isPlaying || isAnimating) return;
 
@@ -558,6 +595,9 @@
                             
                             // Animate before applying logical change
                             animateTransfer(selectedTubeIndex, index, () => {
+                                // Save the move to history before executing
+                                moveHistory.push({ from: selectedTubeIndex, to: index });
+
                                 destTube.push(sourceTube.pop());
                                 selectedTubeIndex = -1;
                                 
@@ -708,6 +748,7 @@
             tubes = initialTubes.map(tube => [...tube]);
             finishedTubes = new Array(tubes.length).fill(false);
             selectedTubeIndex = -1;
+            moveHistory = []; // Clear history on restart
             isPlaying = true;
             render();
         }
@@ -717,6 +758,7 @@
             initialTubes = tubes.map(tube => [...tube]);
             finishedTubes = new Array(tubes.length).fill(false);
             selectedTubeIndex = -1;
+            moveHistory = []; // Clear history on new level
             isPlaying = true;
             document.getElementById('level-display').innerText = `Level ${level}`;
             updateLevelSelector();

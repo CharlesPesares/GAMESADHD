@@ -62,6 +62,50 @@
             background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.34) 100%);
         }
 
+        body.time-warning::after {
+            animation: screenDangerFlash 0.4s infinite alternate ease-in-out;
+        }
+
+        @keyframes screenDangerFlash {
+            0% { box-shadow: inset 0 0 0 transparent; background-color: transparent; }
+            100% { box-shadow: inset 0 0 150px rgba(255, 90, 118, 0.6); background-color: rgba(255, 90, 118, 0.15); }
+        }
+
+        body.time-warning #time-ring-circle {
+            animation: ringPulse 0.3s infinite alternate ease-in-out;
+        }
+
+        @keyframes ringPulse {
+            0% { filter: drop-shadow(0 0 6px var(--red)); stroke-width: 6; }
+            100% { filter: drop-shadow(0 0 24px var(--red)); stroke-width: 10; }
+        }
+
+        body.time-warning .game-board::after,
+        body.intense-fire .game-board::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: transparent;
+            z-index: -2;
+            pointer-events: none;
+            animation: plasmaAura 1.2s infinite alternate ease-in-out;
+            mix-blend-mode: screen;
+        }
+
+        @keyframes plasmaAura {
+            0% { transform: scale(1.01); opacity: 0.6; filter: blur(4px); }
+            100% { 
+                transform: scale(1.06); 
+                opacity: 1; 
+                filter: blur(8px); 
+                box-shadow: 
+                    0 0 40px rgba(255, 90, 118, 1), 
+                    0 0 80px rgba(255, 123, 0, 0.8), 
+                    0 0 120px rgba(255, 209, 102, 0.6);
+            }
+        }
+
         .page {
             width: min(1180px, 100%);
             min-height: 100vh;
@@ -255,6 +299,17 @@
             opacity: 0.52;
             cursor: not-allowed;
         }
+        
+        .difficulty-card:nth-of-type(2) {
+            margin-top: -10px; /* Pulls it closer to the difficulty card above it */
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, rgba(255, 209, 102, 0.86), rgba(255, 90, 118, 0.78));
+            color: #06111a;
+            border-color: transparent;
+            box-shadow: 0 0 24px rgba(255, 209, 102, 0.28);
+        }
 
         .stage {
             position: relative;
@@ -288,6 +343,29 @@
             filter: blur(18px);
             opacity: 0.72;
             transform: translateY(20px);
+        }
+
+        #time-ring {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 5;
+            overflow: visible; /* Prevents the shadow from clipping into a square */
+        }
+        #time-ring-circle {
+            fill: none;
+            stroke: var(--green);
+            stroke-width: 6;
+            stroke-dasharray: 264;
+            stroke-dashoffset: 0;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.05s linear, stroke 0.3s;
+            filter: drop-shadow(0 0 6px currentColor);
         }
 
         .game-board {
@@ -584,12 +662,47 @@
                 min-height: 430px;
             }
         }
+
+        .achievement-toast {
+            position: fixed;
+            bottom: -120px;
+            right: clamp(16px, 4vw, 40px);
+            background: linear-gradient(145deg, #172330, #0b1016);
+            border: 2px solid #ffd166;
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 25px rgba(255,209,102,0.25);
+            z-index: 1000;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .achievement-toast.show {
+            bottom: clamp(16px, 4vw, 40px);
+        }
+        .toast-icon { font-size: 2.8rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+        .toast-text h4 { margin: 0 0 4px 0; color: #ffd166; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; }
+        .toast-text p { margin: 0; color: #fff; font-size: 1.2rem; font-weight: 950; }
     </style>
 </head>
 <body>
+    <!-- Achievement Toast -->
+    <div id="achievement-toast" class="achievement-toast">
+        <div class="toast-icon" id="toast-icon">🏆</div>
+        <div class="toast-text">
+            <h4>Achievement Unlocked!</h4>
+            <p id="toast-title">Brain Warmup</p>
+        </div>
+    </div>
+
     <main class="page">
         <header class="topbar">
-            <a href="gamedashboard.html" class="back-link">&larr; Dashboard</a>
+            <div style="display: flex; gap: 10px;">
+                <a href="gamedashboard.html" class="back-link">&larr; Dashboard</a>
+                <button class="back-link" onclick="toggleFullscreen()" style="cursor: pointer; font-family: inherit;">Fullscreen</button>
+            </div>
             <div class="status-pill" id="status-text">Choose a difficulty, then press start.</div>
         </header>
 
@@ -625,6 +738,17 @@
                         <button class="diff-btn" data-diff="impossible">IMPOSSIBLE</button>
                     </div>
                 </div>
+                
+                <div class="difficulty-card">
+                    <div class="difficulty-header">
+                        <span class="difficulty-title">Game Mode</span>
+                    </div>
+                    <div class="difficulty-selector" id="mode-selector">
+                        <button class="diff-btn mode-btn active" data-mode="classic">CLASSIC</button>
+                        <button class="diff-btn mode-btn" data-mode="reverse">REVERSE</button>
+                        <button class="diff-btn mode-btn" data-mode="timeattack">TIME ATTK</button>
+                    </div>
+                </div>
             </div>
 
             <div class="stage">
@@ -636,6 +760,9 @@
                     <button class="simon-btn blue" id="blue" aria-label="Blue"></button>
 
                     <div class="center-console">
+                        <svg id="time-ring" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" id="time-ring-circle"></circle>
+                        </svg>
                         <div id="console-display">
                             <span id="display-level-text">LVL</span>
                             <span id="display-level-num">0</span>
@@ -656,6 +783,16 @@
             impossible: "IMP"
         };
 
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
         let gamePattern = [];
         let userClickedPattern = [];
         let started = false;
@@ -663,6 +800,11 @@
         let bestLevel = Number(localStorage.getItem("simonBestLevel") || 0);
         let isPlayingSequence = false;
         let currentDifficulty = "medium";
+        
+        let currentGameMode = "classic";
+        let timeAttackTimer = null;
+        let timeAttackRemaining = 0;
+        let timeAttackTotal = 0;
 
         const board = document.querySelector(".game-board");
         const startButton = document.getElementById("start-btn");
@@ -673,10 +815,12 @@
         const statLevel = document.getElementById("stat-level");
         const statBest = document.getElementById("stat-best");
         const statMode = document.getElementById("stat-mode");
+        const timeRing = document.getElementById("time-ring");
+        const timeRingCircle = document.getElementById("time-ring-circle");
 
         statBest.innerText = bestLevel;
 
-        document.querySelectorAll(".diff-btn").forEach(btn => {
+        document.querySelectorAll(".diff-btn:not(.mode-btn)").forEach(btn => {
             btn.addEventListener("pointerdown", (e) => {
                 e.preventDefault();
                 if (started) return;
@@ -685,6 +829,18 @@
                 currentDifficulty = e.target.dataset.diff;
                 statMode.innerText = difficultyLabels[currentDifficulty];
                 statusText.innerText = `${difficultyLabels[currentDifficulty]} mode armed. Press start.`;
+            });
+        });
+        
+        document.querySelectorAll(".mode-btn").forEach(btn => {
+            btn.addEventListener("pointerdown", (e) => {
+                e.preventDefault();
+                if (started) return;
+                document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+                e.target.classList.add("active");
+                currentGameMode = e.target.dataset.mode;
+                timeRing.style.opacity = currentGameMode === 'timeattack' ? "1" : "0";
+                statusText.innerText = `${e.target.innerText} mode selected.`;
             });
         });
 
@@ -731,6 +887,26 @@
             osc2.stop(audioCtx.currentTime + timeInSeconds);
         }
 
+        function unlockAchievement(id, icon, title) {
+            let achievements = JSON.parse(localStorage.getItem('arcade_achievements')) || {};
+            if (!achievements[id]) {
+                achievements[id] = true;
+                localStorage.setItem('arcade_achievements', JSON.stringify(achievements));
+                
+                const toast = document.getElementById('achievement-toast');
+                document.getElementById('toast-icon').innerText = icon;
+                document.getElementById('toast-title').innerText = title;
+                toast.classList.add('show');
+                
+                // Happy little achievement chime
+                playSound('green', 150);
+                setTimeout(() => playSound('blue', 250), 150);
+                setTimeout(() => playSound('yellow', 400), 400);
+                
+                setTimeout(() => toast.classList.remove('show'), 4000);
+            }
+        }
+
         function animatePress(currentColor, duration = 300) {
             const btn = document.getElementById(currentColor);
             btn.classList.add("active");
@@ -742,6 +918,21 @@
             statLevel.innerText = level;
             statBest.innerText = bestLevel;
             statMode.innerText = difficultyLabels[currentDifficulty];
+            
+            // Dynamically ignite the board when the level speed gets intense
+            const intenseThreshold = { easy: 10, medium: 8, hard: 6, impossible: 4 }[currentDifficulty] || 8;
+            if (level >= intenseThreshold) {
+                document.body.classList.add("intense-fire");
+            } else {
+                document.body.classList.remove("intense-fire");
+            }
+            
+            // Achievement Checks
+            if (level === 5) {
+                unlockAchievement('simon_5', '🧠', 'Brain Warmup');
+            } else if (level === 10) {
+                unlockAchievement('simon_10', '🔥', 'On Fire');
+            }
         }
 
         function nextSequence() {
@@ -788,7 +979,11 @@
                         clearInterval(intervalId);
                         isPlayingSequence = false;
                         board.classList.remove("unclickable");
-                        statusText.innerText = `Your turn. Repeat ${gamePattern.length} ${gamePattern.length === 1 ? "signal" : "signals"}.`;
+                        
+                        let instructions = currentGameMode === 'reverse' ? "Repeat the sequence BACKWARDS." : `Your turn. Repeat ${gamePattern.length} ${gamePattern.length === 1 ? "signal" : "signals"}.`;
+                        statusText.innerText = instructions;
+                        
+                        if (currentGameMode === 'timeattack') startTimeAttack();
                     }
                 }, intervalSpeed);
             }, 500);
@@ -806,10 +1001,69 @@
             setTimeout(() => board.classList.remove("level-clear"), 580);
         }
 
-        function checkAnswer(currentLevel) {
-            if (gamePattern[currentLevel] === userClickedPattern[currentLevel]) {
+        function startTimeAttack() {
+            if (currentGameMode !== 'timeattack') return;
+            clearInterval(timeAttackTimer);
+            
+            timeAttackTotal = Math.max(1000, 3500 - (level * 150));
+            timeAttackRemaining = timeAttackTotal;
+            timeRingCircle.style.strokeDashoffset = "0";
+            timeRingCircle.style.stroke = "var(--green)";
+            
+            timeAttackTimer = setInterval(() => {
+                if (!isPlayingSequence && started) {
+                    timeAttackRemaining -= 20;
+                    let pct = Math.max(0, timeAttackRemaining / timeAttackTotal);
+                    timeRingCircle.style.strokeDashoffset = 264 - (264 * pct);
+                    
+                    if (pct < 0.3) {
+                        timeRingCircle.style.stroke = "var(--red)";
+                        document.body.classList.add("time-warning");
+                    } else if (pct < 0.6) {
+                        timeRingCircle.style.stroke = "var(--yellow)";
+                    }
+                    
+                    if (timeAttackRemaining <= 0) {
+                        triggerGameOver();
+                    }
+                }
+            }, 20);
+            
+            unlockAchievement('simon_time', '⏱️', 'Tick Tock');
+        }
+        
+        function resetTimeAttack() {
+            if (currentGameMode !== 'timeattack') return;
+            timeAttackRemaining = timeAttackTotal;
+            timeRingCircle.style.strokeDashoffset = "0";
+            timeRingCircle.style.stroke = "var(--green)";
+            document.body.classList.remove("time-warning");
+        }
+
+        function triggerGameOver() {
+            playSound("wrong", 500);
+            levelTitle.innerText = "Game Over";
+            statusText.innerText = `You reached level ${level}. Press start to run it back.`;
+            board.classList.add("game-over-effect");
+            setTimeout(() => board.classList.remove("game-over-effect"), 500);
+            startButton.style.display = "block";
+            consoleDisplay.style.display = "none";
+            clearInterval(timeAttackTimer);
+            document.body.classList.remove("time-warning");
+            startOver();
+        }
+
+        function checkAnswer(currentStep) {
+            const targetColor = currentGameMode === 'reverse' 
+                ? gamePattern[gamePattern.length - 1 - currentStep] 
+                : gamePattern[currentStep];
+
+            if (targetColor === userClickedPattern[currentStep]) {
+                if (currentGameMode === 'timeattack') resetTimeAttack();
+                
                 statusText.innerText = `${userClickedPattern.length}/${gamePattern.length} correct`;
                 if (userClickedPattern.length === gamePattern.length) {
+                    clearInterval(timeAttackTimer); // Stop timer while playing next sequence
                     bestLevel = Math.max(bestLevel, level);
                     localStorage.setItem("simonBestLevel", String(bestLevel));
                     updateLevelDisplays();
@@ -822,14 +1076,7 @@
                     setTimeout(nextSequence, 1000);
                 }
             } else {
-                playSound("wrong", 500);
-                levelTitle.innerText = "Game Over";
-                statusText.innerText = `You reached level ${level}. Press start to run it back.`;
-                board.classList.add("game-over-effect");
-                setTimeout(() => board.classList.remove("game-over-effect"), 500);
-                startButton.style.display = "block";
-                consoleDisplay.style.display = "none";
-                startOver();
+                triggerGameOver();
             }
         }
 
@@ -841,6 +1088,8 @@
             updateLevelDisplays();
             board.classList.remove("unclickable");
             document.querySelectorAll(".diff-btn").forEach(btn => btn.disabled = false);
+            if (currentGameMode === 'timeattack') timeRingCircle.style.strokeDashoffset = "0";
+            document.body.classList.remove("time-warning");
         }
 
         document.querySelectorAll(".simon-btn").forEach(btn => {
@@ -867,6 +1116,7 @@
                 levelTitle.innerText = "Simon Says";
                 statusText.innerText = "Booting sequence...";
                 document.querySelectorAll(".diff-btn").forEach(btn => btn.disabled = true);
+                if (currentGameMode === 'timeattack') timeRingCircle.style.strokeDashoffset = "0";
                 nextSequence();
             }
         });

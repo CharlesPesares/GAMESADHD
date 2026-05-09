@@ -1218,14 +1218,18 @@
 <body>
 
     <div class="header">
-        <a href="gamedashboard.html" class="back-link">&larr; Dashboard</a>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="gamedashboard.html" class="back-link">&larr; Dashboard</a>
+            <button class="back-link" onclick="toggleFullscreen()" style="cursor: pointer; font-family: inherit;">Fullscreen</button>
+            <button id="ai-toggle" class="back-link" onclick="toggleAI()" style="cursor: pointer; font-family: inherit; margin-left: 10px; border-color: #ffd166; color: #ffd166;">VS CPU: OFF</button>
+        </div>
         <h1>Hammer & Shield</h1>
     </div>
 
     <div class="scoreboard">
         <div class="score p1-text">P1 (Key 'A'): <span id="score1">0</span></div>
         <div class="status-text" id="status-text">First to 5 Wins!<br>Pin their shield, then strike!</div>
-        <div class="score p2-text">P2 (Key 'L'): <span id="score2">0</span></div>
+        <div class="score p2-text" id="p2-score-box">P2 (Key 'L'): <span id="score2">0</span></div>
         <div class="stamina-row" aria-label="Player stamina">
             <div class="stamina p1-stamina">
                 <span>P1 STAMINA</span>
@@ -1308,6 +1312,63 @@
         let parryReady = { 1: false, 2: false };
         let parryTimer = null;
         let stunTimers = { 1: null, 2: null };
+        let isVS_CPU = false;
+        let aiLoopTimer = null;
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        function toggleAI() {
+            isVS_CPU = !isVS_CPU;
+            document.getElementById('ai-toggle').innerText = isVS_CPU ? "VS CPU: ON" : "VS CPU: OFF";
+            document.getElementById('p2-score-box').innerHTML = isVS_CPU ? `CPU (Auto): <span id="score2">${p2Score}</span>` : `P2 (Key 'L'): <span id="score2">${p2Score}</span>`;
+            
+            // Adjust key label visually
+            const p2KeyLabel = document.querySelector('.p2 .key-label');
+            p2KeyLabel.innerText = isVS_CPU ? "CPU" : "L";
+            p2KeyLabel.style.fontSize = isVS_CPU ? "1.5rem" : "2rem";
+            
+            resetGame();
+        }
+
+        function aiLogic() {
+            if (!isVS_CPU || !roundActive || gameOver) return;
+
+            // The AI controls Player 2
+            if (p2State === 'idle') {
+                if (p1State === 'cooldown' || p1State === 'stunned') {
+                    // Punish the opening!
+                    if (Math.random() < 0.5) {
+                        triggerAttack(2);
+                        setTimeout(() => releaseAttack(2), 400 + Math.random() * 400);
+                    }
+                } else if (currentPin && currentPin.defenderNum === 2 && parryReady[2]) {
+                    // We are being pinned! Attempt a parry!
+                    if (Math.random() < 0.4) { 
+                        triggerAttack(2); 
+                        setTimeout(() => releaseAttack(2), 200);
+                    }
+                } else if (p1State === 'idle') {
+                    // Randomly attack when both are staring at each other
+                    if (Math.random() < 0.03) {
+                        triggerAttack(2);
+                        setTimeout(() => releaseAttack(2), 500 + Math.random() * 1000);
+                    }
+                }
+            } else if (p2State === 'pinning') {
+                // Randomly back off or release if stamina gets low
+                if (stamina[2] < 25 || Math.random() < 0.05) {
+                    releaseAttack(2);
+                }
+            }
+        }
 
         const keysHeld = { a: false, l: false }; // Track held keys
 
@@ -1420,7 +1481,7 @@
             if (!roundActive || gameOver) return;
 
             if (key === P1_KEY && p1State === 'idle') triggerAttack(1);
-            if (key === P2_KEY && p2State === 'idle') triggerAttack(2);
+            if (key === P2_KEY && p2State === 'idle' && !isVS_CPU) triggerAttack(2);
         });
 
         document.addEventListener('keyup', (e) => {
@@ -1741,6 +1802,9 @@
             document.querySelectorAll('.player').forEach(el => el.classList.remove('lunging', 'blocked', 'jammed', 'stunned'));
             Object.values(stunTimers).forEach(timer => clearTimeout(timer));
             stunTimers = { 1: null, 2: null };
+            
+            clearInterval(aiLoopTimer);
+            if (isVS_CPU) aiLoopTimer = setInterval(aiLogic, 100);
         }
 
         function showGameOver(winnerNum) {
