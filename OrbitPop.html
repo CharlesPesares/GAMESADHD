@@ -1255,6 +1255,51 @@
         }
 
         function drawMarble(ctx, x, y, radius, colorHex) {
+            if (colorHex === '#ffffff') {
+                // Draw Bomb Base
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#111820'; // Dark casing
+                ctx.fill();
+
+                // Pulsing glowing core
+                let timeSec = Date.now() / 150;
+                let bombPulse = (Math.sin(timeSec) + 1) / 2;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 0.6, 0, Math.PI * 2);
+                let coreGrad = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.6);
+                coreGrad.addColorStop(0, '#ffffff');
+                coreGrad.addColorStop(0.5, '#ffdf3f');
+                coreGrad.addColorStop(1, '#ff4c4c');
+                ctx.fillStyle = coreGrad;
+                
+                ctx.shadowBlur = 10 + (bombPulse * 15);
+                ctx.shadowColor = '#ff4c4c';
+                ctx.fill();
+                ctx.shadowBlur = 0; // reset
+                
+                // Dark structural bands
+                ctx.lineWidth = Math.max(1, radius * 0.15);
+                ctx.strokeStyle = '#000000';
+                ctx.beginPath();
+                ctx.moveTo(x - radius, y);
+                ctx.lineTo(x + radius, y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x, y - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.stroke();
+                
+                // Outer ring
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(255, 76, 76, 0.8)';
+                ctx.stroke();
+                return;
+            }
+
             // Base color
             ctx.beginPath();
             ctx.arc(x, y, radius, 0, Math.PI * 2);

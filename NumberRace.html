@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Race</title>
+    <style>
+        :root {
+            --p1: #3a9fff;
+            --p2: #ff4c4c;
+            --bg: #0d141c;
+            --panel: rgba(255, 255, 255, 0.05);
+            --ink: #ffffff;
+        }
+        body {
+            margin: 0;
+            padding: 22px clamp(14px, 4vw, 42px) 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #111820 0%, #1d2d38 48%, #0d141c 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            box-sizing: border-box;
+        }
+        .header {
+            width: min(1100px, 100%);
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 16px;
+        }
+        h1 {
+            margin: 0;
+            font-size: clamp(2.2rem, 5vw, 4rem);
+            font-weight: 950;
+            text-align: right;
+            text-shadow: 0 0 24px rgba(255, 209, 102, 0.20), 0 18px 48px rgba(0, 0, 0, 0.48);
+        }
+        .back-link {
+            min-height: 42px;
+            padding: 0 15px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 850;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+            transition: all 0.2s;
+        }
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.34);
+            transform: translateY(-2px);
+        }
+        .game-area {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 30px;
+            width: 100%;
+            max-width: 1160px;
+            margin-top: 10px;
+        }
+        .side-panel {
+            flex: 0 0 280px;
+            background: var(--panel);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .center-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .status-box {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            width: 100%;
+            margin: 15px auto;
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-sizing: border-box;
+        }
+        .grid-box {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            transition: background 0.1s, box-shadow 0.1s;
+        }
+        .p1-side .grid-box.filled { background: var(--p1); box-shadow: 0 0 10px var(--p1); }
+        .p2-side .grid-box.filled { background: var(--p2); box-shadow: 0 0 10px var(--p2); }
+        
+        #rps-container {
+            background: rgba(0,0,0,0.2);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .rps-player {
+            flex: 1;
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .status-badge {
+            margin-top: 15px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #fff;
+            display: inline-block;
+        }
+        .hint {
+            margin-top: 15px;
+            font-weight: 800;
+            color: #bdc3c7;
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+        }
+
+        #target-display {
+            font-size: 1.5rem;
+            margin-top: 25px;
+            font-weight: bold;
+            background: rgba(0,0,0,0.4);
+            padding: 10px 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        #target-number {
+            color: #13ff7c;
+            font-size: 2.8rem;
+            text-shadow: 0 0 15px rgba(19, 255, 124, 0.4);
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        #number-box-container {
+            position: relative;
+            margin-top: 25px;
+            background: #0f151c;
+            padding: 20px;
+            border-radius: 16px;
+            border: 2px solid #ffdf3f;
+            box-shadow: 0 0 30px rgba(255, 223, 63, 0.15);
+            width: 100%;
+            min-width: 500px;
+            box-sizing: border-box;
+        }
+        #number-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            justify-items: center;
+            align-items: center;
+        }
+        #number-grid.race-mode {
+            display: block;
+            position: relative;
+            height: 420px;
+            width: 100%;
+        }
+        .number-btn {
+            box-sizing: border-box;
+            border: 1px solid rgba(0,0,0,0.5);
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.6rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.1s;
+            box-shadow: inset -4px -4px 10px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.5);
+        }
+        .number-btn:hover { filter: brightness(1.2); transform: scale(1.08); }
+        .number-btn:active { transform: scale(0.92); }
+        .number-btn.moving {
+            position: absolute;
+        }
+        .number-btn.wrong { 
+            background: radial-gradient(circle at 30% 30%, #ffb3b3 0%, #ff4c4c 40%, #cc0000 100%) !important; 
+            border-color: #ff4c4c !important; 
+            color: #fff !important;
+            animation: shake 0.3s; 
+        }
+        .number-btn.correct { 
+            background: radial-gradient(circle at 30% 30%, #a8ffb2 0%, #13ff7c 40%, #00b34d 100%) !important; 
+            border-color: #13ff7c !important; 
+            color: #000 !important;
+        }
+
+        #curtain {
+            position: absolute;
+            inset: 0;
+            background: rgba(11, 16, 22, 0.95);
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+            font-weight: 950;
+            color: #ffdf3f;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+            text-shadow: 0 0 20px rgba(255, 223, 63, 0.5);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(3, 8, 13, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .overlay h2 {
+            font-size: clamp(3rem, 8vw, 5rem);
+            margin-bottom: 30px;
+            text-shadow: 0 0 24px rgba(77, 171, 255, 0.4), 0 18px 48px rgba(0, 0, 0, 0.48);
+            text-align: center;
+        }
+        .restart-btn {
+            min-height: 54px;
+            padding: 0 34px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #ffd166, #4dabff);
+            color: #06111a;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 7px 0 #1b6b8f, 0 18px 32px rgba(0, 0, 0, 0.38);
+            transition: all 0.1s;
+        }
+        .restart-btn:hover { filter: brightness(1.1); }
+        .restart-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 3px 0 #1b6b8f, 0 8px 15px rgba(0, 0, 0, 0.38);
+        }
+
+        /* Particle Explosion Effect */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 101; /* Above the overlay */
+            animation: explode 1s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
+        <h1>Number Race</h1>
+    </div>
+
+    <div class="game-area">
+        <div class="side-panel p1-side">
+            <h2 style="color: var(--p1); margin-top: 0;">Player 1</h2>
+            <div class="grid" id="p1-grid"></div>
+            <div class="hint">Mash 'A' to Fill</div>
+        </div>
+        
+        <div class="center-panel">
+            <div class="status-box" id="status-display">Waiting for RPS...</div>
+            
+            <div id="rps-container">
+                <h3 style="margin-top:0; text-align:center;">Rock, Paper, Scissors!</h3>
+                <p style="color: #bdc3c7; font-size: 0.9rem; text-align:center;">First turn advantage. Pick secretly!</p>
+                <div style="display:flex; justify-content: space-between; gap: 20px; margin-top: 20px;">
+                    <div class="rps-player">
+                        <span style="color:var(--p1); font-weight:bold;">Player 1</span><br><br>
+                        <strong>Q</strong> (Rock)<br><strong>W</strong> (Paper)<br><strong>E</strong> (Scissors)<br>
+                        <div id="p1-rps-status" class="status-badge">Waiting...</div>
+                    </div>
+                    <div class="rps-player">
+                        <span style="color:var(--p2); font-weight:bold;">Player 2</span><br><br>
+                        <strong>I</strong> (Rock)<br><strong>O</strong> (Paper)<br><strong>P</strong> (Scissors)<br>
+                        <div id="p2-rps-status" class="status-badge">Waiting...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="target-display" style="display:none;">
+                Target: <span id="target-number">??</span>
+            </div>
+
+            <div id="number-box-container" style="display:none;">
+                <div id="curtain">SCRAMBLING...</div>
+                <div id="number-grid"></div>
+            </div>
+        </div>
+
+        <div class="side-panel p2-side">
+            <h2 style="color: var(--p2); margin-top: 0;">Player 2</h2>
+            <div class="grid" id="p2-grid"></div>
+            <div class="hint">Mash 'L' to Fill</div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <h2 id="winner-text">Player X Wins!</h2>
+        <button class="restart-btn" onclick="resetGame()">PLAY AGAIN</button>
+    </div>
+
+    <script>
+        const MAX_SCORE = 50;
+        let p1Score = 0;
+        let p2Score = 0;
+
+        let p1Rps = null;
+        let p2Rps = null;
+
+        let state = 'rps'; // rps, pick, scramble, race, swap, end
+        let filler = null; // 1 or 2
+        let targetNumber = null;
+        let numbers = [];
+        
+        let p1KeyHeld = false;
+        let p2KeyHeld = false;
+
+        let bouncingBalls = [];
+        let animFrameId = null;
+
+        const ballColors = [
+            ['#ffffff', '#e0e0e0', '#999999', '#111'], // white
+            ['#ffb3b3', '#ff4c4c', '#cc0000', '#fff'], // red
+            ['#b3d9ff', '#3a9fff', '#0066cc', '#fff'], // blue
+            ['#ffffb3', '#f1c40f', '#cc9900', '#111'], // yellow
+            ['#b3ffcc', '#2ecc71', '#009933', '#111'], // green
+            ['#e6b3ff', '#9b59b6', '#660099', '#fff'], // purple
+            ['#ffccb3', '#e67e22', '#b35900', '#fff']  // orange
+        ];
+
+        const p1GridEl = document.getElementById('p1-grid');
+        const p2GridEl = document.getElementById('p2-grid');
+        const statusDisplay = document.getElementById('status-display');
+        const rpsContainer = document.getElementById('rps-container');
+        const numberBoxContainer = document.getElementById('number-box-container');
+        const numberGridEl = document.getElementById('number-grid');
+        const curtainEl = document.getElementById('curtain');
+        const targetDisplay = document.getElementById('target-display');
+        const targetNumberEl = document.getElementById('target-number');
+        const overlay = document.getElementById('overlay');
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            
+            if (type === 'fill') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.1, now + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'win') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.setValueAtTime(500, now + 0.1);
+                osc.frequency.setValueAtTime(600, now + 0.2);
+                osc.frequency.setValueAtTime(800, now + 0.3);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+                gain.gain.setValueAtTime(0.3, now + 0.4);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.start(now); osc.stop(now + 0.6);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.2);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'found') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.setValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.2, now + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            }
+        }
+
+        function initGrids() {
+            p1GridEl.innerHTML = '';
+            p2GridEl.innerHTML = '';
+            for(let i=0; i<MAX_SCORE; i++) {
+                let b1 = document.createElement('div');
+                b1.className = 'grid-box';
+                p1GridEl.appendChild(b1);
+                
+                let b2 = document.createElement('div');
+                b2.className = 'grid-box';
+                p2GridEl.appendChild(b2);
+            }
+        }
+
+        function updateGrids() {
+            for(let i=0; i<MAX_SCORE; i++) {
+                p1GridEl.children[i].classList.toggle('filled', i < p1Score);
+                p2GridEl.children[i].classList.toggle('filled', i < p2Score);
+            }
+        }
+
+        function resetGame() {
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            p1Score = 0;
+            p2Score = 0;
+            updateGrids();
+            overlay.style.display = 'none';
+            startRps();
+        }
+
+        function startRps() {
+            state = 'rps';
+            p1Rps = null;
+            p2Rps = null;
+            document.getElementById('p1-rps-status').innerText = 'Waiting...';
+            document.getElementById('p1-rps-status').style.color = '#fff';
+            document.getElementById('p2-rps-status').innerText = 'Waiting...';
+            document.getElementById('p2-rps-status').style.color = '#fff';
+            rpsContainer.style.display = 'block';
+            numberBoxContainer.style.display = 'none';
+            targetDisplay.style.display = 'none';
+            statusDisplay.innerText = "Rock, Paper, Scissors!";
+        }
+
+        function resolveRps() {
+            const rules = {
+                'rock': 'scissors',
+                'paper': 'rock',
+                'scissors': 'paper'
+            };
+            
+            if (p1Rps === p2Rps) {
+                statusDisplay.innerText = "Tie! Pick again.";
+                p1Rps = null;
+                p2Rps = null;
+                document.getElementById('p1-rps-status').innerText = 'Waiting...';
+                document.getElementById('p2-rps-status').innerText = 'Waiting...';
+                playSound('error');
+                return;
+            }
+            
+            if (rules[p1Rps] === p2Rps) {
+                filler = 1;
+            } else {
+                filler = 2;
+            }
+            
+            playSound('found');
+            statusDisplay.innerText = `Player ${filler} won RPS! They will pick the number.`;
+            document.getElementById('p1-rps-status').innerText = p1Rps.toUpperCase();
+            document.getElementById('p2-rps-status').innerText = p2Rps.toUpperCase();
+            
+            setTimeout(() => {
+                rpsContainer.style.display = 'none';
+                startPick();
+            }, 2000);
+        }
+
+        function generateNumbers() {
+            let nums = new Set();
+            while(nums.size < 24) {
+                nums.add(Math.floor(Math.random() * 99) + 1);
+            }
+            return Array.from(nums).map(n => ({
+                n: n,
+                c: Math.floor(Math.random() * ballColors.length)
+            }));
+        }
+
+        function renderNumbers() {
+            numberGridEl.innerHTML = '';
+            bouncingBalls = [];
+            
+            let isRace = state === 'race';
+            let containerWidth = numberGridEl.clientWidth || 500;
+            let containerHeight = numberGridEl.clientHeight || 420;
+            
+            numbers.forEach(obj => {
+                let btn = document.createElement('button');
+                btn.className = 'number-btn';
+                if (isRace) btn.classList.add('moving');
+                
+                let colorSet = ballColors[obj.c];
+                btn.style.background = `radial-gradient(circle at 30% 30%, ${colorSet[0]} 0%, ${colorSet[1]} 40%, ${colorSet[2]} 100%)`;
+                btn.style.color = colorSet[3];
+                
+                btn.innerText = obj.n;
+                btn.onclick = () => handleNumberClick(obj.n, btn);
+                numberGridEl.appendChild(btn);
+                
+                if (isRace) {
+                    let size = 64;
+                    let x = Math.random() * (containerWidth - size);
+                    let y = Math.random() * (containerHeight - size);
+                    
+                    let speedMultiplier = 1.2;
+                    let vx = (Math.random() - 0.5) * 2 * speedMultiplier;
+                    let vy = (Math.random() - 0.5) * 2 * speedMultiplier;
+                    if (Math.abs(vx) < 1) vx = vx < 0 ? -1 : 1;
+                    if (Math.abs(vy) < 1) vy = vy < 0 ? -1 : 1;
+
+                    btn.style.left = x + 'px';
+                    btn.style.top = y + 'px';
+                    
+                    bouncingBalls.push({ el: btn, x, y, vx, vy, size });
+                }
+            });
+        }
+
+        function updateBouncing() {
+            if (state !== 'race') return;
+            let containerWidth = numberGridEl.clientWidth;
+            let containerHeight = numberGridEl.clientHeight;
+            
+            bouncingBalls.forEach(b => {
+                if (b.el.matches(':hover')) return; // Pause ball on hover to make it easier to click
+                
+                b.x += b.vx;
+                b.y += b.vy;
+                
+                if (b.x <= 0) { b.x = 0; b.vx = Math.abs(b.vx); }
+                if (b.x >= containerWidth - b.size) { b.x = containerWidth - b.size; b.vx = -Math.abs(b.vx); }
+                if (b.y <= 0) { b.y = 0; b.vy = Math.abs(b.vy); }
+                if (b.y >= containerHeight - b.size) { b.y = containerHeight - b.size; b.vy = -Math.abs(b.vy); }
+                
+                b.el.style.left = b.x + 'px';
+                b.el.style.top = b.y + 'px';
+            });
+            animFrameId = requestAnimationFrame(updateBouncing);
+        }
+
+        function startPick() {
+            state = 'pick';
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            numberGridEl.classList.remove('race-mode');
+            numbers = generateNumbers();
+            renderNumbers();
+            numberBoxContainer.style.display = 'block';
+            curtainEl.style.display = 'none';
+            targetDisplay.style.display = 'none';
+            statusDisplay.innerText = `Player ${filler} (Filler), pick a number!`;
+        }
+
+        function handleNumberClick(n, btn) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (state === 'pick') {
+                targetNumber = n;
+                playSound('click');
+                startScramble();
+            } else if (state === 'race') {
+                if (n === targetNumber) {
+                    btn.classList.add('correct');
+                    endRound();
+                } else {
+                    playSound('error');
+                    btn.classList.add('wrong');
+                    setTimeout(() => btn.classList.remove('wrong'), 300);
+                }
+            }
+        }
+
+        function startScramble() {
+            state = 'scramble';
+            statusDisplay.innerText = "Scrambling...";
+            curtainEl.style.display = 'flex';
+            curtainEl.innerText = "SCRAMBLING...";
+            
+            for (let i = numbers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+            }
+            
+            setTimeout(() => {
+                let count = 10;
+                curtainEl.innerText = count;
+                playSound('click');
+                let cInt = setInterval(() => {
+                    count--;
+                    if (count > 0) {
+                        curtainEl.innerText = count;
+                        playSound('click');
+                    } else if (count === 0) {
+                        curtainEl.innerText = "GO!";
+                        playSound('found');
+                    } else {
+                        clearInterval(cInt);
+                        startRace();
+                    }
+                }, 1000);
+            }, 1500);
+        }
+
+        function startRace() {
+            state = 'race';
+            numberGridEl.classList.add('race-mode');
+            renderNumbers();
+            curtainEl.style.display = 'none';
+            targetNumberEl.innerText = targetNumber;
+            
+            // Provide a color hint by matching the target text to the target ball's color
+            let targetObj = numbers.find(x => x.n === targetNumber);
+            let colorSet = ballColors[targetObj.c];
+            targetNumberEl.style.color = colorSet[1];
+            targetNumberEl.style.textShadow = `0 0 15px ${colorSet[1]}80`; // Added hex alpha for glow
+            
+            targetDisplay.style.display = 'block';
+            
+            let finder = filler === 1 ? 2 : 1;
+            statusDisplay.innerText = `Player ${finder}, FIND ${targetNumber}! Player ${filler}, MASH YOUR KEY!`;
+            
+            updateBouncing();
+        }
+
+        function endRound() {
+            state = 'swap';
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            playSound('found');
+            let finder = filler === 1 ? 2 : 1;
+            statusDisplay.innerText = `Player ${finder} found it! Roles swap.`;
+            
+            filler = finder;
+            
+            setTimeout(() => {
+                startPick();
+            }, 2000);
+        }
+
+        function createExplosion(colorVar) {
+            const count = 100;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.background = colorVar;
+                p.style.boxShadow = `0 0 15px ${colorVar}`;
+                
+                const size = Math.random() * 12 + 6;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                
+                p.style.left = (centerX - size/2) + 'px';
+                p.style.top = (centerY - size/2) + 'px';
+                
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * window.innerWidth * 0.4 + 50;
+                p.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                p.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+                
+                document.body.appendChild(p);
+                
+                setTimeout(() => p.remove(), 1000);
+            }
+        }
+
+        function checkWin() {
+            if (p1Score >= MAX_SCORE) {
+                state = 'end';
+                playSound('win');
+                document.getElementById('winner-text').innerText = "Player 1 Wins!";
+                document.getElementById('winner-text').style.color = "var(--p1)";
+                overlay.style.display = 'flex';
+                createExplosion('var(--p1)');
+            } else if (p2Score >= MAX_SCORE) {
+                state = 'end';
+                playSound('win');
+                document.getElementById('winner-text').innerText = "Player 2 Wins!";
+                document.getElementById('winner-text').style.color = "var(--p2)";
+                overlay.style.display = 'flex';
+                createExplosion('var(--p2)');
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            let key = e.key.toLowerCase();
+            
+            if (state === 'rps') {
+                if (['q','w','e'].includes(key) && !p1Rps) {
+                    p1Rps = key === 'q' ? 'rock' : (key === 'w' ? 'paper' : 'scissors');
+                    document.getElementById('p1-rps-status').innerText = 'Ready!';
+                    document.getElementById('p1-rps-status').style.color = '#13ff7c';
+                    playSound('click');
+                }
+                if (['i','o','p'].includes(key) && !p2Rps) {
+                    p2Rps = key === 'i' ? 'rock' : (key === 'o' ? 'paper' : 'scissors');
+                    document.getElementById('p2-rps-status').innerText = 'Ready!';
+                    document.getElementById('p2-rps-status').style.color = '#13ff7c';
+                    playSound('click');
+                }
+                if (p1Rps && p2Rps) {
+                    resolveRps();
+                }
+            } else if (state === 'race') {
+                // Using boolean flags to prevent continuous holding down. The player must actively release and press.
+                if (filler === 1 && key === 'a' && p1Score < MAX_SCORE && !p1KeyHeld) {
+                    p1KeyHeld = true;
+                    p1Score++;
+                    updateGrids();
+                    playSound('fill');
+                    checkWin();
+                } else if (filler === 2 && key === 'l' && p2Score < MAX_SCORE && !p2KeyHeld) {
+                    p2KeyHeld = true;
+                    p2Score++;
+                    updateGrids();
+                    playSound('fill');
+                    checkWin();
+                }
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            let key = e.key.toLowerCase();
+            if (key === 'a') p1KeyHeld = false;
+            if (key === 'l') p2KeyHeld = false;
+        });
+
+        window.onload = () => {
+            initGrids();
+            startRps();
+        };
+    </script>
+</body>
+</html>
