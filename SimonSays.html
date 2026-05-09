@@ -148,6 +148,29 @@
             outline: none;
         }
 
+        .help-icon-btn {
+            width: 42px;
+            height: 42px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.07);
+            color: var(--yellow);
+            font: 950 1.3rem/1 "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            cursor: pointer;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.20);
+            transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+        }
+
+        .help-icon-btn:hover,
+        .help-icon-btn:focus-visible {
+            transform: translateY(-2px);
+            border-color: rgba(255, 209, 102, 0.64);
+            background: rgba(255, 255, 255, 0.14);
+            outline: none;
+        }
+
         .status-pill {
             min-height: 42px;
             max-width: min(520px, 62vw);
@@ -309,6 +332,75 @@
             color: #06111a;
             border-color: transparent;
             box-shadow: 0 0 24px rgba(255, 209, 102, 0.28);
+        }
+
+        .guide-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            display: none;
+            justify-content: flex-end;
+            align-items: flex-start;
+            padding: 82px 24px 24px;
+            background: rgba(3, 8, 13, 0.62);
+            backdrop-filter: blur(8px);
+            box-sizing: border-box;
+        }
+
+        .guide-modal.open {
+            display: flex;
+        }
+
+        .guide-panel {
+            width: min(430px, calc(100vw - 32px));
+            max-height: calc(100vh - 112px);
+            overflow-y: auto;
+            padding: 16px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: linear-gradient(145deg, #172330, #0b1016);
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+        }
+
+        .guide-panel h2,
+        .guide-panel h3 {
+            margin: 0 0 8px;
+            color: var(--yellow);
+            font-size: 0.86rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .guide-panel p {
+            margin: 0 0 12px;
+            color: var(--muted);
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .guide-panel ul {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--muted);
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .guide-panel strong {
+            color: #fff;
+        }
+
+        .guide-close-btn {
+            width: 100%;
+            min-height: 42px;
+            margin-top: 16px;
+            border-radius: 999px;
+            border: 0;
+            background: linear-gradient(135deg, #ffd166, #2dfc8f);
+            color: #06111a;
+            font-weight: 950;
+            cursor: pointer;
         }
 
         .stage {
@@ -653,6 +745,11 @@
                 max-width: none;
             }
 
+            .guide-modal {
+                justify-content: center;
+                padding: 72px 16px 16px;
+            }
+
             .stats,
             .difficulty-selector {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -702,6 +799,7 @@
             <div style="display: flex; gap: 10px;">
                 <a href="gamedashboard.html" class="back-link">&larr; Dashboard</a>
                 <button class="back-link" onclick="toggleFullscreen()" style="cursor: pointer; font-family: inherit;">Fullscreen</button>
+                <button class="help-icon-btn" type="button" onclick="openGuide()" aria-label="Open how to play guide" title="How to play">?</button>
             </div>
             <div class="status-pill" id="status-text">Choose a difficulty, then press start.</div>
         </header>
@@ -749,6 +847,7 @@
                         <button class="diff-btn mode-btn" data-mode="timeattack">TIME ATTK</button>
                     </div>
                 </div>
+
             </div>
 
             <div class="stage">
@@ -771,7 +870,24 @@
                     </div>
                 </div>
             </div>
+
         </section>
+
+        <div class="guide-modal" id="guide-modal" onpointerdown="if (event.target === this) closeGuide();">
+            <section class="guide-panel" aria-labelledby="how-to-title">
+                <h2 id="how-to-title">How To Play</h2>
+                <p>Watch the lights, listen to the pattern, then repeat the sequence without missing. Each clear round adds one more signal and raises the pressure.</p>
+                <h3>Controls</h3>
+                <ul>
+                    <li><strong>Start:</strong> begin a new sequence.</li>
+                    <li><strong>Click or tap colors:</strong> repeat the pattern.</li>
+                    <li><strong>Classic:</strong> repeat in order.</li>
+                    <li><strong>Reverse:</strong> repeat backwards.</li>
+                    <li><strong>Time Attack:</strong> finish before the ring runs out.</li>
+                </ul>
+                <button class="guide-close-btn" type="button" onclick="closeGuide()">CLOSE GUIDE</button>
+            </section>
+        </div>
     </main>
 
     <script>
@@ -791,6 +907,14 @@
             } else {
                 if (document.exitFullscreen) document.exitFullscreen();
             }
+        }
+
+        function openGuide() {
+            document.getElementById('guide-modal').classList.add('open');
+        }
+
+        function closeGuide() {
+            document.getElementById('guide-modal').classList.remove('open');
         }
 
         let gamePattern = [];

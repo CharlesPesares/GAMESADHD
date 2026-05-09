@@ -322,6 +322,72 @@
             color: #ffd166;
             transform: translateY(-2px);
         }
+
+        .help-btn {
+            position: absolute;
+            top: 80px;
+            left: clamp(16px, 4vw, 40px);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 10px 20px;
+            border-radius: 999px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+
+        .help-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(45, 252, 143, 0.6);
+            color: #2dfc8f;
+            transform: translateY(-2px);
+        }
+
+        .guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            max-height: 55vh;
+            overflow-y: auto;
+            padding-right: 6px;
+            text-align: left;
+        }
+
+        .guide-card {
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.28);
+        }
+
+        .guide-card h3 {
+            margin: 0 0 8px;
+            color: #ffd166;
+            font-size: 0.95rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .guide-card p {
+            margin: 0;
+            color: #cbd5e1;
+            font-size: 0.88rem;
+            line-height: 1.45;
+        }
+
+        .guide-card strong {
+            color: #fff;
+        }
         .trophy-card {
             background: rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.1);
@@ -345,7 +411,7 @@
         
         @media (max-width: 600px) {
             .hide-mobile { display: none; }
-            .trophy-btn, .profile-btn, .leaderboard-btn { padding: 10px; }
+            .trophy-btn, .profile-btn, .leaderboard-btn, .help-btn { padding: 10px; }
         }
     </style>
 </head>
@@ -355,6 +421,11 @@
     <!-- Trophy Room Button -->
     <button id="trophy-btn" class="trophy-btn">
         🏆 <span class="hide-mobile">Trophies</span>
+    </button>
+
+    <!-- How To Play Button -->
+    <button id="help-btn" class="help-btn" aria-label="Open how to play guide">
+        ? <span class="hide-mobile">How To Play</span>
     </button>
 
     <!-- Player Profile Button -->
@@ -376,6 +447,41 @@
                 <!-- Trophies generated here -->
             </div>
             <button id="close-trophy-btn" class="play-btn" style="position: relative; transform: none; bottom: 0; left: 0; width: 100%; padding: 15px; font-size: 1.2rem; margin-top: 20px;">CLOSE ROOM</button>
+        </div>
+    </div>
+
+    <!-- How To Play Modal -->
+    <div id="help-modal" class="db-modal">
+        <div class="db-modal-content" style="max-width: 780px;">
+            <h2 style="margin-top: 0; color: #2dfc8f; font-size: 2rem; text-shadow: 0 0 15px rgba(45,252,143,0.35);">How To Play</h2>
+            <p style="color: #bdc3c7; margin-bottom: 20px;">Choose a game with the gallery, then use these quick controls once you are inside.</p>
+            <div class="guide-grid">
+                <div class="guide-card">
+                    <h3>Dashboard</h3>
+                    <p><strong>Browse:</strong> Arrow keys, A/D, mouse wheel, drag, or swipe. <strong>Launch:</strong> Enter, Space, the centered card, or Play Selected.</p>
+                </div>
+                <div class="guide-card">
+                    <h3>Simon Says</h3>
+                    <p>Watch the glowing pattern and repeat it with clicks or taps. Reverse mode plays backwards, and Time Attack adds a timer.</p>
+                </div>
+                <div class="guide-card">
+                    <h3>Hammer & Shield</h3>
+                    <p><strong>P1:</strong> A attacks, S parries. <strong>P2:</strong> L attacks, K parries. Time counters, pin guards, and drop health to zero.</p>
+                </div>
+                <div class="guide-card">
+                    <h3>Stacker</h3>
+                    <p>Press Space, click, or tap to drop the moving block. Match the stack cleanly to keep width and build combos.</p>
+                </div>
+                <div class="guide-card">
+                    <h3>Color Sort</h3>
+                    <p>Click or tap a tube to pick the top ball, then place it on a matching color or into an empty tube. Sort every color to clear the level.</p>
+                </div>
+                <div class="guide-card">
+                    <h3>Orbit Pop</h3>
+                    <p>Aim with the mouse, left click to shoot, right click to swap marbles, and use P, Esc, or Space to pause.</p>
+                </div>
+            </div>
+            <button id="close-help-btn" class="play-btn" style="position: relative; transform: none; bottom: 0; left: 0; width: 100%; padding: 15px; font-size: 1.2rem; margin-top: 20px;">CLOSE GUIDE</button>
         </div>
     </div>
 
@@ -466,6 +572,22 @@
         window.addEventListener('resize', () => {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
+        });
+
+        const helpModal = document.getElementById('help-modal');
+        const helpBtn = document.getElementById('help-btn');
+        const closeHelpBtn = document.getElementById('close-help-btn');
+
+        helpBtn.addEventListener('click', () => {
+            helpModal.style.display = 'flex';
+        });
+
+        closeHelpBtn.addEventListener('click', () => {
+            helpModal.style.display = 'none';
+        });
+
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) helpModal.style.display = 'none';
         });
     </script>
 

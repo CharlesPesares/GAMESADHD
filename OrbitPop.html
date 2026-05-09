@@ -39,7 +39,7 @@
             width: min(960px, 100%);
             margin-bottom: 24px;
             display: grid;
-            grid-template-columns: auto 1fr;
+            grid-template-columns: auto 1fr auto;
             align-items: center;
             gap: 16px;
         }
@@ -72,6 +72,29 @@
             background: rgba(255, 255, 255, 0.15);
             border-color: rgba(255, 255, 255, 0.34);
             transform: translateY(-2px);
+        }
+
+        .help-icon-btn {
+            width: 44px;
+            height: 44px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffdf3f;
+            font: 950 1.35rem/1 "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            cursor: pointer;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+            transition: transform 0.2s, background 0.2s, border-color 0.2s;
+        }
+
+        .help-icon-btn:hover,
+        .help-icon-btn:focus-visible {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 223, 63, 0.64);
+            transform: translateY(-2px);
+            outline: none;
         }
 
         .scoreboard {
@@ -219,6 +242,79 @@
             transform: translateY(4px);
             box-shadow: 0 3px 0 #1b6b8f, 0 8px 15px rgba(0, 0, 0, 0.38);
         }
+
+        .guide-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 120;
+            display: none;
+            justify-content: flex-end;
+            align-items: flex-start;
+            padding: 82px 24px 24px;
+            background: rgba(3, 8, 13, 0.62);
+            backdrop-filter: blur(8px);
+            box-sizing: border-box;
+        }
+
+        .guide-modal.open {
+            display: flex;
+        }
+
+        .how-to-panel {
+            width: min(420px, calc(100vw - 32px));
+            max-height: calc(100vh - 112px);
+            overflow-y: auto;
+            margin: 0;
+            padding: 18px 22px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: linear-gradient(145deg, #172330, #0b1016);
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            box-sizing: border-box;
+        }
+
+        .how-to-panel h2,
+        .how-to-panel h3 {
+            margin: 0 0 8px;
+            color: #ffdf3f;
+            font-size: 0.9rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .how-to-panel p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.72);
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .control-list {
+            margin: 0;
+            padding-left: 18px;
+            color: rgba(255, 255, 255, 0.72);
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .control-list strong {
+            color: #fff;
+        }
+
+        .guide-close-btn {
+            min-height: 42px;
+            border-radius: 999px;
+            border: 0;
+            background: linear-gradient(135deg, #4dabff, #2dfc8f);
+            color: #06111a;
+            font-weight: 900;
+            cursor: pointer;
+        }
         
         @media (max-width: 600px) {
             .header {
@@ -237,6 +333,13 @@
                 margin-left: 5px;
             }
         }
+
+        @media (max-width: 600px) {
+            .guide-modal {
+                justify-content: center;
+                padding: 72px 16px 16px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -244,6 +347,7 @@
     <div class="header">
         <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
         <h1>Orbit Pop</h1>
+        <button class="help-icon-btn" type="button" onclick="openGuide()" aria-label="Open how to play guide" title="How to play">?</button>
     </div>
 
     <div class="scoreboard">
@@ -258,7 +362,7 @@
 
     <div class="game-container">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
-        
+
         <div class="overlay" id="start-overlay">
             <h2 style="color: #ffdf3f;">Ready to Pop?</h2>
             <button class="restart-btn" onclick="startGame()">START GAME</button>
@@ -275,7 +379,34 @@
         </div>
     </div>
 
+    <div class="guide-modal" id="guide-modal" onpointerdown="if (event.target === this) closeGuide();">
+        <section class="how-to-panel" aria-labelledby="how-to-title">
+            <div>
+                <h2 id="how-to-title">How To Play</h2>
+                <p>Stop the marble chain before it reaches the center. Fire matching marbles into the chain to make groups of three or more, then use combos to clear space fast.</p>
+            </div>
+            <div>
+                <h3>Controls</h3>
+                <ul class="control-list">
+                    <li><strong>Move mouse:</strong> aim the launcher.</li>
+                    <li><strong>Left click:</strong> shoot a marble.</li>
+                    <li><strong>Right click:</strong> swap current and next marbles.</li>
+                    <li><strong>P, Esc, or Space:</strong> pause or resume.</li>
+                </ul>
+            </div>
+            <button class="guide-close-btn" type="button" onclick="closeGuide()">CLOSE GUIDE</button>
+        </section>
+    </div>
+
     <script>
+        function openGuide() {
+            document.getElementById('guide-modal').classList.add('open');
+        }
+
+        function closeGuide() {
+            document.getElementById('guide-modal').classList.remove('open');
+        }
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
