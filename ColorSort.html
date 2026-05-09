@@ -45,7 +45,7 @@
             width: min(960px, 100%);
             margin-bottom: 24px;
             display: grid;
-            grid-template-columns: auto 1fr;
+            grid-template-columns: auto 1fr auto;
             align-items: center;
             gap: 16px;
         }
@@ -78,6 +78,29 @@
             background: rgba(255, 255, 255, 0.15);
             border-color: rgba(255, 255, 255, 0.34);
             transform: translateY(-2px);
+        }
+
+        .help-icon-btn {
+            width: 44px;
+            height: 44px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffd166;
+            font: 950 1.35rem/1 "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            cursor: pointer;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+            transition: transform 0.2s, background 0.2s, border-color 0.2s;
+        }
+
+        .help-icon-btn:hover,
+        .help-icon-btn:focus-visible {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 209, 102, 0.64);
+            transform: translateY(-2px);
+            outline: none;
         }
 
         .level-info {
@@ -307,6 +330,79 @@
             box-shadow: 0 3px 0 #1b6b8f, 0 8px 15px rgba(0, 0, 0, 0.38);
         }
 
+        .guide-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 120;
+            display: none;
+            justify-content: flex-end;
+            align-items: flex-start;
+            padding: 82px 24px 24px;
+            background: rgba(3, 8, 13, 0.62);
+            backdrop-filter: blur(8px);
+            box-sizing: border-box;
+        }
+
+        .guide-modal.open {
+            display: flex;
+        }
+
+        .how-to-panel {
+            width: min(420px, calc(100vw - 32px));
+            max-height: calc(100vh - 112px);
+            overflow-y: auto;
+            margin: 0;
+            padding: 18px 22px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: linear-gradient(145deg, #172330, #0b1016);
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            box-sizing: border-box;
+        }
+
+        .how-to-panel h2,
+        .how-to-panel h3 {
+            margin: 0 0 8px;
+            color: #ffd166;
+            font-size: 0.9rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .how-to-panel p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .control-list {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--muted);
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .control-list strong {
+            color: #fff;
+        }
+
+        .guide-close-btn {
+            min-height: 42px;
+            border-radius: 999px;
+            border: 0;
+            background: linear-gradient(135deg, #ffd166, #ff5a76);
+            color: #06111a;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
         /* Particle Explosion Effect */
         .particle {
             position: fixed;
@@ -336,12 +432,20 @@
                 gap: 15px;
             }
         }
+
+        @media (max-width: 600px) {
+            .guide-modal {
+                justify-content: center;
+                padding: 72px 16px 16px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
         <h1>Color Sort</h1>
+        <button class="help-icon-btn" type="button" onclick="openGuide()" aria-label="Open how to play guide" title="How to play">?</button>
     </div>
 
     <div class="level-info">
@@ -359,6 +463,24 @@
 
     <div id="tubes-container" class="tubes-container"></div>
 
+    <div class="guide-modal" id="guide-modal" onpointerdown="if (event.target === this) closeGuide();">
+        <section class="how-to-panel" aria-labelledby="how-to-title">
+            <div>
+                <h2 id="how-to-title">How To Play</h2>
+                <p>Sort the balls until every tube is either empty or filled with one color. Pick up the top ball from one tube, then move it to an empty tube or onto the same color.</p>
+            </div>
+            <div>
+                <h3>Controls</h3>
+                <ul class="control-list">
+                    <li><strong>Click or tap a tube:</strong> select and place a ball.</li>
+                    <li><strong>Undo:</strong> take back your last move.</li>
+                    <li><strong>Restart:</strong> reset the current level.</li>
+                </ul>
+            </div>
+            <button class="guide-close-btn" type="button" onclick="closeGuide()">CLOSE GUIDE</button>
+        </section>
+    </div>
+
     <div class="overlay" id="overlay">
         <h2 id="overlay-title">Level Cleared!</h2>
         <div id="overlay-moves" style="font-size: 1.5rem; margin-top: -15px; margin-bottom: 30px; font-weight: bold; color: #a6c1ee;">Moves: 0</div>
@@ -366,6 +488,14 @@
     </div>
 
     <script>
+        function openGuide() {
+            document.getElementById('guide-modal').classList.add('open');
+        }
+
+        function closeGuide() {
+            document.getElementById('guide-modal').classList.remove('open');
+        }
+
         // Vibrant 3D Gradients mapped to colors
         const COLORS = [
             { bg: "radial-gradient(circle at 30% 30%, #ff7675, #d63031)", glow: "#ff7675" }, // Red

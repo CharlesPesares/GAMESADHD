@@ -17,13 +17,13 @@
             color: white;
             overflow: hidden;
         }
-        
+
         .header {
             margin-top: 30px;
             margin-bottom: 20px;
             text-align: center;
         }
-        
+
         h1 {
             font-size: 2.5rem;
             margin: 0 0 10px 0;
@@ -199,7 +199,7 @@
         .p1 {
             transform: scaleX(1) translateX(0) scale(1);
         }
-        
+
         /* P2 faces left by mirroring */
         .p2 {
             transform: scaleX(-1) translateX(0) scale(1);
@@ -230,7 +230,7 @@
             border: 2px solid #1a252f;
             box-sizing: border-box;
         }
-        
+
         /* Player colored tabard / chest plate */
         .body::before {
             content: '';
@@ -257,7 +257,7 @@
             border: 2px solid #1a252f;
             box-sizing: border-box;
         }
-        
+
         /* Knight Plume/Crest */
         .head::before {
             content: '';
@@ -351,7 +351,7 @@
             box-shadow: inset 2px 2px 5px rgba(255,255,255,0.4), inset -2px -2px 5px rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.5);
             box-sizing: border-box;
         }
-        
+
         /* Back Spike on the Warhammer */
         .hammer-head::after {
             content: '';
@@ -400,6 +400,13 @@
             pointer-events: none;
         }
 
+        /* New Dedicated Parry Stance Animation */
+        .shield.parrying {
+            transform: rotate(-35deg) scale(1.15) translateY(-10px);
+            filter: brightness(1.5);
+            box-shadow: 0 0 25px #2dfc8f, inset 0 0 15px #2dfc8f;
+        }
+
         .shield.attacking {
             bottom: 21px; /* Lands perfectly on the floor without clipping through it! */
             transform: rotate(90deg); /* Falls over completely flat */
@@ -409,7 +416,8 @@
         .key-label {
             position: absolute;
             bottom: 30px;
-            width: 100px;
+            width: 140px;
+            left: -20px;
             text-align: center;
             font-size: 2rem;
             font-weight: 900;
@@ -456,13 +464,13 @@
         .p1.blocked { animation: pushback-p1 0.15s; }
         .p2.blocked { animation: pushback-p2 0.15s; }
 
-        @keyframes pushback-p1 { 
-            0%, 100% { transform: scaleX(1) translateX(0); } 
-            50% { transform: scaleX(1) translateX(-15px); } 
+        @keyframes pushback-p1 {
+            0%, 100% { transform: scaleX(1) translateX(0); }
+            50% { transform: scaleX(1) translateX(-15px); }
         }
-        @keyframes pushback-p2 { 
-            0%, 100% { transform: scaleX(-1) translateX(0); } 
-            50% { transform: scaleX(-1) translateX(-15px); } 
+        @keyframes pushback-p2 {
+            0%, 100% { transform: scaleX(-1) translateX(0); }
+            50% { transform: scaleX(-1) translateX(-15px); }
         }
 
         /* Spark Particles */
@@ -593,7 +601,7 @@
             width: min(1120px, 100%);
             margin: 0;
             display: grid;
-            grid-template-columns: auto 1fr;
+            grid-template-columns: auto 1fr auto;
             align-items: center;
             gap: 16px;
             text-align: left;
@@ -620,6 +628,30 @@
             color: #fff;
             background: rgba(255, 255, 255, 0.15);
             border-color: rgba(255, 255, 255, 0.34);
+            transform: translateY(-2px);
+            outline: none;
+        }
+
+        .help-icon-btn {
+            width: 44px;
+            height: 44px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--gold);
+            font: 950 1.35rem/1 "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            cursor: pointer;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+            transition: transform 0.2s, background 0.2s, border-color 0.2s;
+        }
+
+        .help-icon-btn:hover,
+        .help-icon-btn:focus-visible {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 209, 102, 0.64);
             transform: translateY(-2px);
             outline: none;
         }
@@ -702,6 +734,78 @@
             color: rgba(255, 255, 255, 0.82);
             font-size: clamp(0.88rem, 1.8vw, 1.05rem);
             line-height: 1.4;
+        }
+
+        .guide-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 220;
+            display: none;
+            justify-content: flex-end;
+            align-items: flex-start;
+            padding: 82px 24px 24px;
+            background: rgba(3, 8, 13, 0.62);
+            backdrop-filter: blur(8px);
+            box-sizing: border-box;
+        }
+
+        .guide-modal.open {
+            display: flex;
+        }
+
+        .how-to-panel {
+            width: min(430px, calc(100vw - 32px));
+            max-height: calc(100vh - 112px);
+            overflow-y: auto;
+            padding: 18px 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: linear-gradient(145deg, #172330, #0b1016);
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            box-sizing: border-box;
+        }
+
+        .how-to-panel h2,
+        .how-to-panel h3 {
+            margin: 0 0 8px;
+            color: var(--gold);
+            font-size: 0.88rem;
+            font-weight: 950;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .how-to-panel p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.72);
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .control-list {
+            margin: 0;
+            padding-left: 18px;
+            color: rgba(255, 255, 255, 0.72);
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .control-list strong {
+            color: #fff;
+        }
+
+        .guide-close-btn {
+            min-height: 42px;
+            border-radius: 999px;
+            border: 0;
+            background: linear-gradient(90deg, #ff5a76, #ffd166);
+            color: #06111a;
+            font-weight: 900;
+            cursor: pointer;
         }
 
         .arena-container {
@@ -1078,6 +1182,21 @@
             background: linear-gradient(90deg, #ff5a76, #ffd166);
         }
 
+        .health-track {
+            height: 14px;
+        }
+        .health-fill {
+            transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .p1-health .health-fill {
+            background: linear-gradient(90deg, #1b6b8f, #4dabff);
+            box-shadow: 0 0 16px rgba(77, 171, 255, 0.4);
+        }
+        .p2-health .health-fill {
+            background: linear-gradient(90deg, #a33b4e, #ff5a76);
+            box-shadow: 0 0 16px rgba(255, 90, 118, 0.4);
+        }
+
         .player.parry-window .shield {
             animation: parryReady 0.22s ease-in-out infinite alternate;
         }
@@ -1146,6 +1265,119 @@
             100% { transform: scaleX(-1) translateX(-2px) rotate(-1deg); }
         }
 
+        .damage-text {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #ff4c4c;
+            text-shadow: 0 5px 10px rgba(0,0,0,0.8), 0 0 15px #ff4c4c;
+            pointer-events: none;
+            z-index: 150;
+            animation: floatDamage 0.8s ease-out forwards;
+        }
+        .p2 .damage-text {
+            animation-name: floatDamageP2;
+        }
+        @keyframes floatDamage {
+            0% { opacity: 1; transform: translate(-50%, 0) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -80px) scale(1); }
+        }
+        @keyframes floatDamageP2 {
+            0% { opacity: 1; transform: translate(-50%, 0) scale(-0.5, 0.5); }
+            20% { opacity: 1; transform: translate(-50%, -20px) scale(-1.2, 1.2); }
+            100% { opacity: 0; transform: translate(-50%, -80px) scale(-1, 1); }
+        }
+
+        /* Cinematic Slow-Mo Effect */
+        body.slow-mo .arena-container {
+            filter: contrast(1.15) brightness(0.8) saturate(1.2);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8), inset 0 0 80px rgba(45, 252, 143, 0.2);
+            transition: filter 0.1s ease-in;
+        }
+
+        .player.parried-slowmo {
+            animation: parryBurstSlow 2s cubic-bezier(0.1, 0.9, 0.2, 1) both;
+        }
+        @keyframes parryBurstSlow {
+            0%, 100% { transform: scaleX(1) translateX(0); }
+            10% { transform: scaleX(1) translateX(25px) rotate(4deg); }
+            90% { transform: scaleX(1) translateX(5px) rotate(1deg); }
+        }
+        .p2.parried-slowmo {
+            animation: parryBurstSlowP2 2s cubic-bezier(0.1, 0.9, 0.2, 1) both;
+        }
+        @keyframes parryBurstSlowP2 {
+            0%, 100% { transform: scaleX(-1) translateX(0); }
+            10% { transform: scaleX(-1) translateX(25px) rotate(4deg); }
+            90% { transform: scaleX(-1) translateX(5px) rotate(1deg); }
+        }
+
+        .player.recoil-slowmo {
+            animation: recoilSlow 2s cubic-bezier(0.1, 0.9, 0.2, 1) both;
+        }
+        @keyframes recoilSlow {
+            0%, 100% { transform: scaleX(1) translateX(0); }
+            10% { transform: scaleX(1) translateX(-35px) rotate(-8deg); }
+            90% { transform: scaleX(1) translateX(-15px) rotate(-3deg); }
+        }
+        .p2.recoil-slowmo {
+            animation: recoilSlowP2 2s cubic-bezier(0.1, 0.9, 0.2, 1) both;
+        }
+        @keyframes recoilSlowP2 {
+            0%, 100% { transform: scaleX(-1) translateX(0); }
+            10% { transform: scaleX(-1) translateX(-35px) rotate(-8deg); }
+            90% { transform: scaleX(-1) translateX(-15px) rotate(-3deg); }
+        }
+
+        /* Violent Disarm/Recoil Animation for Attacker's Limbs when Parried */
+        .player.recoil-slowmo .arm-hammer {
+            animation: hammerRecoil 2s cubic-bezier(0.1, 0.9, 0.2, 1) both;
+        }
+        @keyframes hammerRecoil {
+            0%, 100% { transform: rotate(-10deg); }
+            10% { transform: rotate(-140deg) translate(-20px, 40px); }
+            90% { transform: rotate(-120deg) translate(-15px, 25px); }
+        }
+
+        .player.recoil-slowmo .shield {
+            animation: shieldRecoil 2s cubic-bezier(0.1, 0.9, 0.2, 1) both;
+        }
+        @keyframes shieldRecoil {
+            0%, 100% { transform: rotate(-15deg); }
+            10% { transform: rotate(-75deg) translate(-25px, 15px); }
+            90% { transform: rotate(-55deg) translate(-15px, 10px); }
+        }
+
+        .player.recoil-slowmo .head {
+            animation: headRecoil 2s cubic-bezier(0.1, 0.9, 0.2, 1) both;
+        }
+        @keyframes headRecoil {
+            0%, 100% { transform: rotate(0) translate(0, 0); }
+            10% { transform: rotate(30deg) translate(-15px, 8px); }
+            90% { transform: rotate(20deg) translate(-10px, 4px); }
+        }
+
+        .player.recoil-slowmo .body, .player.recoil-slowmo .head, .player.recoil-slowmo .arm-hammer, .player.recoil-slowmo .shield {
+            animation: flashParried 2s cubic-bezier(0.1, 0.9, 0.2, 1) both;
+        }
+        @keyframes flashParried {
+            0%, 100% { filter: brightness(1) grayscale(0); }
+            5% { filter: brightness(2) drop-shadow(0 0 15px #ff4c4c); }
+            15%, 90% { filter: brightness(0.6) grayscale(0.5); }
+        }
+
+        body.slow-mo .spark {
+            animation: spark-fly-slow 2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes spark-fly-slow {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            10% { transform: translate(calc(var(--tx) * 0.3), calc(var(--ty) * 0.3)) scale(1.5); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
         @keyframes impactPop {
             0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(-6deg); }
             24% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(2deg); }
@@ -1189,8 +1421,17 @@
                 padding-inline: 10px;
             }
 
+            .guide-modal {
+                justify-content: center;
+                padding: 72px 16px 16px;
+            }
+
             .scoreboard {
                 grid-template-columns: 1fr;
+            }
+
+            .how-to-panel {
+                padding: 16px;
             }
 
             .stamina-row {
@@ -1224,19 +1465,28 @@
             <button id="ai-toggle" class="back-link" onclick="toggleAI()" style="cursor: pointer; font-family: inherit; margin-left: 10px; border-color: #ffd166; color: #ffd166;">VS CPU: OFF</button>
         </div>
         <h1>Hammer & Shield</h1>
+        <button class="help-icon-btn" type="button" onclick="openGuide()" aria-label="Open how to play guide" title="How to play">?</button>
     </div>
 
     <div class="scoreboard">
-        <div class="score p1-text">P1 (Key 'A'): <span id="score1">0</span></div>
-        <div class="status-text" id="status-text">First to 5 Wins!<br>Pin their shield, then strike!</div>
-        <div class="score p2-text" id="p2-score-box">P2 (Key 'L'): <span id="score2">0</span></div>
-        <div class="stamina-row" aria-label="Player stamina">
+        <div class="score p1-text">P1 (Atk: A | Def: S): <span id="score1">100</span></div>
+        <div class="status-text" id="status-text">Deplete their Health!<br>Pin their guard or counter attacks!</div>
+        <div class="score p2-text" id="p2-score-box">P2 (Atk: L | Def: K): <span id="score2">100</span></div>
+        <div class="stamina-row" aria-label="Player health and stamina">
+            <div class="stamina p1-health">
+                <span>P1 HEALTH</span>
+                <div class="stamina-track health-track"><div class="stamina-fill health-fill" id="health-bar1" style="width: 100%;"></div></div>
+            </div>
+            <div class="stamina p2-health">
+                <span>P2 HEALTH</span>
+                <div class="stamina-track health-track"><div class="stamina-fill health-fill" id="health-bar2" style="width: 100%;"></div></div>
+            </div>
             <div class="stamina p1-stamina">
-                <span>P1 STAMINA</span>
+                <span>P1 GUARD</span>
                 <div class="stamina-track"><div class="stamina-fill" id="stamina1"></div></div>
             </div>
             <div class="stamina p2-stamina">
-                <span>P2 STAMINA</span>
+                <span>P2 GUARD</span>
                 <div class="stamina-track"><div class="stamina-fill" id="stamina2"></div></div>
             </div>
         </div>
@@ -1247,7 +1497,7 @@
             <div class="cloud cloud1"></div>
             <div class="cloud cloud2"></div>
         </div>
-        
+
         <!-- Animated Crowd Background -->
         <div class="crowd">
             <div class="spectator s1"></div>
@@ -1270,7 +1520,7 @@
             <div class="body"></div>
             <div class="arm-hammer"><div class="hammer-head"></div></div>
             <div class="shield"></div>
-            <div class="key-label">A</div>
+            <div class="key-label">A / S</div>
         </div>
 
         <!-- Player 2 (Right) -->
@@ -1282,7 +1532,7 @@
             <div class="body"></div>
             <div class="arm-hammer"><div class="hammer-head"></div></div>
             <div class="shield"></div>
-            <div class="key-label">L</div>
+            <div class="key-label">K / L</div>
         </div>
 
         <!-- Impact Text (WHACK / BLOCK) -->
@@ -1295,22 +1545,49 @@
         </div>
     </div>
 
+    <div class="guide-modal" id="guide-modal" onpointerdown="if (event.target === this) closeGuide();">
+        <section class="how-to-panel" aria-labelledby="how-to-title">
+            <div>
+                <h2 id="how-to-title">How To Play</h2>
+                <p>Knock the other fighter to zero health. Swing into an open guard for damage, hold pressure to pin a shield, and time a parry to punish incoming attacks or escape a pin.</p>
+            </div>
+            <div>
+                <h3>Controls</h3>
+                <ul class="control-list">
+                    <li><strong>Player 1:</strong> A attacks, S parries.</li>
+                    <li><strong>Player 2:</strong> L attacks, K parries.</li>
+                    <li><strong>Hold attack:</strong> pin a guarding opponent, then release to reset.</li>
+                    <li><strong>VS CPU:</strong> let the computer control Player 2.</li>
+                </ul>
+            </div>
+            <button class="guide-close-btn" type="button" onclick="closeGuide()">CLOSE GUIDE</button>
+        </section>
+    </div>
+
     <script>
+        function openGuide() {
+            document.getElementById('guide-modal').classList.add('open');
+        }
+
+        function closeGuide() {
+            document.getElementById('guide-modal').classList.remove('open');
+        }
+
         const P1_KEY = 'a';
         const P2_KEY = 'l';
-        
-        let p1State = 'idle'; // States: idle, swinging, pinning, cooldown, stunned, dead
+        const P1_PARRY = 's';
+        const P2_PARRY = 'k';
+
+        let p1State = 'idle'; // States: idle, swinging, pinning, cooldown, stunned, parrying, dead
         let p2State = 'idle';
-        let p1Score = 0;
-        let p2Score = 0;
+        let p1Health = 100;
+        let p2Health = 100;
         let roundActive = true;
         let gameOver = false;
         let impactTimer = null;
         let stamina = { 1: 100, 2: 100 };
         let staminaTimer = null;
         let currentPin = null;
-        let parryReady = { 1: false, 2: false };
-        let parryTimer = null;
         let stunTimers = { 1: null, 2: null };
         let isVS_CPU = false;
         let aiLoopTimer = null;
@@ -1328,13 +1605,13 @@
         function toggleAI() {
             isVS_CPU = !isVS_CPU;
             document.getElementById('ai-toggle').innerText = isVS_CPU ? "VS CPU: ON" : "VS CPU: OFF";
-            document.getElementById('p2-score-box').innerHTML = isVS_CPU ? `CPU (Auto): <span id="score2">${p2Score}</span>` : `P2 (Key 'L'): <span id="score2">${p2Score}</span>`;
-            
+            document.getElementById('p2-score-box').innerHTML = isVS_CPU ? `CPU (Auto): <span id="score2">${p2Health}</span>` : `P2 (Atk: L | Def: K): <span id="score2">${p2Health}</span>`;
+
             // Adjust key label visually
             const p2KeyLabel = document.querySelector('.p2 .key-label');
-            p2KeyLabel.innerText = isVS_CPU ? "CPU" : "L";
+            p2KeyLabel.innerText = isVS_CPU ? "CPU" : "K / L";
             p2KeyLabel.style.fontSize = isVS_CPU ? "1.5rem" : "2rem";
-            
+
             resetGame();
         }
 
@@ -1343,17 +1620,15 @@
 
             // The AI controls Player 2
             if (p2State === 'idle') {
-                if (p1State === 'cooldown' || p1State === 'stunned') {
+                if (p1State === 'swinging' && Math.random() < 0.6) {
+                    triggerParry(2); // AI attempts to parry incoming strike
+                } else if (currentPin && currentPin.defenderNum === 2 && Math.random() < 0.1) {
+                    triggerParry(2); // Occasional parry out of a pin
+                } else if (p1State === 'cooldown' || p1State === 'stunned') {
                     // Punish the opening!
                     if (Math.random() < 0.5) {
                         triggerAttack(2);
                         setTimeout(() => releaseAttack(2), 400 + Math.random() * 400);
-                    }
-                } else if (currentPin && currentPin.defenderNum === 2 && parryReady[2]) {
-                    // We are being pinned! Attempt a parry!
-                    if (Math.random() < 0.4) { 
-                        triggerAttack(2); 
-                        setTimeout(() => releaseAttack(2), 200);
                     }
                 } else if (p1State === 'idle') {
                     // Randomly attack when both are staring at each other
@@ -1363,14 +1638,14 @@
                     }
                 }
             } else if (p2State === 'pinning') {
-                // Randomly back off or release if stamina gets low
-                if (stamina[2] < 25 || Math.random() < 0.05) {
+                // Randomly back off or release
+                if (Math.random() < 0.02) {
                     releaseAttack(2);
                 }
             }
         }
 
-        const keysHeld = { a: false, l: false }; // Track held keys
+        const keysHeld = { a: false, l: false, s: false, k: false }; // Track held keys
 
         // Setup Audio Context for high-performance synthesized sound effects
         let audioCtx;
@@ -1389,29 +1664,29 @@
             osc1.connect(gainNode);
             osc2.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            
+
             // Thick Wooden/Shield "CHUNK" Block Sound
             osc1.type = 'triangle';
             osc1.frequency.setValueAtTime(150, audioCtx.currentTime);
             osc1.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
-            
+
             gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
             gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.01);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            
+
             osc1.start(); osc1.stop(audioCtx.currentTime + 0.1);
 
             // High-frequency "crack" on impact
             osc2.type = 'square';
             osc2.frequency.setValueAtTime(300, audioCtx.currentTime);
             osc2.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.05);
-            
+
             const gain2 = audioCtx.createGain();
             osc2.connect(gain2); gain2.connect(audioCtx.destination);
             gain2.gain.setValueAtTime(0, audioCtx.currentTime);
             gain2.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.01);
             gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-            
+
             osc2.start(); osc2.stop(audioCtx.currentTime + 0.05);
         }
 
@@ -1422,7 +1697,7 @@
             osc.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             // Deep Thud/Bonk
-            osc.type = 'sine'; 
+            osc.type = 'sine';
             osc.frequency.setValueAtTime(300, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
             gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
@@ -1444,7 +1719,7 @@
             gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
             gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.01);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-            
+
             osc.start(); osc.stop(audioCtx.currentTime + 0.05);
         }
 
@@ -1465,7 +1740,7 @@
 
         document.addEventListener('keydown', (e) => {
             initAudio(); // Initialize audio on first keypress
-            
+
             const key = e.key.toLowerCase();
             if (e.repeat) return; // Prevent browser key-repeat from spamming
 
@@ -1476,6 +1751,14 @@
             if (key === P2_KEY) {
                 keysHeld[P2_KEY] = true;
                 document.querySelector('.p2 .key-label').classList.add('pressed');
+            }
+            if (key === P1_PARRY) {
+                keysHeld[P1_PARRY] = true;
+                if (roundActive && !gameOver) triggerParry(1);
+            }
+            if (key === P2_PARRY && !isVS_CPU) {
+                keysHeld[P2_PARRY] = true;
+                if (roundActive && !gameOver) triggerParry(2);
             }
 
             if (!roundActive || gameOver) return;
@@ -1497,29 +1780,67 @@
                 document.querySelector('.p2 .key-label').classList.remove('pressed');
                 if (roundActive && !gameOver && (p2State === 'swinging' || p2State === 'pinning')) releaseAttack(2);
             }
+            if (key === P1_PARRY) keysHeld[P1_PARRY] = false;
+            if (key === P2_PARRY) keysHeld[P2_PARRY] = false;
         });
+
+        function triggerParry(playerNum) {
+            const setMyState = playerNum === 1 ? (s) => p1State = s : (s) => p2State = s;
+            const myState = playerNum === 1 ? p1State : p2State;
+            const opponentNum = playerNum === 1 ? 2 : 1;
+
+            // Instant parry if we are currently pinned
+            if (currentPin && currentPin.defenderNum === playerNum) {
+                performParry(playerNum, opponentNum);
+                return;
+            }
+
+            // Cannot enter parry stance if attacking, stunned, etc.
+            if (myState !== 'idle') return;
+
+            // Cannot parry if someone is actively pinning your shield down!
+            if (currentPin && currentPin.defenderNum === playerNum) return;
+
+            setMyState('parrying');
+            updateVisuals(playerNum, 'parrying');
+            playBlockSound(); // Swish sound on stance
+
+            setTimeout(() => {
+                if (!roundActive) return;
+                const currentState = playerNum === 1 ? p1State : p2State;
+                if (currentState === 'parrying') {
+                    // Missed the perfect reflex window! Add a slight recovery penalty so you can't spam it.
+                    setMyState('cooldown');
+                    updateVisuals(playerNum, 'idle');
+                    setTimeout(() => {
+                        if (!roundActive) return;
+                        const recoveryState = playerNum === 1 ? p1State : p2State;
+                        if (recoveryState === 'cooldown') {
+                            setMyState('idle');
+                        }
+                    }, 250); // 250ms vulnerable recovery penalty
+                }
+            }, 120); // 120ms tight counter window for perfect reflexes!
+        }
 
         function triggerAttack(playerNum) {
             const setMyState = playerNum === 1 ? (s) => p1State = s : (s) => p2State = s;
             const myState = playerNum === 1 ? p1State : p2State;
             const opponentState = playerNum === 1 ? p2State : p1State;
             const opponentNum = playerNum === 1 ? 2 : 1;
-            
+
             // If the opponent is pinning our shield down, we are physically jammed!
             if (opponentState === 'pinning') {
-                if (parryReady[playerNum]) {
-                    performParry(playerNum, opponentNum);
-                    return;
-                }
+                // Missed the parry window! Jammed.
                 const myPlayerEl = document.getElementById(`p${playerNum}`);
                 myPlayerEl.classList.add('jammed');
                 setTimeout(() => myPlayerEl.classList.remove('jammed'), 150);
-                
+
                 const oppPlayerEl = document.getElementById(`p${opponentNum}`);
                 const oppHammer = oppPlayerEl.querySelector('.arm-hammer');
                 oppHammer.classList.add('struggling');
                 setTimeout(() => oppHammer.classList.remove('struggling'), 150);
-                
+
                 playJamSound();
                 return;
             }
@@ -1530,14 +1851,17 @@
             // Wait 40ms for hammer to physically land (Incredibly fast!)
             setTimeout(() => {
                 if (!roundActive) return;
-                
+
                 const currentState = playerNum === 1 ? p1State : p2State;
                 if (currentState !== 'swinging') return; // Released early
 
                 const currentOppState = playerNum === 1 ? p2State : p1State;
-                
-                // If opponent's shield is down (swinging, pinning, or recovering)
-                if (currentOppState === 'swinging' || currentOppState === 'pinning' || currentOppState === 'cooldown') {
+
+                if (currentOppState === 'parrying') {
+                    // We attacked right into their active parry!
+                    performParry(opponentNum, playerNum);
+                // If opponent's shield is down (swinging, pinning, recovering, or stunned)
+                } else if (currentOppState === 'swinging' || currentOppState === 'pinning' || currentOppState === 'cooldown' || currentOppState === 'stunned') {
                     updateVisuals(playerNum, 'whacking');
                     processHit(opponentNum);
                     showImpact('WHACK!', '#ff4c4c');
@@ -1555,10 +1879,10 @@
         function releaseAttack(playerNum) {
             const setMyState = playerNum === 1 ? (s) => p1State = s : (s) => p2State = s;
             const myState = playerNum === 1 ? p1State : p2State;
-            
-            if (myState === 'idle' || myState === 'cooldown' || myState === 'dead') return;
+
+            if (myState === 'idle' || myState === 'cooldown' || myState === 'dead' || myState === 'parrying') return;
             stopPin();
-            
+
             setMyState('cooldown');
             updateVisuals(playerNum, 'cooldown');
 
@@ -1580,14 +1904,14 @@
             // Normal block visuals for defender
             const pEl = document.getElementById(`p${defenderNum}`);
             const shield = pEl.querySelector('.shield');
-            
+
             pEl.classList.add('blocked');
             shield.classList.add('blocked');
-            
+
             showImpact('BLOCKED!', '#3a9fff');
             playBlockSound();
             spawnSparks(defenderNum);
-            
+
             setTimeout(() => {
                 pEl.classList.remove('blocked');
                 shield.classList.remove('blocked');
@@ -1605,40 +1929,23 @@
         function startPin(attackerNum, defenderNum) {
             stopPin();
             currentPin = { attackerNum, defenderNum };
-            parryReady[defenderNum] = true;
+
             const defender = document.getElementById(`p${defenderNum}`);
             defender.classList.add('parry-window');
-            document.getElementById('status-text').innerHTML = `Player ${defenderNum}: tap your key now to parry!`;
+            const shield = defender.querySelector('.shield');
+            shield.classList.add('pinned'); // Push shield down slightly
 
-            parryTimer = setTimeout(() => {
-                parryReady[defenderNum] = false;
-                defender.classList.remove('parry-window');
-                document.getElementById('status-text').innerHTML = `Player ${attackerNum} is draining stamina. Release to reset.`;
-            }, 520);
+            document.getElementById('status-text').innerHTML = `Player ${attackerNum} is pinning the guard!`;
 
             staminaTimer = setInterval(() => {
                 if (!currentPin || !roundActive) return;
-                stamina[attackerNum] = Math.max(0, stamina[attackerNum] - 4);
+                stamina[attackerNum] = Math.max(0, stamina[attackerNum] - 10); // Drain attacker's stamina while pinning
                 updateStaminaHud();
+
                 if (stamina[attackerNum] <= 0) {
                     exhaustPin(attackerNum);
                 }
-            }, 120);
-        }
-
-        function stopPin() {
-            clearInterval(staminaTimer);
-            clearTimeout(parryTimer);
-            staminaTimer = null;
-            parryTimer = null;
-            currentPin = null;
-            parryReady = { 1: false, 2: false };
-            document.querySelectorAll('.player').forEach(el => el.classList.remove('parry-window'));
-        }
-
-        function recoverStamina(playerNum, amount = 18) {
-            stamina[playerNum] = Math.min(100, stamina[playerNum] + amount);
-            updateStaminaHud();
+            }, 100);
         }
 
         function exhaustPin(attackerNum) {
@@ -1649,48 +1956,106 @@
             showImpact('TIRED!', '#ffd166');
             playJamSound();
             document.getElementById('status-text').innerHTML = `Player ${attackerNum} ran out of stamina!`;
+
             setTimeout(() => {
                 if (!roundActive) return;
-                setAttackerState('idle');
-                updateVisuals(attackerNum, 'idle');
-            }, 420);
+                const currentState = attackerNum === 1 ? p1State : p2State;
+                if (currentState === 'cooldown') {
+                    setAttackerState('idle');
+                    updateVisuals(attackerNum, 'idle');
+                }
+            }, 1000); // 1 second penalty for gassing out
+        }
+
+        function stopPin() {
+            clearInterval(staminaTimer);
+            staminaTimer = null;
+            currentPin = null;
+            document.querySelectorAll('.player').forEach(el => {
+                el.classList.remove('parry-window');
+                el.querySelector('.shield').classList.remove('pinned');
+            });
+        }
+
+        function recoverStamina(playerNum, amount = 18) {
+            stamina[playerNum] = Math.min(100, stamina[playerNum] + amount);
+            updateStaminaHud();
+        }
+
+        function guardBreak(defenderNum, attackerNum) {
+            stopPin();
+            const setDefenderState = defenderNum === 1 ? (s) => p1State = s : (s) => p2State = s;
+            setDefenderState('stunned');
+
+            const defender = document.getElementById(`p${defenderNum}`);
+            defender.classList.add('stunned');
+
+            showImpact('GUARD BREAK!', '#ff4c4c');
+            playBlockSound();
+            setTimeout(playBlockSound, 80); // Double chunk for heavy break
+
+            document.getElementById('status-text').innerHTML = `Player ${defenderNum}'s guard broke! Strike them!`;
+
+            clearTimeout(stunTimers[defenderNum]);
+            stunTimers[defenderNum] = setTimeout(() => {
+                if (!roundActive) return;
+                defender.classList.remove('stunned');
+                if (defenderNum === 1 && p1State === 'stunned') {
+                    p1State = 'idle';
+                    updateVisuals(1, 'idle');
+                }
+                if (defenderNum === 2 && p2State === 'stunned') {
+                    p2State = 'idle';
+                    updateVisuals(2, 'idle');
+                }
+                stamina[defenderNum] = 100; // Reset guard after stun
+                updateStaminaHud();
+            }, 2000); // Huge 2-second vulnerability window!
         }
 
         function performParry(defenderNum, attackerNum) {
             stopPin();
-            recoverStamina(defenderNum, 22);
-            stamina[attackerNum] = Math.max(0, stamina[attackerNum] - 18);
+            recoverStamina(defenderNum, 30);
+            stamina[attackerNum] = Math.max(0, stamina[attackerNum] - 20); // Chip damage to attacker guard
             updateStaminaHud();
 
             const defender = document.getElementById(`p${defenderNum}`);
             const attacker = document.getElementById(`p${attackerNum}`);
-            defender.classList.add('parried');
-            attacker.classList.add('stunned');
-            setTimeout(() => defender.classList.remove('parried'), 340);
-            clearTimeout(stunTimers[attackerNum]);
 
-            if (attackerNum === 1) p1State = 'stunned';
-            if (attackerNum === 2) p2State = 'stunned';
+            // Trigger Cinematic Slow-Mo
+            document.body.classList.add('slow-mo');
+            defender.classList.add('parried-slowmo');
+            attacker.classList.add('recoil-slowmo');
+
+            setTimeout(() => {
+                document.body.classList.remove('slow-mo');
+                defender.classList.remove('parried-slowmo');
+                attacker.classList.remove('recoil-slowmo');
+            }, 2000); // Increased cinematic slowmo time
+
+            // Set attacker to recoil/cooldown (removing the stun state entirely)
+            if (attackerNum === 1) p1State = 'cooldown';
+            if (attackerNum === 2) p2State = 'cooldown';
             updateVisuals(attackerNum, 'cooldown');
 
-            showImpact('PARRY!', '#ffd166');
+            showImpact('PERFECT COUNTER!', '#2dfc8f');
             playParrySound();
             spawnSparks(defenderNum);
-            document.getElementById('status-text').innerHTML = `Parry shock! Player ${attackerNum} is stunned.`;
+            document.getElementById('status-text').innerHTML = `Perfect Counter! Cinematic Slow-mo!`;
 
+            clearTimeout(stunTimers[attackerNum]);
             stunTimers[attackerNum] = setTimeout(() => {
                 if (!roundActive) return;
-                attacker.classList.remove('stunned');
-                if (attackerNum === 1 && p1State === 'stunned') {
+                if (attackerNum === 1 && p1State === 'cooldown') {
                     p1State = 'idle';
                     updateVisuals(1, 'idle');
                 }
-                if (attackerNum === 2 && p2State === 'stunned') {
+                if (attackerNum === 2 && p2State === 'cooldown') {
                     p2State = 'idle';
                     updateVisuals(2, 'idle');
                 }
                 document.getElementById('status-text').innerHTML = `Player ${attackerNum} recovered. Fight!`;
-            }, 2200);
+            }, 2000); // Stun recovery timeout matches the slowmo end
         }
 
         function spawnSparks(defenderNum) {
@@ -1700,7 +2065,7 @@
                 spark.className = 'spark';
                 // Randomly scatter sparks upward and outward
                 const tx = (Math.random() - 0.5) * 100 + 'px';
-                const ty = (Math.random() * -100 - 20) + 'px'; 
+                const ty = (Math.random() * -100 - 20) + 'px';
                 spark.style.setProperty('--tx', tx);
                 spark.style.setProperty('--ty', ty);
                 pEl.appendChild(spark);
@@ -1713,7 +2078,7 @@
             clearTimeout(impactTimer);
             impactEl.innerText = text;
             impactEl.style.color = color;
-            
+
             // Reset animation to allow spamming
             impactEl.classList.remove('show');
             void impactEl.offsetWidth; // Force browser reflow
@@ -1725,32 +2090,73 @@
         }
 
         function processHit(loserNum) {
-            roundActive = false; // Freeze further actions
             stopPin();
-            
+
             // Screen Shake effect
             const arena = document.querySelector('.arena-container');
             arena.classList.add('shake');
             setTimeout(() => arena.classList.remove('shake'), 400);
 
+            // Reduce damage to 5 if the opponent is being mashed during a parry slow-mo
+            const damage = document.body.classList.contains('slow-mo') ? 5 : 20;
+
             if (loserNum === 1) {
-                p1State = 'dead';
-                p2Score++;
-                document.getElementById('score2').innerText = p2Score;
+                p1Health -= damage;
+                document.getElementById('score1').innerText = Math.max(0, p1Health);
+                document.getElementById('health-bar1').style.width = Math.max(0, p1Health) + '%';
             } else {
-                p2State = 'dead';
-                p1Score++;
-                document.getElementById('score1').innerText = p1Score;
+                p2Health -= damage;
+                document.getElementById('score2').innerText = Math.max(0, p2Health);
+                document.getElementById('health-bar2').style.width = Math.max(0, p2Health) + '%';
             }
 
-            updateVisuals(loserNum, 'dead');
+            showDamageNumber(loserNum, damage);
 
             // Check overall game win condition
-            if (p1Score >= 5 || p2Score >= 5) {
+            if (p1Health <= 0 || p2Health <= 0) {
+                roundActive = false; // Freeze further actions
+                if (loserNum === 1) p1State = 'dead';
+                else p2State = 'dead';
+                updateVisuals(loserNum, 'dead');
                 setTimeout(() => showGameOver(loserNum === 1 ? 2 : 1), 1000); // 1s delay so they can enjoy the popped head
             } else {
-                setTimeout(resetRound, 2000); // 2 seconds between rounds
+                // Not dead yet! Just take damage. Hit stun is removed to keep it a fluid brawl!
+
+                // Bounce the attacker back after a brief moment
+                const attackerNum = loserNum === 1 ? 2 : 1;
+                setTimeout(() => {
+                    if (!roundActive) return;
+                    const attackerState = attackerNum === 1 ? p1State : p2State;
+                    // Only bounce them if they are still swinging/whacking
+                    if (attackerState === 'swinging') {
+                        if (attackerNum === 1) p1State = 'cooldown';
+                        else p2State = 'cooldown';
+                        updateVisuals(attackerNum, 'cooldown');
+
+                        setTimeout(() => {
+                            if (!roundActive) return;
+                            const currentState = attackerNum === 1 ? p1State : p2State;
+                            if (currentState === 'cooldown') {
+                                if (attackerNum === 1) p1State = 'idle';
+                                else p2State = 'idle';
+                                updateVisuals(attackerNum, 'idle');
+
+                                const key = attackerNum === 1 ? P1_KEY : P2_KEY;
+                                if (keysHeld[key]) triggerAttack(attackerNum);
+                            }
+                        }, 250);
+                    }
+                }, 150); // Keep whacking visual for 150ms before recoil
             }
+        }
+
+        function showDamageNumber(playerNum, damage) {
+            const pEl = document.getElementById(`p${playerNum}`);
+            const dmgEl = document.createElement('div');
+            dmgEl.className = 'damage-text';
+            dmgEl.innerText = `-${damage}`;
+            pEl.appendChild(dmgEl);
+            setTimeout(() => dmgEl.remove(), 800);
         }
 
         function updateVisuals(playerNum, state) {
@@ -1774,6 +2180,10 @@
                 hammer.classList.remove('attacking', 'whacking');
                 shield.classList.remove('attacking');
                 pEl.classList.remove('lunging');
+                shield.classList.remove('parrying');
+            } else if (state === 'parrying') {
+                shield.classList.add('parrying');
+                hammer.classList.remove('attacking', 'whacking');
             } else if (state === 'dead') {
                 head.classList.add('popped');
                 spring.classList.add('popped');
@@ -1792,17 +2202,18 @@
             const impactEl = document.getElementById('impact-text');
             impactEl.classList.remove('show');
             impactEl.innerText = '';
-            
+
+            document.body.classList.remove('slow-mo');
             document.querySelectorAll('.head').forEach(el => el.classList.remove('popped'));
             document.querySelectorAll('.spring').forEach(el => el.classList.remove('popped'));
             document.querySelectorAll('.arm-hammer').forEach(el => {
                 el.classList.remove('attacking', 'whacking', 'struggling');
             });
-            document.querySelectorAll('.shield').forEach(el => el.classList.remove('attacking', 'blocked'));
-            document.querySelectorAll('.player').forEach(el => el.classList.remove('lunging', 'blocked', 'jammed', 'stunned'));
+            document.querySelectorAll('.shield').forEach(el => el.classList.remove('attacking', 'blocked', 'parrying'));
+            document.querySelectorAll('.player').forEach(el => el.classList.remove('lunging', 'blocked', 'jammed', 'stunned', 'parried-slowmo', 'recoil-slowmo', 'parrying'));
             Object.values(stunTimers).forEach(timer => clearTimeout(timer));
             stunTimers = { 1: null, 2: null };
-            
+
             clearInterval(aiLoopTimer);
             if (isVS_CPU) aiLoopTimer = setInterval(aiLogic, 100);
         }
@@ -1811,21 +2222,36 @@
             gameOver = true;
             const overlay = document.getElementById('overlay');
             const winnerText = document.getElementById('winner-text');
-            
+
             winnerText.innerText = `Player ${winnerNum} Wins!`;
             winnerText.style.color = winnerNum === 1 ? '#3a9fff' : '#ff4c4c';
             overlay.style.display = 'flex';
         }
 
         function resetGame() {
-            p1Score = 0;
-            p2Score = 0;
-            document.getElementById('score1').innerText = p1Score;
-            document.getElementById('score2').innerText = p2Score;
+            p1Health = 100;
+            p2Health = 100;
+            document.getElementById('score1').innerText = p1Health;
+            document.getElementById('score2').innerText = p2Health;
+            document.getElementById('health-bar1').style.width = '100%';
+            document.getElementById('health-bar2').style.width = '100%';
             document.getElementById('overlay').style.display = 'none';
             gameOver = false;
             resetRound();
         }
+
+        // Global Passive Guard Regeneration
+        setInterval(() => {
+            if (!roundActive || gameOver) return;
+            [1, 2].forEach(p => {
+                // Only regenerate guard if not currently being pinned down
+                if (currentPin && currentPin.defenderNum === p) return;
+                if (stamina[p] < 100) {
+                    stamina[p] = Math.min(100, stamina[p] + 3);
+                    updateStaminaHud();
+                }
+            });
+        }, 100);
 
         updateStaminaHud();
     </script>
