@@ -47,7 +47,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 800px;
+            width: 100%;
+            max-width: min(1200px, 95vw, calc(75vh * 4 / 3));
             margin-bottom: 15px;
             background: #1a252f;
             padding: 10px 30px;
@@ -96,13 +97,26 @@
 
         .game-container {
             position: relative;
-            width: 800px;
-            height: 600px;
+            width: 100%;
+            max-width: min(1200px, 95vw, calc(75vh * 4 / 3));
+            aspect-ratio: 4 / 3;
             background: #111820;
             border: 8px solid #34495e;
             border-radius: 20px;
             box-shadow: 0 25px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.9);
             overflow: hidden;
+        }
+
+        .game-container.shake {
+            animation: screenShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-10px, 6px) rotate(-1deg); }
+            40% { transform: translate(10px, -6px) rotate(1deg); }
+            60% { transform: translate(-6px, -3px) rotate(-0.5deg); }
+            80% { transform: translate(6px, 3px) rotate(0.5deg); }
         }
 
         canvas {
@@ -163,6 +177,7 @@
         <div class="level-text">
             LEVEL <span id="level-display">1</span>
             <select id="level-selector" class="level-select" onchange="jumpToLevel(this.value)"></select>
+            <button class="level-select" onclick="toggleFullscreen()">FULLSCREEN</button>
         </div>
     </div>
 
@@ -309,6 +324,14 @@
                 gain.gain.setValueAtTime(0.3, now + 0.4);
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
                 osc.start(now); osc.stop(now + 0.6);
+            } else if (type === 'lose') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.8);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.4, now + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                osc.start(now); osc.stop(now + 0.8);
             }
         }
 
@@ -462,6 +485,7 @@
             document.getElementById('score-display').innerText = score;
             document.getElementById('overlay').style.display = 'none';
             document.getElementById('start-overlay').style.display = 'none';
+            document.querySelector('.game-container').classList.remove('shake');
             
             loadLevel();
             gameState = 'playing';
@@ -483,6 +507,16 @@
             comboMultiplier = 1;
             document.getElementById('level-display').innerText = level;
             updateLevelSelector();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
         }
 
         function startGame() {
@@ -626,8 +660,9 @@
                 let p = particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vy += 0.1; // Add slight gravity to all particles for better effect
+                p.vy += p.gravity !== undefined ? p.gravity : 0.1; // Add slight gravity to all particles for better effect
                 p.life -= p.fadeRate || 0.05;
+                if (p.sizeChange) p.size += p.sizeChange;
                 if (p.life <= 0) particles.splice(i, 1);
             }
 
@@ -641,6 +676,42 @@
                 if (s.x < 0) {
                     s.x = 800;
                     s.y = Math.random() * 600;
+                }
+            }
+
+            // Sinkhole Embers and Smoke
+            if (pathPoints.length > 0 && gameState !== 'start') {
+                let endP = pathPoints[pathPoints.length - 1];
+                
+                // Embers
+                if (Math.random() < 0.1) {
+                    particles.push({
+                        x: endP.x + (Math.random() - 0.5) * 20,
+                        y: endP.y + (Math.random() - 0.5) * 20,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2 - 1.5, // Shoot upward
+                        gravity: 0.02, // Fall back down gently
+                        color: Math.random() > 0.5 ? 'red' : 'yellow',
+                        life: 1.0,
+                        fadeRate: 0.02 + Math.random() * 0.03,
+                        size: 1.5 + Math.random() * 2
+                    });
+                }
+                
+                // Smoke
+                if (Math.random() < 0.05) {
+                    particles.push({
+                        x: endP.x + (Math.random() - 0.5) * 30,
+                        y: endP.y + (Math.random() - 0.5) * 30,
+                        vx: (Math.random() - 0.5) * 1,
+                        vy: -0.5 - Math.random() * 1, // Drift upward
+                        gravity: -0.01, // Float away
+                        color: '#4a6278', // Dark slate smoke
+                        life: 0.6 + Math.random() * 0.4,
+                        fadeRate: 0.01,
+                        size: 4 + Math.random() * 6,
+                        sizeChange: 0.15
+                    });
                 }
             }
 
@@ -665,6 +736,8 @@
                 if (marbles.length === 0) {
                     gameState = 'lost';
                     stopBGM();
+                    playSound('lose');
+                    document.querySelector('.game-container').classList.add('shake');
                     showOverlay("Game Over", "#ff4c4c", "TRY AGAIN");
                 }
                 return;
@@ -957,7 +1030,7 @@
                 ctx.globalAlpha = Math.max(0, p.life);
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-                ctx.fillStyle = COLORS[p.color];
+                ctx.fillStyle = COLORS[p.color] || p.color;
                 ctx.fill();
             }
             ctx.globalAlpha = 1.0; // Reset transparency for other elements
@@ -1128,6 +1201,7 @@
 
         function nextAction() {
             document.getElementById('overlay').style.display = 'none';
+            document.querySelector('.game-container').classList.remove('shake');
             if (gameState === 'won') {
                 level++;
                 maxLevel = Math.max(maxLevel, level);
