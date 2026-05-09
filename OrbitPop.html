@@ -214,15 +214,7 @@
         // --- Audio Context ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-<<<<<<< HEAD
         function playSound(type) {
-=======
-        let bgmInterval = null;
-        let bgmIndex = 0;
-        const bgmNotes = [146.83, 174.61, 196.00, 220.00, 261.63, 220.00, 196.00, 174.61]; // D minor pentatonic
-
-        function playSound(type, combo = 1) {
->>>>>>> e56dfdc38447925b918f6d192f4adeb908002686
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
