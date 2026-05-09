@@ -169,6 +169,19 @@
         let marbles = [];
         let projectiles = [];
         let particles = [];
+        let stars = [];
+        
+        // Initialize ambient background stars
+        for (let i = 0; i < 150; i++) {
+            stars.push({
+                x: Math.random() * 800,
+                y: Math.random() * 600,
+                size: Math.random() * 1.5 + 0.5,
+                alpha: Math.random(),
+                fadeSpeed: (Math.random() * 0.02 + 0.005) * (Math.random() > 0.5 ? 1 : -1),
+                driftSpeed: Math.random() * 0.15 + 0.05
+            });
+        }
         
         let level = 1;
         let score = 0;
@@ -184,6 +197,10 @@
         // --- Audio Context ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
+        let bgmInterval = null;
+        let bgmIndex = 0;
+        const bgmNotes = [146.83, 174.61, 196.00, 220.00, 261.63, 220.00, 196.00, 174.61]; // D minor pentatonic
+
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
@@ -216,6 +233,57 @@
                 gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
                 osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'win') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.setValueAtTime(500, now + 0.1);
+                osc.frequency.setValueAtTime(600, now + 0.2);
+                osc.frequency.setValueAtTime(800, now + 0.3);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+                gain.gain.setValueAtTime(0.3, now + 0.4);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.start(now); osc.stop(now + 0.6);
+            }
+        }
+
+        function startBGM() {
+            if (bgmInterval) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            bgmInterval = setInterval(() => {
+                if (gameState !== 'playing' && gameState !== 'losing') return;
+                
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                let filter = audioCtx.createBiquadFilter();
+                
+                osc.type = 'triangle';
+                osc.frequency.value = bgmNotes[bgmIndex];
+                
+                filter.type = 'lowpass';
+                filter.frequency.value = 600; // Muted, spacey tone
+                
+                gain.connect(filter);
+                filter.connect(audioCtx.destination);
+                osc.connect(gain);
+                
+                let now = audioCtx.currentTime;
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.04, now + 0.1); // Keep it quiet so SFX stand out
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                
+                osc.start(now);
+                osc.stop(now + 0.6);
+                
+                bgmIndex = (bgmIndex + 1) % bgmNotes.length;
+            }, 350); // Speed of the background sequence
+        }
+
+        function stopBGM() {
+            if (bgmInterval) {
+                clearInterval(bgmInterval);
+                bgmInterval = null;
             }
         }
 
@@ -281,6 +349,7 @@
             document.getElementById('score-display').innerText = score;
             loadLevel();
             gameState = 'playing';
+            startBGM();
             requestAnimationFrame(gameLoop);
         }
 
@@ -314,7 +383,7 @@
                     vy: Math.sin(shooterAngle) * 16,
                     color: currentMarbleColor
                 });
-                createCannonSparks(shooterAngle);
+                createCannonSparks(shooterAngle, currentMarbleColor);
                 currentMarbleColor = nextMarbleColor;
                 nextMarbleColor = getShooterColor();
                 shootCooldown = 15; // frames
@@ -335,12 +404,13 @@
                     vy: Math.sin(angle) * speed,
                     color: color,
                     life: 1.0,
+                    fadeRate: 0.05,
                     size: 3 + Math.random() * 5
                 });
             }
         }
 
-        function createCannonSparks(angle) {
+        function createCannonSparks(angle, color) {
             let muzzleX = 400 + Math.cos(angle) * 50;
             let muzzleY = 300 + Math.sin(angle) * 50;
             for (let i = 0; i < 8; i++) {
@@ -351,9 +421,27 @@
                     y: muzzleY,
                     vx: Math.cos(angle + spread) * speed,
                     vy: Math.sin(angle + spread) * speed,
-                    color: 'yellow',
+                    color: color,
                     life: 0.8 + Math.random() * 0.4,
+                    fadeRate: 0.05,
                     size: 2 + Math.random() * 3
+                });
+            }
+        }
+
+        function createWinExplosion() {
+            for (let i = 0; i < 200; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = 2 + Math.random() * 15;
+                particles.push({
+                    x: 400,
+                    y: 300,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: COLOR_KEYS[Math.floor(Math.random() * COLOR_KEYS.length)],
+                    life: 1.0 + Math.random() * 0.5,
+                    fadeRate: 0.015 + Math.random() * 0.01,
+                    size: 4 + Math.random() * 8
                 });
             }
         }
@@ -389,6 +477,29 @@
         }
 
         function update() {
+            // Keep updating existing particles universally
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1; // Add slight gravity to all particles for better effect
+                p.life -= p.fadeRate || 0.05;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            // Update ambient stars
+            for (let s of stars) {
+                s.alpha += s.fadeSpeed;
+                if (s.alpha > 1) { s.alpha = 1; s.fadeSpeed *= -1; }
+                else if (s.alpha < 0) { s.alpha = 0; s.fadeSpeed *= -1; }
+                
+                s.x -= s.driftSpeed;
+                if (s.x < 0) {
+                    s.x = 800;
+                    s.y = Math.random() * 600;
+                }
+            }
+
             if (gameState === 'losing') {
                 for (let i = marbles.length - 1; i >= 0; i--) {
                     marbles[i].d += 8.0; // Accelerate into the abyss
@@ -406,20 +517,16 @@
                         projectiles.splice(i, 1);
                     }
                 }
-
-                // Keep updating existing particles
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    let p = particles[i];
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.life -= 0.05;
-                    if (p.life <= 0) particles.splice(i, 1);
-                }
                 
                 if (marbles.length === 0) {
                     gameState = 'lost';
+                    stopBGM();
                     showOverlay("Game Over", "#ff4c4c", "TRY AGAIN");
                 }
+                return;
+            }
+
+            if (gameState === 'won' || gameState === 'lost') {
                 return;
             }
 
@@ -540,20 +647,14 @@
                 if (hit) projectiles.splice(i, 1);
             }
 
-            // Update Particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life -= 0.05;
-                if (p.life <= 0) particles.splice(i, 1);
-            }
-
             // End Game Checks
             if (marbles.length > 0 && marbles[0].d >= pathPoints.length - 15) {
                 gameState = 'losing';
             } else if (marbles.length === 0 && ballsToSpawn <= 0) {
                 gameState = 'won';
+                stopBGM();
+                playSound('win');
+                createWinExplosion();
                 showOverlay("Level Cleared!", "#13ff7c", "NEXT LEVEL");
             }
         }
@@ -596,11 +697,19 @@
         function draw() {
             ctx.clearRect(0, 0, 800, 600);
             
+            // Draw Ambient Stars
+            ctx.fillStyle = '#ffffff';
+            for (let s of stars) {
+                ctx.globalAlpha = s.alpha;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0; // Reset transparency for other elements
+
             if (pathPoints.length === 0) return;
 
             // Draw Path Track
-            ctx.lineWidth = 32;
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.beginPath();
@@ -609,7 +718,16 @@
                 if (i===0) ctx.moveTo(p.x, p.y);
                 else ctx.lineTo(p.x, p.y);
             }
-            ctx.stroke();
+        
+        // Outer metallic rim
+        ctx.lineWidth = 38;
+        ctx.strokeStyle = '#2c3e50';
+        ctx.stroke();
+
+        // Inner dark groove where the marbles roll
+        ctx.lineWidth = 30;
+        ctx.strokeStyle = '#0a0f14';
+        ctx.stroke();
 
             // Draw Sinkhole
             let endP = pathPoints[pathPoints.length - 1];
@@ -675,7 +793,7 @@
 
             // Draw Particles
             for (let p of particles) {
-                ctx.globalAlpha = p.life;
+                ctx.globalAlpha = Math.max(0, p.life);
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
                 ctx.fillStyle = COLORS[p.color];
@@ -685,34 +803,69 @@
 
             // Draw Start Tunnel (covers spawning balls)
             let startP = pathPoints[0];
+            let nextP = pathPoints[10] || pathPoints[pathPoints.length - 1];
+            let angle = Math.atan2(nextP.y - startP.y, nextP.x - startP.x);
 
-            // 1. Clean outer metallic casing
+            ctx.save();
+            ctx.translate(startP.x, startP.y);
+            ctx.rotate(angle);
+
+            // Shift forward so a ball at startP (d=0) is perfectly hidden inside the tunnel
+            ctx.translate(20, 0);
+
+            // Dark shadow casting OUT of the tunnel onto the track and marbles
+            let shadowGrad = ctx.createLinearGradient(0, 0, 45, 0);
+            shadowGrad.addColorStop(0, 'rgba(0,0,0,0.9)');
+            shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = shadowGrad;
             ctx.beginPath();
-            ctx.arc(startP.x, startP.y, 34, 0, Math.PI*2);
-            ctx.fillStyle = '#34495e';
+            ctx.arc(5, 0, 40, -Math.PI/2, Math.PI/2);
             ctx.fill();
+
+            // Main Tunnel Body (an arched metallic dome)
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 12, 36, 0, -Math.PI/2, Math.PI/2);
+            ctx.lineTo(-60, 36);
+            ctx.lineTo(-60, -36);
+            ctx.closePath();
+            
+            let tunnelGrad = ctx.createLinearGradient(-60, -36, 12, 36);
+            tunnelGrad.addColorStop(0, '#1a252f');
+            tunnelGrad.addColorStop(0.5, '#4a6278');
+            tunnelGrad.addColorStop(1, '#0f171e');
+            ctx.fillStyle = tunnelGrad;
+            ctx.fill();
+            
             ctx.lineWidth = 3;
             ctx.strokeStyle = '#1a252f';
             ctx.stroke();
 
-            // 2. Inner bevel
+            // Structural ribs on the tunnel roof
             ctx.beginPath();
-            ctx.arc(startP.x, startP.y, 28, 0, Math.PI*2);
-            ctx.fillStyle = '#2c3e50';
-            ctx.fill();
-
-            // 3. The dark void (where balls come out)
-            ctx.beginPath();
-            ctx.arc(startP.x, startP.y, 22, 0, Math.PI*2);
-            ctx.fillStyle = '#05080a';
-            ctx.fill();
-            
-            // 4. Inner shadow ring for smooth depth inside the hole
-            ctx.beginPath();
-            ctx.arc(startP.x, startP.y, 22, 0, Math.PI*2);
+            ctx.moveTo(-15, -36); ctx.lineTo(-15, 36);
+            ctx.moveTo(-35, -36); ctx.lineTo(-35, 36);
             ctx.lineWidth = 4;
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.strokeStyle = '#1a252f';
             ctx.stroke();
+
+            // Neon glowing arch at the exit edge
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 12, 36, 0, -Math.PI/2, Math.PI/2);
+            ctx.lineWidth = 4;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#13ff7c';
+            ctx.strokeStyle = '#13ff7c';
+            ctx.stroke();
+            ctx.shadowBlur = 0; // reset
+            
+            // Solid metallic edge on the arch
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 12, 36, 0, -Math.PI/2, Math.PI/2);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#ecf0f1';
+            ctx.stroke();
+
+            ctx.restore();
 
             // Draw Projectiles
             for (let p of projectiles) {
@@ -806,10 +959,11 @@
                 loadLevel();
             }
             gameState = 'playing';
+            startBGM();
         }
 
         function gameLoop() {
-            if (gameState === 'playing' || gameState === 'losing') {
+            if (gameState !== 'start') {
                 update();
             }
             draw();
