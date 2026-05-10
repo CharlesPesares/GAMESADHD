@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Color Sort</title>
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            corePlugins: { preflight: false },
+            theme: { extend: { fontFamily: { arcade: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'] } } }
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
             color-scheme: dark;
@@ -441,7 +449,7 @@
         }
     </style>
 </head>
-<body>
+<body class="font-arcade min-h-screen antialiased selection:bg-fuchsia-400/30">
     <div class="header">
         <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
         <h1>Color Sort</h1>

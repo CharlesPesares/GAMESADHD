@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Number Race</title>
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            corePlugins: { preflight: false },
+            theme: { extend: { fontFamily: { arcade: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'] } } }
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
             --p1: #3a9fff;
@@ -186,6 +194,55 @@
             font-size: 1rem;
             line-height: 1.5;
         }
+
+        .touch-rps-row {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .touch-choice-btn,
+        .mobile-mash-btn {
+            min-height: 46px;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 950;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .touch-choice-btn:active,
+        .touch-choice-btn.selected,
+        .mobile-mash-btn:active {
+            transform: translateY(2px) scale(0.98);
+            filter: brightness(1.25);
+        }
+
+        .mobile-mash-bar {
+            display: none;
+            position: sticky;
+            bottom: 10px;
+            z-index: 30;
+            width: min(760px, 100%);
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+            pointer-events: auto;
+        }
+
+        .mobile-mash-btn {
+            min-height: 62px;
+            font-size: 1.05rem;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.35);
+        }
+
+        .mobile-mash-btn.p1 { border-color: rgba(58,159,255,0.5); color: #9bd3ff; }
+        .mobile-mash-btn.p2 { border-color: rgba(255,76,76,0.5); color: #ff9a9a; }
         .status-badge {
             margin-top: 15px;
             background: rgba(255,255,255,0.1);
@@ -375,9 +432,87 @@
             0% { transform: translate(0, 0) scale(1); opacity: 1; }
             100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
         }
+
+        @media (max-width: 900px) {
+            body {
+                padding: 14px 10px 20px;
+            }
+            .header {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            h1 {
+                text-align: center;
+                font-size: clamp(2rem, 10vw, 3rem);
+            }
+            .game-area {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .center-panel {
+                grid-column: 1 / -1;
+                order: -1;
+            }
+            .side-panel {
+                flex-basis: auto;
+                padding: 12px;
+            }
+            #number-box-container {
+                min-width: 0;
+                padding: 12px;
+            }
+            #number-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+            #number-grid.race-mode {
+                height: 360px;
+            }
+            .number-btn {
+                width: 56px;
+                height: 56px;
+                font-size: 1.35rem;
+            }
+            .touch-rps-row {
+                display: grid;
+            }
+            .mobile-mash-bar {
+                display: grid;
+            }
+            .kbd-key {
+                display: none;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+            .side-panel {
+                width: auto;
+            }
+            .grid {
+                grid-template-columns: repeat(10, 1fr);
+                gap: 4px;
+                padding: 8px;
+            }
+            #rps-container {
+                padding: 14px;
+            }
+            #number-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            #number-grid.race-mode {
+                height: 330px;
+            }
+            .mobile-mash-bar {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
-<body>
+<body class="font-arcade min-h-screen antialiased selection:bg-yellow-300/30">
     <div class="header">
         <div style="display: flex; gap: 10px; align-items: center;">
             <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
@@ -403,11 +538,21 @@
                     <div class="rps-player">
                         <span style="color:var(--p1); font-weight:bold;">Player 1</span><br><br>
                         <span class="kbd-key">Q</span> (Rock)<br><span class="kbd-key">W</span> (Paper)<br><span class="kbd-key">E</span> (Scissors)<br>
+                        <div class="touch-rps-row" aria-label="Player 1 touch choices">
+                            <button class="touch-choice-btn" data-player="1" data-choice="rock" type="button">Rock</button>
+                            <button class="touch-choice-btn" data-player="1" data-choice="paper" type="button">Paper</button>
+                            <button class="touch-choice-btn" data-player="1" data-choice="scissors" type="button">Scissors</button>
+                        </div>
                         <div id="p1-rps-status" class="status-badge">Waiting...</div>
                     </div>
                     <div class="rps-player">
                         <span id="p2-rps-title" style="color:var(--p2); font-weight:bold;">Player 2</span><br><br>
                         <span class="kbd-key">I</span> (Rock)<br><span class="kbd-key">O</span> (Paper)<br><span class="kbd-key">P</span> (Scissors)<br>
+                        <div class="touch-rps-row" aria-label="Player 2 touch choices">
+                            <button class="touch-choice-btn" data-player="2" data-choice="rock" type="button">Rock</button>
+                            <button class="touch-choice-btn" data-player="2" data-choice="paper" type="button">Paper</button>
+                            <button class="touch-choice-btn" data-player="2" data-choice="scissors" type="button">Scissors</button>
+                        </div>
                         <div id="p2-rps-status" class="status-badge">Waiting...</div>
                     </div>
                 </div>
@@ -435,6 +580,11 @@
         <button class="restart-btn" onclick="resetGame()">PLAY AGAIN</button>
     </div>
 
+    <div class="mobile-mash-bar" aria-label="Mobile mash controls">
+        <button class="mobile-mash-btn p1" id="mobile-p1-mash" type="button">P1 Mash</button>
+        <button class="mobile-mash-btn p2" id="mobile-p2-mash" type="button">P2 Mash</button>
+    </div>
+
     <script>
         const MAX_SCORE = 50;
         let p1Score = 0;
@@ -456,6 +606,12 @@
 
         let isVsCpu = false;
         let cpuAction = null;
+
+        function incrementLocalCounter(key) {
+            const nextValue = (parseInt(localStorage.getItem(key), 10) || 0) + 1;
+            localStorage.setItem(key, String(nextValue));
+            return nextValue;
+        }
 
         function toggleCpu() {
             isVsCpu = !isVsCpu;
@@ -677,7 +833,73 @@
             numberBoxContainer.style.display = 'none';
             targetDisplay.style.display = 'none';
             statusDisplay.innerText = "Rock, Paper, Scissors!";
+            document.querySelectorAll('.touch-choice-btn').forEach(btn => btn.classList.remove('selected'));
         }
+
+        function pickRps(player, choice) {
+            if (state !== 'rps') return;
+            if (player === 1 && !p1Rps) {
+                p1Rps = choice;
+                document.getElementById('p1-rps-status').innerText = 'Ready!';
+                document.getElementById('p1-rps-status').style.color = '#13ff7c';
+                document.querySelectorAll('.touch-choice-btn[data-player="1"]').forEach(btn => {
+                    btn.classList.toggle('selected', btn.dataset.choice === choice);
+                });
+                playSound('click');
+
+                if (isVsCpu && !p2Rps) {
+                    const choices = ['rock', 'paper', 'scissors'];
+                    p2Rps = choices[Math.floor(Math.random() * choices.length)];
+                    document.getElementById('p2-rps-status').innerText = 'Ready!';
+                    document.getElementById('p2-rps-status').style.color = '#13ff7c';
+                    setTimeout(() => playSound('click'), 100);
+                }
+            }
+            if (player === 2 && !p2Rps && !isVsCpu) {
+                p2Rps = choice;
+                document.getElementById('p2-rps-status').innerText = 'Ready!';
+                document.getElementById('p2-rps-status').style.color = '#13ff7c';
+                document.querySelectorAll('.touch-choice-btn[data-player="2"]').forEach(btn => {
+                    btn.classList.toggle('selected', btn.dataset.choice === choice);
+                });
+                playSound('click');
+            }
+            if (p1Rps && p2Rps) resolveRps();
+        }
+
+        document.querySelectorAll('.touch-choice-btn').forEach(btn => {
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                pickRps(parseInt(btn.dataset.player, 10), btn.dataset.choice);
+            });
+        });
+
+        function mobileMash(player) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (state !== 'race') return;
+            if (player === 1 && filler === 1 && p1Score < MAX_SCORE) {
+                p1Score++;
+                updateGrids();
+                playSound('fill');
+                checkWin();
+            } else if (player === 2 && filler === 2 && p2Score < MAX_SCORE && !isVsCpu) {
+                p2Score++;
+                updateGrids();
+                playSound('fill');
+                checkWin();
+            }
+        }
+
+        document.getElementById('mobile-p1-mash').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            mobileMash(1);
+        });
+
+        document.getElementById('mobile-p2-mash').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            mobileMash(2);
+        });
 
         function resolveRps() {
             const rules = {
@@ -1013,6 +1235,7 @@
                 state = 'end';
                 stopBGM();
                 playSound('win');
+                incrementLocalCounter('numberRaceWins');
                 document.getElementById('winner-text').innerText = "Player 1 Wins!";
                 document.getElementById('winner-text').style.color = "var(--p1)";
                 overlay.style.display = 'flex';

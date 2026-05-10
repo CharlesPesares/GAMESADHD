@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hammer & Shield</title>
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            corePlugins: { preflight: false },
+            theme: { extend: { fontFamily: { arcade: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'] } } }
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             margin: 0;
@@ -1385,6 +1393,53 @@
             100% { opacity: 0; transform: translate(-50%, -70%) scale(0.86) rotate(0deg); }
         }
 
+        .mobile-controls {
+            display: none;
+            width: min(920px, 100%);
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 12px;
+            touch-action: manipulation;
+        }
+
+        .mobile-control-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .mobile-control-label {
+            grid-column: 1 / -1;
+            color: rgba(255,255,255,0.72);
+            font-size: 0.82rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .mobile-action-btn {
+            min-height: 58px;
+            border: 1px solid rgba(255,255,255,0.22);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 950;
+            letter-spacing: 0.04em;
+            box-shadow: 0 10px 22px rgba(0,0,0,0.35);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-action-btn.attack { border-color: rgba(255,90,118,0.5); color: #ff9aac; }
+        .mobile-action-btn.parry { border-color: rgba(77,171,255,0.5); color: #9bd3ff; }
+        .mobile-action-btn:active, .mobile-action-btn.pressed {
+            transform: translateY(3px) scale(0.98);
+            filter: brightness(1.25);
+        }
+
         @media (max-width: 760px) {
             .header {
                 grid-template-columns: 1fr;
@@ -1413,6 +1468,10 @@
             .arena-container {
                 height: 390px;
                 gap: 66px;
+            }
+
+            .mobile-controls {
+                display: grid;
             }
         }
 
@@ -1444,6 +1503,10 @@
                 padding-bottom: 46px;
             }
 
+            .mobile-controls {
+                grid-template-columns: 1fr;
+            }
+
             .player {
                 width: 78px;
                 height: 220px;
@@ -1456,7 +1519,7 @@
 
     </style>
 </head>
-<body>
+<body class="font-arcade min-h-screen antialiased selection:bg-blue-400/30">
 
     <div class="header">
         <div style="display: flex; gap: 10px; align-items: center;">
@@ -1545,6 +1608,19 @@
         </div>
     </div>
 
+    <div class="mobile-controls" aria-label="Touch controls">
+        <div class="mobile-control-group">
+            <div class="mobile-control-label">Player 1</div>
+            <button class="mobile-action-btn attack" data-player="1" data-action="attack" type="button">Attack</button>
+            <button class="mobile-action-btn parry" data-player="1" data-action="parry" type="button">Parry</button>
+        </div>
+        <div class="mobile-control-group">
+            <div class="mobile-control-label">Player 2</div>
+            <button class="mobile-action-btn attack" data-player="2" data-action="attack" type="button">Attack</button>
+            <button class="mobile-action-btn parry" data-player="2" data-action="parry" type="button">Parry</button>
+        </div>
+    </div>
+
     <div class="guide-modal" id="guide-modal" onpointerdown="if (event.target === this) closeGuide();">
         <section class="how-to-panel" aria-labelledby="how-to-title">
             <div>
@@ -1591,6 +1667,20 @@
         let stunTimers = { 1: null, 2: null };
         let isVS_CPU = false;
         let aiLoopTimer = null;
+
+        function incrementLocalCounter(key) {
+            const nextValue = (parseInt(localStorage.getItem(key), 10) || 0) + 1;
+            localStorage.setItem(key, String(nextValue));
+            return nextValue;
+        }
+
+        function unlockLocalAchievement(id) {
+            const achievements = JSON.parse(localStorage.getItem('arcade_achievements')) || {};
+            if (!achievements[id]) {
+                achievements[id] = true;
+                localStorage.setItem('arcade_achievements', JSON.stringify(achievements));
+            }
+        }
 
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
@@ -1782,6 +1872,60 @@
             }
             if (key === P1_PARRY) keysHeld[P1_PARRY] = false;
             if (key === P2_PARRY) keysHeld[P2_PARRY] = false;
+        });
+
+        function pressMobileControl(btn) {
+            initAudio();
+            const playerNum = parseInt(btn.dataset.player, 10);
+            const action = btn.dataset.action;
+            btn.classList.add('pressed');
+
+            if (action === 'parry') {
+                if (roundActive && !gameOver && (playerNum !== 2 || !isVS_CPU)) triggerParry(playerNum);
+                return;
+            }
+
+            if (!roundActive || gameOver) return;
+            if (playerNum === 1) {
+                keysHeld[P1_KEY] = true;
+                document.querySelector('.p1 .key-label').classList.add('pressed');
+                if (p1State === 'idle') triggerAttack(1);
+            } else if (!isVS_CPU) {
+                keysHeld[P2_KEY] = true;
+                document.querySelector('.p2 .key-label').classList.add('pressed');
+                if (p2State === 'idle') triggerAttack(2);
+            }
+        }
+
+        function releaseMobileControl(btn) {
+            const playerNum = parseInt(btn.dataset.player, 10);
+            const action = btn.dataset.action;
+            btn.classList.remove('pressed');
+            if (action !== 'attack') return;
+
+            if (playerNum === 1) {
+                keysHeld[P1_KEY] = false;
+                document.querySelector('.p1 .key-label').classList.remove('pressed');
+                if (roundActive && !gameOver && (p1State === 'swinging' || p1State === 'pinning')) releaseAttack(1);
+            } else {
+                keysHeld[P2_KEY] = false;
+                document.querySelector('.p2 .key-label').classList.remove('pressed');
+                if (roundActive && !gameOver && (p2State === 'swinging' || p2State === 'pinning')) releaseAttack(2);
+            }
+        }
+
+        document.querySelectorAll('.mobile-action-btn').forEach(btn => {
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                btn.setPointerCapture(e.pointerId);
+                pressMobileControl(btn);
+            });
+            btn.addEventListener('pointerup', (e) => {
+                e.preventDefault();
+                releaseMobileControl(btn);
+            });
+            btn.addEventListener('pointercancel', () => releaseMobileControl(btn));
+            btn.addEventListener('lostpointercapture', () => releaseMobileControl(btn));
         });
 
         function triggerParry(playerNum) {
@@ -2226,6 +2370,11 @@
             winnerText.innerText = `Player ${winnerNum} Wins!`;
             winnerText.style.color = winnerNum === 1 ? '#3a9fff' : '#ff4c4c';
             overlay.style.display = 'flex';
+
+            if (winnerNum === 1) {
+                incrementLocalCounter('hammerShieldWins');
+                unlockLocalAchievement('hammer_win');
+            }
         }
 
         function resetGame() {

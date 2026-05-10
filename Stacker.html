@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stacker</title>
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            corePlugins: { preflight: false },
+            theme: { extend: { fontFamily: { arcade: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'] } } }
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             margin: 0;
@@ -15,7 +23,8 @@
             background: linear-gradient(135deg, #0d1b2a 0%, #700b33 100%);
             font-family: 'Courier New', Courier, monospace;
             color: #fff;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             text-transform: uppercase;
         }
 
@@ -102,6 +111,7 @@
             border: 4px solid #333;
             border-radius: 4px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.9);
+            width: min(400px, calc(100vw - 92px));
         }
 
         /* Arcade CRT Scanlines */
@@ -136,6 +146,9 @@
             display: block;
             background: #0f172a;
             image-rendering: pixelated;
+            width: 100%;
+            height: auto;
+            touch-action: manipulation;
         }
 
         .overlay {
@@ -298,9 +311,109 @@
             text-align: center;
             line-height: 1.4;
         }
+
+        @media (max-width: 620px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                margin-top: 6px;
+                margin-bottom: 8px;
+            }
+
+            .back-link {
+                margin-bottom: 8px;
+                font-size: 0.92rem;
+            }
+
+            .os-window {
+                width: 100%;
+                max-width: 430px;
+                margin-bottom: 12px;
+            }
+
+            .title-bar {
+                height: 24px;
+            }
+
+            .title-bar .dot {
+                width: 10px;
+                height: 10px;
+            }
+
+            .cabinet {
+                padding: 12px;
+                border-left-width: 5px;
+                border-right-width: 5px;
+            }
+
+            .top-panel {
+                padding: 9px 0;
+                margin-bottom: 10px;
+            }
+
+            .top-panel h1 {
+                font-size: clamp(2rem, 13vw, 3rem);
+                letter-spacing: 3px;
+            }
+
+            .game-container {
+                width: min(360px, calc(100vw - 54px));
+                border-width: 3px;
+            }
+
+            #hud {
+                top: 7px !important;
+                left: 9px !important;
+                right: 9px !important;
+                font-size: 0.82rem !important;
+            }
+
+            .overlay h2 {
+                font-size: clamp(2rem, 12vw, 3rem);
+            }
+
+            .overlay p {
+                margin-bottom: 18px;
+                font-size: 0.95rem;
+            }
+
+            .guide-note {
+                width: min(280px, 88%);
+                margin: -8px 0 16px;
+                font-size: 0.78rem;
+            }
+
+            .restart-btn {
+                padding: 10px 20px;
+                font-size: 1.05rem;
+            }
+
+            .control-panel {
+                margin-top: 12px;
+                padding: 12px;
+            }
+
+            .s-btn {
+                width: 68px;
+                height: 68px;
+                font-size: 2.2rem;
+            }
+
+            .control-text {
+                margin-top: 10px;
+                font-size: 0.9rem;
+                letter-spacing: 2px;
+            }
+
+            .control-hint {
+                font-size: 0.72rem;
+            }
+        }
     </style>
 </head>
-<body>
+<body class="font-arcade min-h-screen antialiased selection:bg-red-400/30">
 
     <div class="header">
         <a href="gamedashboard.html" class="back-link">&larr; Back to Dashboard</a>
@@ -392,6 +505,22 @@
         let score = 0;
         let combo = 0;
         let currentDifficulty = 'medium';
+
+        function getBestStackerRow() {
+            return Math.max(
+                parseInt(localStorage.getItem('stackerBestRow')) || 0,
+                parseInt(localStorage.getItem('stackerHighScore')) || 0,
+                parseInt(localStorage.getItem('stackerHighScore_easy')) || 0,
+                parseInt(localStorage.getItem('stackerHighScore_hard')) || 0
+            );
+        }
+
+        function saveStackerBestRow(row) {
+            const bestRow = Math.max(getBestStackerRow(), row);
+            if (bestRow > 0) {
+                localStorage.setItem('stackerBestRow', String(bestRow));
+            }
+        }
 
         function setDifficulty(diff) {
             currentDifficulty = diff;
@@ -750,6 +879,7 @@
                 highScore = currentRow;
                 let key = currentDifficulty === 'medium' ? 'stackerHighScore' : `stackerHighScore_${currentDifficulty}`;
                 localStorage.setItem(key, highScore);
+                saveStackerBestRow(highScore);
                 document.getElementById('hud-best').innerText = highScore;
             }
         }

@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Dashboard</title>
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            corePlugins: { preflight: false },
+            theme: {
+                extend: {
+                    fontFamily: { arcade: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'] },
+                    colors: {
+                        arcadeBlue: '#4dabff',
+                        arcadeGreen: '#2dfc8f',
+                        arcadeGold: '#ffd166',
+                        arcadeRed: '#ff5a76'
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             margin: 0;
@@ -65,18 +83,26 @@
 
         .nav-hint {
             position: absolute;
-            top: 135px;
-            left: 0;
-            right: 0;
+            top: 118px;
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
             text-align: center;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.76);
+            font-size: 0.76rem;
             font-weight: 700;
-            letter-spacing: 0.2em;
+            letter-spacing: 0.16em;
             z-index: 10;
             pointer-events: none;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-            animation: pulseHint 2.5s infinite ease-in-out;
+            text-transform: uppercase;
+            white-space: nowrap;
+            background: rgba(7, 13, 22, 0.54);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 8px 18px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
         }
 
         @keyframes pulseHint {
@@ -86,12 +112,12 @@
 
         .eyebrow {
             position: absolute;
-            top: 40px;
+            top: 32px;
             left: 0;
             right: 0;
             text-align: center;
             color: #ffd166;
-            font-size: 1rem;
+            font-size: 0.86rem;
             font-weight: 900;
             letter-spacing: 0.3em;
             text-transform: uppercase;
@@ -102,13 +128,16 @@
 
         .welcome-text {
             position: absolute;
-            top: 65px;
-            left: 0;
-            right: 0;
-            font-size: clamp(2.5rem, 5vw, 4rem);
+            top: 58px;
+            left: 50%;
+            right: auto;
+            width: min(900px, calc(100vw - 280px));
+            transform: translateX(-50%);
+            font-size: clamp(2rem, 4vw, 3.2rem);
             margin: 0;
             font-weight: 950;
-            letter-spacing: -1px;
+            letter-spacing: 0;
+            line-height: 1.02;
             text-align: center;
             z-index: 10;
             background: linear-gradient(to bottom, #ffffff, #a6c1ee);
@@ -120,14 +149,15 @@
 
         .selected-game-display {
             position: absolute;
-            bottom: 120px;
+            bottom: 112px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
             z-index: 10;
             pointer-events: none;
-            background: rgba(11, 16, 22, 0.65);
-            padding: 12px 45px;
+            min-width: 300px;
+            background: rgba(7, 13, 22, 0.78);
+            padding: 13px 38px;
             border-radius: 50px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(12px);
@@ -137,12 +167,22 @@
 
         #selected-game-title {
             margin: 0;
-            font-size: 2.2rem;
+            font-size: clamp(1.55rem, 2.4vw, 2.05rem);
             font-weight: 900;
             color: #fff;
             text-transform: uppercase;
-            letter-spacing: 3px;
-            text-shadow: 0 0 15px rgba(77, 171, 255, 0.8), 0 0 30px rgba(45, 252, 143, 0.4);
+            letter-spacing: 0.12em;
+            line-height: 1;
+            text-shadow: 0 0 12px rgba(77, 171, 255, 0.78), 0 0 24px rgba(45, 252, 143, 0.28);
+        }
+
+        .score-record-note {
+            margin: 8px 0 0;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
 
         .gallery-wrapper {
@@ -163,7 +203,7 @@
         
         .play-btn {
             position: absolute;
-            bottom: 40px;
+            bottom: 34px;
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(135deg, #4dabff, #2dfc8f);
@@ -186,6 +226,13 @@
         }
         .play-btn:hover {
             filter: brightness(1.15);
+        }
+        .play-btn.disabled {
+            cursor: not-allowed;
+            background: linear-gradient(135deg, #7f8c8d, #bdc3c7);
+            box-shadow: 0 8px 0 #5f6c6d, 0 20px 30px rgba(0,0,0,0.5);
+            color: #1f2933;
+            filter: grayscale(0.2);
         }
 
         #dust-canvas {
@@ -253,6 +300,135 @@
             color: #4dabff;
             transform: translateY(-2px);
         }
+
+        .selected-rank-panel {
+            position: absolute;
+            right: clamp(16px, 4vw, 40px);
+            bottom: 34px;
+            width: min(330px, calc(100vw - 32px));
+            z-index: 12;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(77, 171, 255, 0.28);
+            background: rgba(7, 12, 20, 0.76);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            pointer-events: auto;
+        }
+
+        .rank-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .rank-panel-title {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .rank-panel-title span {
+            color: #8fb7ff;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .rank-panel-title strong {
+            color: #ffffff;
+            font-size: 0.98rem;
+            line-height: 1.1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .rank-panel-open-btn {
+            flex: 0 0 auto;
+            border: 1px solid rgba(45, 252, 143, 0.45);
+            border-radius: 999px;
+            background: rgba(45, 252, 143, 0.1);
+            color: #2dfc8f;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            padding: 7px 10px;
+            text-transform: uppercase;
+        }
+
+        .rank-panel-open-btn:hover {
+            background: rgba(45, 252, 143, 0.18);
+        }
+
+        .rank-preview-list {
+            display: grid;
+            gap: 6px;
+        }
+
+        .leaderboard-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.22);
+        }
+
+        .leaderboard-row.compact {
+            padding: 8px 10px;
+            border-bottom: 0;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .rank-name {
+            min-width: 0;
+            overflow: hidden;
+            color: #ffffff;
+            font-size: 1.02rem;
+            font-weight: 900;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .leaderboard-row.compact .rank-name {
+            font-size: 0.88rem;
+        }
+
+        .rank-score {
+            flex: 0 0 auto;
+            color: #4dabff;
+            font-size: 1.18rem;
+            font-weight: 950;
+            text-align: right;
+        }
+
+        .leaderboard-row.compact .rank-score {
+            font-size: 0.86rem;
+        }
+
+        .rank-message {
+            color: #bdc3c7;
+            font-size: 0.88rem;
+            font-weight: 700;
+            line-height: 1.35;
+            padding: 10px 4px;
+            text-align: center;
+        }
+
+        .rank-message.error {
+            color: #ff7a90;
+        }
+
         .db-modal {
             position: fixed;
             inset: 0;
@@ -412,10 +588,68 @@
         @media (max-width: 600px) {
             .hide-mobile { display: none; }
             .trophy-btn, .profile-btn, .leaderboard-btn, .help-btn { padding: 10px; }
+
+            .eyebrow {
+                top: 10px;
+                font-size: 0.76rem;
+                letter-spacing: 0.28em;
+            }
+
+            .welcome-text {
+                top: 42px;
+                width: 100%;
+                padding: 0 64px;
+                font-size: clamp(1.45rem, 7vw, 2rem);
+                line-height: 1.08;
+                letter-spacing: 0;
+            }
+
+            .nav-hint {
+                display: none;
+            }
+
+            .selected-game-display {
+                top: 150px;
+                bottom: auto;
+                width: min(360px, calc(100vw - 24px));
+                box-sizing: border-box;
+                padding: 10px 16px;
+                z-index: 35;
+                background: rgba(6, 12, 20, 0.88);
+            }
+            #selected-game-title {
+                font-size: clamp(1.25rem, 6vw, 1.7rem);
+                letter-spacing: 0.08em;
+                white-space: normal;
+                line-height: 1.08;
+            }
+            .score-record-note {
+                margin-top: 6px;
+                font-size: 0.62rem;
+                line-height: 1.25;
+            }
+            .selected-rank-panel {
+                right: auto;
+                left: 50%;
+                bottom: 96px;
+                transform: translateX(-50%);
+                width: min(360px, calc(100vw - 24px));
+                box-sizing: border-box;
+                padding: 10px;
+            }
+            .rank-preview-list {
+                max-height: 86px;
+                overflow: hidden;
+            }
+            .play-btn {
+                bottom: 24px;
+                padding: 14px 30px;
+                font-size: 1.05rem;
+            }
         }
     </style>
 </head>
-<body>
+<body class="font-arcade min-h-screen antialiased selection:bg-arcadeBlue/30">
     <canvas id="dust-canvas"></canvas>
     
     <!-- Trophy Room Button -->
@@ -489,13 +723,24 @@
         </div>
     </div>
 
+    <!-- Name Prompt Modal (replaces browser alert) -->
+    <div id="prompt-modal" class="db-modal">
+        <div class="db-modal-content" style="max-width: 360px;">
+            <div style="font-size: 2.4rem; margin-bottom: 12px;">👤</div>
+            <h2 style="margin-top: 0; color: #a6c1ee; font-size: 1.6rem;">Set Your Name First</h2>
+            <p style="color: #bdc3c7; margin: 0 0 24px; font-size: 0.95rem; line-height: 1.5;">Please add your name so your highest score can be recorded on the leaderboards.</p>
+            <button id="prompt-ok-btn" class="play-btn" style="position: relative; transform: none; bottom: 0; left: 0; width: 100%; padding: 15px; font-size: 1.1rem;">GOT IT — SET MY NAME</button>
+            <button id="prompt-cancel-btn" style="background: transparent; border: none; color: #ff5a76; margin-top: 16px; font-size: 0.95rem; cursor: pointer; text-decoration: underline; font-weight: bold;">Maybe later</button>
+        </div>
+    </div>
+
     <!-- Player Database Modal -->
     <div id="db-modal" class="db-modal">
         <div class="db-modal-content">
-            <h2 style="margin-top: 0; color: #a6c1ee; font-size: 2rem;">Player Login</h2>
-            <p style="color: #bdc3c7;">Enter your name to create a profile and track your own high scores!</p>
+            <h2 style="margin-top: 0; color: #a6c1ee; font-size: 2rem;">Player Name</h2>
+            <p style="color: #bdc3c7;">Scores save automatically while you play when this name is set.</p>
             <input type="text" id="player-name-input" class="db-input" placeholder="Enter your name..." maxlength="15">
-            <button id="save-player-btn" class="play-btn" style="position: relative; transform: none; bottom: 0; left: 0; width: 100%; padding: 15px; font-size: 1.2rem; margin-top: 10px;">SAVE PROFILE</button>
+            <button id="save-player-btn" class="play-btn" style="position: relative; transform: none; bottom: 0; left: 0; width: 100%; padding: 15px; font-size: 1.2rem; margin-top: 10px;">SAVE NAME</button>
             <button id="close-db-btn" style="background: transparent; border: none; color: #ff5a76; margin-top: 20px; font-size: 1rem; cursor: pointer; text-decoration: underline; font-weight: bold;">Cancel</button>
         </div>
     </div>
@@ -518,13 +763,26 @@
 
     <div class="eyebrow">ADHD Arcade</div>
     <h1 class="welcome-text">Your brain's playground awaits!!</h1>
-    <div class="nav-hint">&larr; USE ARROW KEYS TO NAVIGATE &rarr;</div>
+    <div class="nav-hint">Drag, swipe, or use arrow keys</div>
     
     <div class="gallery-wrapper">
         <div class="circular-gallery" id="gallery-container"></div>
         <div class="selected-game-display">
             <h2 id="selected-game-title">Loading...</h2>
+            <p id="score-record-note" class="score-record-note">Add your name to record your highest score.</p>
         </div>
+        <section class="selected-rank-panel" aria-live="polite">
+            <div class="rank-panel-header">
+                <div class="rank-panel-title">
+                    <span>Top Players</span>
+                    <strong id="rank-panel-game">Loading...</strong>
+                </div>
+                <button id="rank-panel-open-btn" class="rank-panel-open-btn" type="button">View All</button>
+            </div>
+            <div id="selected-leaderboard-list" class="rank-preview-list">
+                <div class="rank-message">Loading rankings...</div>
+            </div>
+        </section>
         <button class="play-btn" id="play-btn">PLAY SELECTED</button>
     </div>
 
@@ -536,7 +794,7 @@
         let height = canvas.height = window.innerHeight;
 
         const particles = [];
-        for (let i = 0; i < 150; i++) {
+        for (let i = 0; i < 80; i++) {
             particles.push({
                 x: Math.random() * width,
                 y: Math.random() * height,
@@ -596,12 +854,24 @@
     </script>
 
     <script type="module">
+        // =====================================================================
+        // OPTION 2: UID-BASED IDENTITY
+        // Player documents are keyed by Firebase Anonymous Auth UID, NOT by name.
+        // The display name is just a cosmetic label stored inside the document.
+        // This means:
+        //   - Typing someone else's name CANNOT steal their scores.
+        //   - Each device/browser gets its own permanent UID (persisted by Firebase).
+        //   - Changing your display name only updates the name field on YOUR document.
+        //   - Scores always belong to the device's UID.
+        // =====================================================================
+
         // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Your web app's Firebase configuration
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyANOX_HyzFEzL_0ky8jW-O8Zj-YzpXUdaY",
             authDomain: "omnicade-af880.firebaseapp.com",
@@ -615,47 +885,302 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Two-Way Sync for Achievements & High Scores
-        async function syncPlayerProfile(playerName) {
-            if (!playerName || playerName === 'Guest') return;
+        // ----------------------------------------------------------------
+        // Auth: sign in anonymously and wait for the UID to be ready.
+        // Firebase persists the anonymous UID in IndexedDB automatically,
+        // so the same device always gets the same UID on return visits.
+        // ----------------------------------------------------------------
+        let currentUID = null;
+
+        const authReady = new Promise((resolve, reject) => {
+            // signInAnonymously creates or reuses the persisted anonymous account
+            signInAnonymously(auth).catch(reject);
+            // onAuthStateChanged fires once the SDK has loaded the persisted user
+            const unsub = onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUID = user.uid;
+                    unsub();
+                    resolve(user);
+                }
+            });
+            // Fallback timeout so we fail gracefully if Firebase is unreachable
+            setTimeout(() => reject(new Error('Firebase Anonymous sign-in is not enabled yet.')), 6000);
+        });
+
+        function withTimeout(promise, ms, message) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
+            ]);
+        }
+
+        async function ensureDatabaseAccess() {
+            await withTimeout(authReady, 5000, 'Firebase Anonymous sign-in is not enabled yet.');
+            return auth.currentUser;
+        }
+
+        // ----------------------------------------------------------------
+        // Game definitions (unchanged)
+        // ----------------------------------------------------------------
+        const dashboardGames = [
+            {
+                title: 'Simon Says',
+                image: 'images/simon-says.jpg',
+                url: 'SimonSays.html',
+                scoreKey: 'simonBestLevel',
+                localKeys: ['simonBestLevel'],
+                optionLabel: 'Simon Says (Highest Level)',
+                scorePrefix: 'Level'
+            },
+            {
+                title: 'Hammer & Shield',
+                image: 'images/hammer-shield.jpg',
+                url: 'HammerShield.html',
+                scoreKey: 'hammerShieldWins',
+                localKeys: ['hammerShieldWins'],
+                optionLabel: 'Hammer & Shield (Wins)',
+                scoreSingular: 'Win',
+                scorePlural: 'Wins',
+                unitPosition: 'suffix'
+            },
+            {
+                title: 'Stacker',
+                image: 'images/stacker.jpg',
+                url: 'Stacker.html',
+                scoreKey: 'stackerBestRow',
+                localKeys: ['stackerBestRow', 'stackerHighScore', 'stackerHighScore_easy', 'stackerHighScore_hard'],
+                optionLabel: 'Stacker (Best Row)',
+                scorePrefix: 'Row'
+            },
+            {
+                title: 'Color Sort',
+                image: 'images/color-sort.jpg',
+                url: 'ColorSort.html',
+                scoreKey: 'colorSortMaxLevel',
+                localKeys: ['colorSortMaxLevel'],
+                optionLabel: 'Color Sort (Highest Level)',
+                scorePrefix: 'Level'
+            },
+            {
+                title: 'Orbit Pop',
+                image: 'images/orbit-pop.jpg',
+                url: 'OrbitPop.html',
+                scoreKey: 'orbitPopMaxLevel',
+                localKeys: ['orbitPopMaxLevel'],
+                optionLabel: 'Orbit Pop (Highest Level)',
+                scorePrefix: 'Level'
+            },
+            {
+                title: 'Number Race',
+                image: 'images/NumberRace.jpg',
+                url: 'NumberRace.html',
+                scoreKey: 'numberRaceWins',
+                localKeys: ['numberRaceWins'],
+                optionLabel: 'Number Race (Wins)',
+                scoreSingular: 'Win',
+                scorePlural: 'Wins',
+                unitPosition: 'suffix'
+            }
+        ];
+
+        const gameConfigByKey = new Map(dashboardGames.map(g => [g.scoreKey, g]));
+        const gameConfigByTitle = new Map(dashboardGames.map(g => [g.title, g]));
+        window.dashboardGameItems = dashboardGames.map(g => ({
+            image: g.image, text: g.title, url: g.url, scoreKey: g.scoreKey
+        })).concat({ image: 'images/poko-tree.svg', text: 'POKO Tree', url: 'POKOTree.html', comingSoon: true });
+
+        // ----------------------------------------------------------------
+        // Helpers
+        // ----------------------------------------------------------------
+        function toScore(value) {
+            const s = Number.parseInt(value, 10);
+            return Number.isFinite(s) && s > 0 ? s : 0;
+        }
+
+        function normalizeDisplayName(name) {
+            return (name || '').trim().replace(/\//g, '-').slice(0, 15) || 'Guest';
+        }
+
+        function getBestLocalScore(game) {
+            return game.localKeys.reduce((best, key) => Math.max(best, toScore(localStorage.getItem(key))), 0);
+        }
+
+        function collectLocalScores() {
+            return dashboardGames.reduce((scores, game) => {
+                const score = getBestLocalScore(game);
+                scores[game.scoreKey] = score;
+                if (game.scoreKey === 'stackerBestRow' && score > 0) {
+                    localStorage.setItem('stackerBestRow', String(score));
+                }
+                return scores;
+            }, {});
+        }
+
+        function storeMergedScores(scores) {
+            dashboardGames.forEach(game => {
+                const score = toScore(scores[game.scoreKey]);
+                if (score > 0) {
+                    localStorage.setItem(game.scoreKey, String(score));
+                    if (game.localKeys) game.localKeys.forEach(k => localStorage.setItem(k, String(score)));
+                } else {
+                    localStorage.removeItem(game.scoreKey);
+                    if (game.localKeys) game.localKeys.forEach(k => localStorage.removeItem(k));
+                }
+            });
+        }
+
+        function formatLeaderboardScore(game, score) {
+            if (game.unitPosition === 'suffix') {
+                return `${score} ${score === 1 ? game.scoreSingular : game.scorePlural}`;
+            }
+            return `${game.scorePrefix} ${score}`;
+        }
+
+        function syncStatusText() {
+            return currentPlayer === 'Guest'
+                ? 'Add your name to record your highest score.'
+                : `Recording highs as ${currentPlayer}`;
+        }
+
+        function updateScoreRecordNote() {
+            const note = document.getElementById('score-record-note');
+            if (!note) return;
+            note.textContent = currentPlayer === 'Guest'
+                ? 'Add your name to record your highest score.'
+                : `Highest scores record as ${currentPlayer}.`;
+        }
+
+        const promptModal = document.getElementById('prompt-modal');
+        document.getElementById('prompt-ok-btn').addEventListener('click', () => {
+            promptModal.style.display = 'none';
+            playerNameInput.value = currentPlayer === 'Guest' ? '' : currentPlayer;
+            dbModal.style.display = 'flex';
+            playerNameInput.focus();
+        });
+        document.getElementById('prompt-cancel-btn').addEventListener('click', () => {
+            promptModal.style.display = 'none';
+        });
+        promptModal.addEventListener('click', (e) => {
+            if (e.target === promptModal) promptModal.style.display = 'none';
+        });
+
+        function promptForPlayerName() {
+            promptModal.style.display = 'flex';
+        }
+
+        function launchGame(item) {
+            if (!item || !item.url || item.comingSoon) return;
+            if (currentPlayer === 'Guest') { promptForPlayerName(); return; }
+            window.location.href = item.url;
+        }
+        window.launchGame = launchGame;
+
+        function isPermissionError(error) {
+            return /permission|insufficient/i.test(error && error.message ? error.message : '');
+        }
+
+        function getDatabaseHelpMessage(error) {
+            const msg = error && error.message ? error.message : '';
+            if (/Anonymous sign-in|auth\/configuration-not-found/i.test(msg)) {
+                return 'Enable Anonymous sign-in in Firebase Authentication.';
+            }
+            if (isPermissionError(error)) {
+                return 'Update Firestore Rules so players can read rankings and signed-in users can write scores.';
+            }
+            return 'Cloud rankings are unavailable right now.';
+        }
+
+        // ----------------------------------------------------------------
+        // UID-BASED PROFILE SYNC
+        //
+        // The Firestore document path is: players/{uid}
+        // It stores: { displayName, achievements, highScores, updatedAt }
+        //
+        // On first visit: UID is new, document is empty → local scores are
+        //   pushed up and the display name is set.
+        // On return visit: cloud scores are merged with local (take the max),
+        //   so the best score always wins regardless of device.
+        // On name change: ONLY the displayName field is updated. Scores are
+        //   untouched and still belong to this UID.
+        // ----------------------------------------------------------------
+        async function syncPlayerProfile() {
+            // We need a UID; nothing to sync for guests
+            if (!currentUID || currentPlayer === 'Guest') return null;
+
             try {
-                const playerRef = doc(db, "players", playerName);
+                await ensureDatabaseAccess();
+                const playerRef = doc(db, "players", currentUID);
                 const docSnap = await getDoc(playerRef);
 
-                let cloudData = docSnap.exists() ? docSnap.data() : {};
-                let cloudAchievements = cloudData.achievements || {};
-                let cloudScores = cloudData.highScores || {};
+                const cloudData = docSnap.exists() ? docSnap.data() : {};
+                const cloudAchievements = cloudData.achievements || {};
+                const cloudScores = cloudData.highScores || {};
 
-                let localAchievements = JSON.parse(localStorage.getItem('arcade_achievements')) || {};
-                let localScores = {
-                    simonBestLevel: parseInt(localStorage.getItem('simonBestLevel')) || 0,
-                    orbitPopMaxLevel: parseInt(localStorage.getItem('orbitPopMaxLevel')) || 1,
-                    colorSortMaxLevel: parseInt(localStorage.getItem('colorSortMaxLevel')) || 1
-                };
+                // Merge: local achievements union cloud achievements
+                const localAchievements = JSON.parse(localStorage.getItem('arcade_achievements') || '{}');
+                const mergedAchievements = { ...cloudAchievements, ...localAchievements };
 
-                let mergedAchievements = { ...cloudAchievements, ...localAchievements };
-                let mergedScores = {
-                    simonBestLevel: Math.max(cloudScores.simonBestLevel || 0, localScores.simonBestLevel),
-                    orbitPopMaxLevel: Math.max(cloudScores.orbitPopMaxLevel || 1, localScores.orbitPopMaxLevel),
-                    colorSortMaxLevel: Math.max(cloudScores.colorSortMaxLevel || 1, localScores.colorSortMaxLevel)
-                };
+                // Merge scores: always keep the higher value per game
+                const localScores = collectLocalScores();
+                const mergedScores = {};
+                dashboardGames.forEach(game => {
+                    mergedScores[game.scoreKey] = Math.max(
+                        toScore(cloudScores[game.scoreKey]),
+                        toScore(localScores[game.scoreKey])
+                    );
+                });
 
-                // Update Local Storage with the highest/merged values
+                // Push merged data back down to localStorage
                 localStorage.setItem('arcade_achievements', JSON.stringify(mergedAchievements));
-                localStorage.setItem('simonBestLevel', mergedScores.simonBestLevel);
-                localStorage.setItem('orbitPopMaxLevel', mergedScores.orbitPopMaxLevel);
-                localStorage.setItem('colorSortMaxLevel', mergedScores.colorSortMaxLevel);
+                storeMergedScores(mergedScores);
 
-                // Push the newly merged master record back up to the Cloud
-                await setDoc(playerRef, { achievements: mergedAchievements, highScores: mergedScores }, { merge: true });
+                // Write to Firestore under the UID document.
+                // displayName is cosmetic — changing it does NOT change the doc path,
+                // so no one can steal scores by guessing a name.
+                await withTimeout(
+                    setDoc(playerRef, {
+                        displayName: currentPlayer,   // cosmetic label only
+                        updatedAt: new Date().toISOString(),
+                        achievements: mergedAchievements,
+                        highScores: mergedScores
+                    }, { merge: true }),
+                    5000,
+                    'Firebase setDoc timeout'
+                );
+
+                return mergedScores;
             } catch (e) {
-                console.error("Cloud sync failed:", e);
+                console.error('Sync error:', e);
+                return null;
             }
         }
 
-        // Player Database & Profile System
+        // Rename-only: just update the displayName field on the existing UID document.
+        // Does NOT touch scores or achievements.
+        async function updateDisplayNameOnly(newName) {
+            if (!currentUID) return;
+            try {
+                await ensureDatabaseAccess();
+                const playerRef = doc(db, "players", currentUID);
+                await withTimeout(
+                    setDoc(playerRef, {
+                        displayName: newName,
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true }),
+                    5000,
+                    'Firebase setDoc timeout'
+                );
+            } catch (e) {
+                console.error('Display name update error:', e);
+            }
+        }
+
+        // ----------------------------------------------------------------
+        // Player Profile UI
+        // ----------------------------------------------------------------
         const profileBtn = document.getElementById('profile-btn');
         const dbModal = document.getElementById('db-modal');
         const closeDbBtn = document.getElementById('close-db-btn');
@@ -663,9 +1188,11 @@
         const playerNameInput = document.getElementById('player-name-input');
         const currentPlayerName = document.getElementById('current-player-name');
 
-        // Load saved player from local database
-        let currentPlayer = localStorage.getItem('currentPlayer') || 'Guest';
+        // Load the display name from localStorage (cosmetic only)
+        let currentPlayer = normalizeDisplayName(localStorage.getItem('currentPlayer') || 'Guest');
+        localStorage.setItem('currentPlayer', currentPlayer);
         currentPlayerName.innerText = currentPlayer;
+        updateScoreRecordNote();
 
         profileBtn.addEventListener('click', () => {
             playerNameInput.value = currentPlayer === 'Guest' ? '' : currentPlayer;
@@ -673,51 +1200,56 @@
             playerNameInput.focus();
         });
 
-        closeDbBtn.addEventListener('click', () => {
-            dbModal.style.display = 'none';
-        });
+        closeDbBtn.addEventListener('click', () => { dbModal.style.display = 'none'; });
 
         savePlayerBtn.addEventListener('click', async () => {
-            const name = playerNameInput.value.trim() || 'Guest';
-            currentPlayer = name;
-            
+            const newName = normalizeDisplayName(playerNameInput.value);
+            if (!newName || newName === 'Guest') return;
+
+            const isNameChange = newName !== currentPlayer;
+            currentPlayer = newName;
             localStorage.setItem('currentPlayer', currentPlayer);
             currentPlayerName.innerText = currentPlayer;
-            
-            // Sync with Firestore Cloud Database
-            if (currentPlayer !== 'Guest') {
-                savePlayerBtn.innerText = "SYNCING TO CLOUD...";
-                await syncPlayerProfile(currentPlayer);
-                savePlayerBtn.innerText = "SAVE PROFILE";
+
+            savePlayerBtn.innerText = 'SAVING NAME...';
+
+            if (isNameChange && currentUID) {
+                // Only rename — scores stay put on the UID document
+                await updateDisplayNameOnly(currentPlayer);
+            } else {
+                // First time setting a name: do a full sync to push local scores up
+                await syncPlayerProfile();
             }
+
+            leaderboardCache.clear();
+            savePlayerBtn.innerText = 'SAVE NAME';
+            updateScoreRecordNote();
+            if (window.refreshSelectedGameLeaderboard) window.refreshSelectedGameLeaderboard();
             dbModal.style.display = 'none';
         });
 
-        // Allow pressing Enter to save
         playerNameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') savePlayerBtn.click();
         });
 
-        // Trophy Room Logic
+        // ----------------------------------------------------------------
+        // Trophy Room
+        // ----------------------------------------------------------------
         const achievementsList = [
-            { id: 'simon_5', icon: '🧠', title: 'Brain Warmup', desc: 'Reach Level 5 in Simon Says' },
-            { id: 'simon_10', icon: '🔥', title: 'On Fire', desc: 'Reach Level 10 in Simon Says' },
-            { id: 'simon_time', icon: '⏱️', title: 'Tick Tock', desc: 'Play Time Attack Mode' },
-            { id: 'hammer_win', icon: '👑', title: 'Gladiator', desc: 'Win a match in Hammer & Shield' },
-            { id: 'color_sort', icon: '🧪', title: 'Scientist', desc: 'Solve a Color Sort puzzle' },
-            { id: 'orbit_10', icon: '🪐', title: 'Orbit Cleared', desc: 'Reach Level 10 in Orbit Pop' }
+            { id: 'simon_5',   icon: '🧠', title: 'Brain Warmup',  desc: 'Reach Level 5 in Simon Says' },
+            { id: 'simon_10',  icon: '🔥', title: 'On Fire',        desc: 'Reach Level 10 in Simon Says' },
+            { id: 'simon_time',icon: '⏱️', title: 'Tick Tock',      desc: 'Play Time Attack Mode' },
+            { id: 'hammer_win',icon: '👑', title: 'Gladiator',      desc: 'Win a match in Hammer & Shield' },
+            { id: 'color_sort',icon: '🧪', title: 'Scientist',      desc: 'Solve a Color Sort puzzle' },
+            { id: 'orbit_10',  icon: '🪐', title: 'Orbit Cleared',  desc: 'Reach Level 10 in Orbit Pop' }
         ];
 
         const trophyModal = document.getElementById('trophy-modal');
-        const trophyGrid = document.getElementById('trophy-grid');
+        const trophyGrid  = document.getElementById('trophy-grid');
 
         document.getElementById('trophy-btn').addEventListener('click', async () => {
-            // Refresh from cloud before opening if logged in
-            if (currentPlayer !== 'Guest') {
-                await syncPlayerProfile(currentPlayer);
-            }
-
-            const unlocked = JSON.parse(localStorage.getItem('arcade_achievements')) || {};
+            if (currentPlayer !== 'Guest') await syncPlayerProfile();
+            const unlocked = JSON.parse(localStorage.getItem('arcade_achievements') || '{}');
             trophyGrid.innerHTML = '';
             achievementsList.forEach(ach => {
                 const isUnlocked = unlocked[ach.id];
@@ -726,8 +1258,7 @@
                         <span class="trophy-icon">${ach.icon}</span>
                         <h4 class="trophy-title">${ach.title}</h4>
                         <p class="trophy-desc">${ach.desc}</p>
-                    </div>
-                `;
+                    </div>`;
             });
             trophyModal.style.display = 'flex';
         });
@@ -736,52 +1267,195 @@
             trophyModal.style.display = 'none';
         });
 
-        // Global Leaderboard Logic
-        const leaderboardBtn = document.getElementById('leaderboard-btn');
-        const leaderboardModal = document.getElementById('leaderboard-modal');
-        const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
-        const leaderboardGameSelect = document.getElementById('leaderboard-game-select');
-        const leaderboardList = document.getElementById('leaderboard-list');
+        // ----------------------------------------------------------------
+        // Leaderboard
+        // Reads displayName from each player document for display.
+        // ----------------------------------------------------------------
+        const leaderboardBtn          = document.getElementById('leaderboard-btn');
+        const leaderboardModal        = document.getElementById('leaderboard-modal');
+        const closeLeaderboardBtn     = document.getElementById('close-leaderboard-btn');
+        const leaderboardGameSelect   = document.getElementById('leaderboard-game-select');
+        const leaderboardList         = document.getElementById('leaderboard-list');
+        const selectedLeaderboardList = document.getElementById('selected-leaderboard-list');
+        const selectedLeaderboardGame = document.getElementById('rank-panel-game');
+        const selectedLeaderboardOpenBtn = document.getElementById('rank-panel-open-btn');
 
-        async function fetchLeaderboard(gameKey) {
-            leaderboardList.innerHTML = '<div style="text-align:center; color:#a6c1ee; font-weight:bold; padding: 20px;">Fetching from Cloud...</div>';
-            try {
-                const q = query(collection(db, "players"), orderBy(`highScores.${gameKey}`, "desc"), limit(10));
-                const querySnapshot = await getDocs(q);
-                let html = '';
-                let rank = 1;
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const score = data.highScores && data.highScores[gameKey] ? data.highScores[gameKey] : 0;
-                    if (score > 0) {
-                        const color = rank === 1 ? '#ffd166' : rank === 2 ? '#bdc3c7' : rank === 3 ? '#cd7f32' : '#ffffff';
-                        html += `
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); margin-bottom: 5px; border-radius: 8px;">
-                                <span style="font-weight: 900; color: ${color}; font-size: 1.1rem;">#${rank} ${doc.id}</span>
-                                <span style="color: #4dabff; font-weight: 900; font-size: 1.3rem;">Level ${score}</span>
-                            </div>`;
-                        rank++;
-                    }
-                });
-                if (html === '') html = '<div style="text-align:center; color:#bdc3c7; padding: 20px;">No high scores posted yet!</div>';
-                leaderboardList.innerHTML = html;
-            } catch(e) {
-                console.error("Leaderboard fetch error:", e);
-                leaderboardList.innerHTML = `<div style="text-align:center; color:#ff5a76; padding: 20px; font-size: 0.9rem;"><strong>Database Error:</strong><br>${e.message}</div>`;
+        let selectedLeaderboardKey   = dashboardGames[0].scoreKey;
+        let previewRequestId         = 0;
+        let selectedLeaderboardTimer = null;
+        let leaderboardReadBlocked   = false;
+        let selectedLeaderboardMessage = '';
+        const leaderboardCache       = new Map();
+
+        function populateLeaderboardSelect() {
+            leaderboardGameSelect.innerHTML = '';
+            dashboardGames.forEach(game => {
+                const option = document.createElement('option');
+                option.value = game.scoreKey;
+                option.textContent = game.optionLabel;
+                leaderboardGameSelect.appendChild(option);
+            });
+        }
+
+        function renderMessage(container, message, isError = false) {
+            container.innerHTML = '';
+            const el = document.createElement('div');
+            el.className = `rank-message${isError ? ' error' : ''}`;
+            el.textContent = message;
+            container.appendChild(el);
+        }
+
+        function renderLeaderboardRows(container, game, rows, isCompact = false) {
+            container.innerHTML = '';
+            if (rows.length === 0) {
+                renderMessage(container, 'No scores posted for this game yet.');
+                return;
+            }
+            rows.forEach(row => {
+                const rowEl = document.createElement('div');
+                rowEl.className = `leaderboard-row${isCompact ? ' compact' : ''}`;
+
+                const nameEl = document.createElement('span');
+                nameEl.className = 'rank-name';
+                nameEl.textContent = `#${row.rank} ${row.name}`;
+                if (row.rank === 1) nameEl.style.color = '#ffd166';
+                if (row.rank === 2) nameEl.style.color = '#bdc3c7';
+                if (row.rank === 3) nameEl.style.color = '#cd7f32';
+
+                const scoreEl = document.createElement('span');
+                scoreEl.className = 'rank-score';
+                scoreEl.textContent = formatLeaderboardScore(game, row.score);
+
+                rowEl.appendChild(nameEl);
+                rowEl.appendChild(scoreEl);
+                container.appendChild(rowEl);
+            });
+
+            if (isCompact) {
+                const statusEl = document.createElement('div');
+                statusEl.className = 'rank-message';
+                statusEl.textContent = syncStatusText();
+                container.appendChild(statusEl);
             }
         }
 
+        async function loadLeaderboardRows(gameKey, count = 10, forceRefresh = false) {
+            await ensureDatabaseAccess();
+            const game = gameConfigByKey.get(gameKey) || dashboardGames[0];
+            const cacheKey = `${game.scoreKey}:${count}`;
+            if (!forceRefresh && leaderboardCache.has(cacheKey)) return leaderboardCache.get(cacheKey);
+
+            // Query players collection, ordered by this game's score descending.
+            // Document IDs are UIDs; displayName is the cosmetic label shown in rankings.
+            const q = query(
+                collection(db, "players"),
+                orderBy(`highScores.${game.scoreKey}`, "desc"),
+                limit(count)
+            );
+            const querySnapshot = await withTimeout(getDocs(q), 5500, 'Firebase leaderboard request timed out.');
+
+            const rows = [];
+            querySnapshot.forEach((playerDoc) => {
+                const data = playerDoc.data();
+                const score = toScore(data.highScores && data.highScores[game.scoreKey]);
+                if (score > 0) {
+                    rows.push({
+                        rank: rows.length + 1,
+                        // Use displayName (cosmetic) for the leaderboard label.
+                        // Falls back to a truncated UID so there is always something.
+                        name: data.displayName || ('Player-' + playerDoc.id.slice(0, 6)),
+                        score
+                    });
+                }
+            });
+
+            const result = { game, rows };
+            leaderboardCache.set(cacheKey, result);
+            return result;
+        }
+
+        async function fetchLeaderboard(gameKey) {
+            const game = gameConfigByKey.get(gameKey) || dashboardGames[0];
+            if (leaderboardReadBlocked) {
+                renderMessage(leaderboardList, 'Cloud rankings are unavailable right now.', true);
+                return;
+            }
+            renderMessage(leaderboardList, `Fetching ${game.title} rankings from cloud...`);
+            try {
+                const result = await loadLeaderboardRows(game.scoreKey, 10);
+                renderLeaderboardRows(leaderboardList, result.game, result.rows);
+            } catch (e) {
+                selectedLeaderboardMessage = getDatabaseHelpMessage(e);
+                if (isPermissionError(e) || /timed out|Anonymous sign-in/i.test(e.message || '')) {
+                    leaderboardReadBlocked = true;
+                }
+                renderMessage(leaderboardList, selectedLeaderboardMessage, true);
+            }
+        }
+
+        async function refreshSelectedGameLeaderboard(gameTitle) {
+            const game = gameConfigByTitle.get(gameTitle) || gameConfigByKey.get(selectedLeaderboardKey) || dashboardGames[0];
+            const requestId = ++previewRequestId;
+            selectedLeaderboardKey = game.scoreKey;
+            selectedLeaderboardGame.textContent = game.title;
+
+            if (leaderboardReadBlocked) {
+                renderMessage(selectedLeaderboardList, selectedLeaderboardMessage || 'Cloud rankings are unavailable right now.', true);
+                return;
+            }
+            if (!selectedLeaderboardList.textContent.trim() || !/Loading /.test(selectedLeaderboardList.textContent)) {
+                renderMessage(selectedLeaderboardList, `Loading ${game.title} leaders...`);
+            }
+            clearTimeout(selectedLeaderboardTimer);
+            selectedLeaderboardTimer = setTimeout(async () => {
+                try {
+                    const result = await loadLeaderboardRows(game.scoreKey, 3);
+                    if (requestId !== previewRequestId) return;
+                    renderLeaderboardRows(selectedLeaderboardList, result.game, result.rows, true);
+                } catch (e) {
+                    if (requestId !== previewRequestId) return;
+                    selectedLeaderboardMessage = getDatabaseHelpMessage(e);
+                    if (isPermissionError(e) || /timed out|Anonymous sign-in/i.test(e.message || '')) {
+                        leaderboardReadBlocked = true;
+                    }
+                    renderMessage(selectedLeaderboardList, selectedLeaderboardMessage, true);
+                }
+            }, 180);
+        }
+
+        populateLeaderboardSelect();
+        window.refreshSelectedGameLeaderboard = refreshSelectedGameLeaderboard;
+
         leaderboardBtn.addEventListener('click', () => {
+            leaderboardGameSelect.value = selectedLeaderboardKey;
             leaderboardModal.style.display = 'flex';
             fetchLeaderboard(leaderboardGameSelect.value);
         });
 
-        closeLeaderboardBtn.addEventListener('click', () => {
-            leaderboardModal.style.display = 'none';
+        selectedLeaderboardOpenBtn.addEventListener('click', () => {
+            leaderboardGameSelect.value = selectedLeaderboardKey;
+            leaderboardModal.style.display = 'flex';
+            fetchLeaderboard(selectedLeaderboardKey);
         });
 
-        leaderboardGameSelect.addEventListener('change', (e) => {
-            fetchLeaderboard(e.target.value);
+        closeLeaderboardBtn.addEventListener('click', () => { leaderboardModal.style.display = 'none'; });
+        leaderboardGameSelect.addEventListener('change', (e) => { fetchLeaderboard(e.target.value); });
+
+        // ----------------------------------------------------------------
+        // Bootstrap: wait for auth, then sync if the player has a name set.
+        // ----------------------------------------------------------------
+        authReady.then(() => {
+            if (currentPlayer !== 'Guest') {
+                syncPlayerProfile().then(() => {
+                    leaderboardCache.clear();
+                    refreshSelectedGameLeaderboard();
+                });
+            } else {
+                refreshSelectedGameLeaderboard();
+            }
+        }).catch(() => {
+            // Auth failed — still show leaderboard (it may fail too, handled inside)
+            refreshSelectedGameLeaderboard();
         });
     </script>
 
@@ -993,8 +1667,9 @@
                         void main() {
                             vTexCoord = uv;
                             vec3 pos = position;
-                            float waveDist = sin(pos.x * 4.0 + uTime) * 1.5 + cos(pos.y * 2.0 + uTime) * 1.5;
-                            pos.z = waveDist * (0.1 + uSpeed * 0.5);
+                            float idleWave = sin(pos.x * 3.0 + uTime) * 0.035 + cos(pos.y * 2.0 + uTime * 0.7) * 0.025;
+                            float scrollWave = sin(pos.x * 4.0) * uSpeed * 0.18;
+                            pos.z = idleWave + scrollWave;
                             gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                         }
                     `,
@@ -1087,7 +1762,7 @@
                 }
 
                 this.speed = scroll.current - scroll.last;
-                this.program.uniforms.uTime.value += 0.04;
+                this.program.uniforms.uTime.value += 0.012;
                 this.program.uniforms.uSpeed.value = this.speed;
 
                 const planeOffset = this.plane.scale.x / 2;
@@ -1143,6 +1818,8 @@
                 this.update();
                 this.addEventListeners();
                 this.dragDistance = 0;
+                this.lastCenteredText = '';
+                this.centeredUpdateTimer = null;
 
                 this.isAutoScrolling = false;
                 this.inactivityTimer = null;
@@ -1153,7 +1830,7 @@
                 this.inactivityTimer = setTimeout(() => { this.isAutoScrolling = true; }, 5000); // 5 seconds
             }
             createRenderer() {
-                this.renderer = new Renderer({ alpha: true, antialias: true, dpr: Math.min(window.devicePixelRatio || 1, 2) });
+                this.renderer = new Renderer({ alpha: true, antialias: true, dpr: Math.min(window.devicePixelRatio || 1, 1.35) });
                 this.gl = this.renderer.gl;
                 this.gl.clearColor(0, 0, 0, 0);
                 this.container.appendChild(this.gl.canvas);
@@ -1167,7 +1844,7 @@
                 this.scene = new Transform();
             }
             createGeometry() {
-                this.planeGeometry = new Plane(this.gl, { heightSegments: 50, widthSegments: 100 });
+                this.planeGeometry = new Plane(this.gl, { heightSegments: 12, widthSegments: 24 });
             }
             createMedias(items, bend = 1, textColor, borderRadius, font) {
                 this.mediasImages = items.concat(items); // duplicate to loop properly
@@ -1205,9 +1882,7 @@
                 // Handle clicking a card directly
                 if (this.dragDistance < 10) {
                     const centered = this.getCenteredItem();
-                    if (centered && centered.url) {
-                        window.location.href = centered.url;
-                    }
+                    window.launchGame(centered);
                 }
             }
             onKeyDown(e) {
@@ -1227,9 +1902,7 @@
                 } else if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     const centered = this.getCenteredItem();
-                    if (centered && centered.url) {
-                        window.location.href = centered.url;
-                    }
+                    window.launchGame(centered);
                 }
             }
             onWheel(e) {
@@ -1267,7 +1940,8 @@
             }
             update() {
                 if (this.isAutoScrolling) {
-                    this.scroll.target += 0.1; // Auto-scroll speed
+                    const autoScrollSpeed = window.innerWidth <= 600 ? 0.012 : 0.025;
+                    this.scroll.target += autoScrollSpeed; // Gentle auto-scroll speed
                 }
                 this.scroll.current = lerp(this.scroll.current, this.scroll.target, this.scroll.ease);
                 const scrollDir = this.scroll.current > this.scroll.last ? 'right' : 'left';
@@ -1283,11 +1957,22 @@
                 
                 // Update the centered game title display dynamically
                 const centeredItem = this.getCenteredItem();
-                if (centeredItem && centeredItem.text) {
+                if (centeredItem && centeredItem.text && centeredItem.text !== this.lastCenteredText) {
+                    this.lastCenteredText = centeredItem.text;
                     const titleEl = document.getElementById('selected-game-title');
-                    if (titleEl && titleEl.innerText !== centeredItem.text) {
-                        titleEl.innerText = centeredItem.text;
-                    }
+                    if (titleEl) titleEl.innerText = centeredItem.text;
+                    updatePlayButtonState(centeredItem);
+                    clearTimeout(this.centeredUpdateTimer);
+                    this.centeredUpdateTimer = setTimeout(() => {
+                        if (centeredItem.comingSoon) {
+                            const rankTitle = document.getElementById('rank-panel-game');
+                            const rankList = document.getElementById('selected-leaderboard-list');
+                            if (rankTitle) rankTitle.innerText = centeredItem.text;
+                            if (rankList) rankList.innerHTML = '<div class="rank-message">Coming Soon</div>';
+                        } else if (window.refreshSelectedGameLeaderboard) {
+                            window.refreshSelectedGameLeaderboard(centeredItem.text);
+                        }
+                    }, 450);
                 }
                 
                 this.raf = window.requestAnimationFrame(this.update.bind(this));
@@ -1314,13 +1999,14 @@
         }
 
         // Setup the specific games
-        const gameItems = [
+        const gameItems = window.dashboardGameItems || [
             { image: 'images/simon-says.jpg', text: 'Simon Says', url: 'SimonSays.html' },
             { image: 'images/hammer-shield.jpg', text: 'Hammer & Shield', url: 'HammerShield.html' },
             { image: 'images/stacker.jpg', text: 'Stacker', url: 'Stacker.html' },
             { image: 'images/color-sort.jpg', text: 'Color Sort', url: 'ColorSort.html' },
             { image: 'images/orbit-pop.jpg', text: 'Orbit Pop', url: 'OrbitPop.html' },
-            { image: 'images/number-race.svg', text: 'Number Race', url: 'NumberRace.html' }
+            { image: 'images/NumberRace.jpg', text: 'Number Race', url: 'NumberRace.html' },
+            { image: 'images/poko-tree.svg', text: 'POKO Tree', url: 'POKOTree.html', comingSoon: true }
         ];
 
         const container = document.getElementById('gallery-container');
@@ -1335,13 +2021,29 @@
         });
 
         galleryApp.resetInactivityTimer(); // Start the inactivity timer
+        function updatePlayButtonState(item) {
+            const playBtn = document.getElementById('play-btn');
+            if (!playBtn || !item) return;
+            playBtn.classList.toggle('disabled', Boolean(item.comingSoon));
+            playBtn.innerText = item.comingSoon ? 'COMING SOON' : 'PLAY SELECTED';
+            playBtn.setAttribute('aria-disabled', item.comingSoon ? 'true' : 'false');
+        }
+
+        if (window.refreshSelectedGameLeaderboard) {
+            const centered = galleryApp.getCenteredItem();
+            updatePlayButtonState(centered);
+            if (centered && centered.comingSoon) {
+                document.getElementById('rank-panel-game').innerText = centered.text;
+                document.getElementById('selected-leaderboard-list').innerHTML = '<div class="rank-message">Coming Soon</div>';
+            } else {
+                window.refreshSelectedGameLeaderboard(centered && centered.text ? centered.text : 'Simon Says');
+            }
+        }
 
         // Play Button Hookup
         document.getElementById('play-btn').addEventListener('click', () => {
             const centered = galleryApp.getCenteredItem();
-            if (centered && centered.url) {
-                window.location.href = centered.url;
-            }
+            window.launchGame(centered);
         });
     </script>
 </body>

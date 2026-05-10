@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orbit Pop</title>
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            corePlugins: { preflight: false },
+            theme: { extend: { fontFamily: { arcade: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'] } } }
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             margin: 0;
@@ -198,6 +206,7 @@
             width: 100%;
             height: 100%;
             cursor: crosshair;
+            touch-action: none;
         }
 
         .overlay {
@@ -342,7 +351,7 @@
         }
     </style>
 </head>
-<body>
+<body class="font-arcade min-h-screen antialiased selection:bg-cyan-400/30">
 
     <div class="header">
         <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
@@ -388,9 +397,9 @@
             <div>
                 <h3>Controls</h3>
                 <ul class="control-list">
-                    <li><strong>Move mouse:</strong> aim the launcher.</li>
-                    <li><strong>Left click:</strong> shoot a marble.</li>
-                    <li><strong>Right click:</strong> swap current and next marbles.</li>
+                    <li><strong>Mouse / touch:</strong> aim the launcher.</li>
+                    <li><strong>Left click / tap:</strong> shoot a marble.</li>
+                    <li><strong>Right click / two-finger tap:</strong> swap current and next marbles.</li>
                     <li><strong>P, Esc, or Space:</strong> pause or resume.</li>
                 </ul>
             </div>
@@ -802,41 +811,74 @@
 
         canvas.addEventListener('mousemove', e => {
             if (gameState !== 'playing') return;
-            const rect = canvas.getBoundingClientRect();
-            const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-            const my = (e.clientY - rect.top) * (canvas.height / rect.height);
-            shooterAngle = Math.atan2(my - 300, mx - 400);
+            aimAtClientPoint(e.clientX, e.clientY);
         });
 
         canvas.addEventListener('contextmenu', e => e.preventDefault());
 
+        function aimAtClientPoint(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const mx = (clientX - rect.left) * (canvas.width / rect.width);
+            const my = (clientY - rect.top) * (canvas.height / rect.height);
+            shooterAngle = Math.atan2(my - 300, mx - 400);
+        }
+
+        function swapMarbles() {
+            let temp = currentMarbleColor;
+            currentMarbleColor = nextMarbleColor;
+            nextMarbleColor = temp;
+            playSound('thud');
+        }
+
+        function shootMarble() {
+            if (shootCooldown > 0) return;
+            comboMultiplier = 1; // Reset combo multiplier for the new shot sequence
+            projectiles.push({
+                x: 400 + Math.cos(shooterAngle) * 25,
+                y: 300 + Math.sin(shooterAngle) * 25,
+                vx: Math.cos(shooterAngle) * 16,
+                vy: Math.sin(shooterAngle) * 16,
+                color: currentMarbleColor
+            });
+            createCannonSparks(shooterAngle, currentMarbleColor);
+            currentMarbleColor = nextMarbleColor;
+            nextMarbleColor = getShooterColor();
+            shootCooldown = 15; // frames
+            recoil = 12; // kickback amount
+            playSound('shoot');
+        }
+
+        let lastTouchShotAt = 0;
+
         canvas.addEventListener('mousedown', (e) => {
             if (gameState !== 'playing') return;
+            if (Date.now() - lastTouchShotAt < 450) return;
+            aimAtClientPoint(e.clientX, e.clientY);
 
             if (e.button === 2) {
-                let temp = currentMarbleColor;
-                currentMarbleColor = nextMarbleColor;
-                nextMarbleColor = temp;
-                playSound('thud');
+                swapMarbles();
                 return;
             }
 
-            if (e.button === 0 && shootCooldown <= 0) {
-                comboMultiplier = 1; // Reset combo multiplier for the new shot sequence
-                projectiles.push({
-                    x: 400 + Math.cos(shooterAngle) * 25,
-                    y: 300 + Math.sin(shooterAngle) * 25,
-                    vx: Math.cos(shooterAngle) * 16,
-                    vy: Math.sin(shooterAngle) * 16,
-                    color: currentMarbleColor
-                });
-                createCannonSparks(shooterAngle, currentMarbleColor);
-                currentMarbleColor = nextMarbleColor;
-                nextMarbleColor = getShooterColor();
-                shootCooldown = 15; // frames
-                recoil = 12; // kickback amount
-                playSound('shoot');
+            if (e.button === 0) shootMarble();
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (gameState !== 'playing' || e.pointerType === 'mouse') return;
+            e.preventDefault();
+            aimAtClientPoint(e.clientX, e.clientY);
+        });
+
+        canvas.addEventListener('pointerdown', (e) => {
+            if (gameState !== 'playing' || e.pointerType === 'mouse') return;
+            e.preventDefault();
+            lastTouchShotAt = Date.now();
+            aimAtClientPoint(e.clientX, e.clientY);
+            if (e.pointerType === 'touch' && e.isPrimary === false) {
+                swapMarbles();
+                return;
             }
+            shootMarble();
         });
 
         function togglePause() {

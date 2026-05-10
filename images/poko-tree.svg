@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+  <title id="title">POKO Tree Coming Soon</title>
+  <desc id="desc">A glowing arcade tree card labeled coming soon.</desc>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+      <stop offset="0" stop-color="#123626"/>
+      <stop offset="0.55" stop-color="#081923"/>
+      <stop offset="1" stop-color="#030711"/>
+    </radialGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9cffcb"/>
+      <stop offset="1" stop-color="#18d47b"/>
+    </linearGradient>
+    <linearGradient id="trunk" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffd166"/>
+      <stop offset="1" stop-color="#9b5c21"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <g opacity="0.35" fill="#ffffff">
+    <circle cx="92" cy="86" r="3"/>
+    <circle cx="168" cy="148" r="2"/>
+    <circle cx="650" cy="96" r="3"/>
+    <circle cx="706" cy="194" r="2"/>
+    <circle cx="118" cy="490" r="2"/>
+    <circle cx="612" cy="510" r="3"/>
+    <circle cx="394" cy="72" r="2"/>
+  </g>
+
+  <ellipse cx="400" cy="468" rx="210" ry="34" fill="#000000" opacity="0.38"/>
+  <g filter="url(#glow)">
+    <path d="M371 433c19-78 25-143 14-196h42c-10 55-4 120 18 196z" fill="url(#trunk)"/>
+    <path d="M338 298c-74-21-95-94-38-132 9-74 103-92 145-36 68-4 112 59 87 120 54 39 26 115-44 121-42 53-122 41-150-73z" fill="url(#leaf)"/>
+    <circle cx="333" cy="227" r="48" fill="#2dfc8f" opacity="0.92"/>
+    <circle cx="421" cy="189" r="66" fill="#74ffb3" opacity="0.82"/>
+    <circle cx="487" cy="261" r="58" fill="#20df86" opacity="0.86"/>
+    <circle cx="386" cy="298" r="72" fill="#16c77b" opacity="0.84"/>
+  </g>
+
+  <g font-family="Segoe UI, Arial, sans-serif" text-anchor="middle" font-weight="900">
+    <text x="400" y="80" fill="#9cffcb" font-size="34" letter-spacing="6" filter="url(#glow)">POKO TREE</text>
+    <rect x="172" y="454" width="456" height="74" rx="20" fill="#07111f" stroke="#2dfc8f" stroke-width="4" opacity="0.95"/>
+    <text x="400" y="503" fill="#ffffff" font-size="44" letter-spacing="4" filter="url(#glow)">COMING SOON</text>
+  </g>
+</svg>
