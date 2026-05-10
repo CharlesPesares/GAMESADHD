@@ -1701,6 +1701,7 @@
                         uniform vec2 uPlaneSizes;
                         uniform sampler2D tMap;
                         uniform float uBorderRadius;
+                        uniform float uLoaded;
                         varying vec2 vTexCoord;
                         
                         float calcRoundedRect(vec2 p, vec2 size, float rad) {
@@ -1733,16 +1734,21 @@
                         uImageSizes: { value: [0, 0] },
                         uSpeed: { value: 0 },
                         uTime: { value: 100 * Math.random() },
-                        uBorderRadius: { value: this.borderRadius }
+                        uBorderRadius: { value: this.borderRadius },
+                        uLoaded: { value: 0 }
                     },
                     transparent: true
                 });
                 const img = new Image();
-                img.crossOrigin = 'anonymous';
                 img.src = this.image;
                 img.onload = () => {
                     texture.image = img;
                     this.program.uniforms.uImageSizes.value = [img.naturalWidth, img.naturalHeight];
+                    this.program.uniforms.uLoaded.value = 1.0;
+                };
+                img.onerror = () => {
+                    console.warn('Missing image: ' + this.image + '. Using fallback background.');
+                    this.program.uniforms.uLoaded.value = 0.0;
                 };
             }
             createMesh() {
