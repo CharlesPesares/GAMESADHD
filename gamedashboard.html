@@ -718,6 +718,10 @@
                     <h3>Number Race</h3>
                     <p><strong>2-Player:</strong> Play RPS to start. The winner mashes their key (A or L) to fill the board. The loser searches the bouncing balls for the target number to interrupt and swap roles!</p>
                 </div>
+                <div class="guide-card">
+                    <h3>Neon Pulse</h3>
+                    <p>Tap D, F, J, K or touch the bottom lane buttons exactly as the falling neon notes hit the target line to build your combo.</p>
+                </div>
             </div>
             <button id="close-help-btn" class="play-btn" style="position: relative; transform: none; bottom: 0; left: 0; width: 100%; padding: 15px; font-size: 1.2rem; margin-top: 20px;">CLOSE GUIDE</button>
         </div>
@@ -983,6 +987,24 @@
                 scoreSingular: 'Win',
                 scorePlural: 'Wins',
                 unitPosition: 'suffix'
+            },
+            {
+                title: 'Neon Pulse',
+                image: 'images/neon-pulse.jpg',
+                url: 'NeonPulse.html',
+                scoreKey: 'neonPulseHighscore',
+                localKeys: ['neonPulseHighscore'],
+                optionLabel: 'Neon Pulse (High Score)',
+                scorePrefix: 'Score'
+            },
+            {
+                title: 'Shape Snap',
+                image: 'images/shape-snap.jpg',
+                url: 'ShapeSnap.html',
+                scoreKey: 'shapeSnapHighScore',
+                localKeys: ['shapeSnapHighScore'],
+                optionLabel: 'Shape Snap (High Score)',
+                scorePrefix: 'Score'
             }
         ];
 
@@ -2006,6 +2028,8 @@
             { image: 'images/color-sort.jpg', text: 'Color Sort', url: 'ColorSort.html' },
             { image: 'images/orbit-pop.jpg', text: 'Orbit Pop', url: 'OrbitPop.html' },
             { image: 'images/NumberRace.jpg', text: 'Number Race', url: 'NumberRace.html' },
+            { image: 'images/neon-pulse.jpg', text: 'Neon Pulse', url: 'NeonPulse.html' },
+            { image: 'images/shape-snap.jpg', text: 'Shape Snap', url: 'ShapeSnap.html' },
             { image: 'images/poko-tree.svg', text: 'POKO Tree', url: 'POKOTree.html', comingSoon: true }
         ];
 
