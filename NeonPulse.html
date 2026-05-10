@@ -298,32 +298,45 @@
             <h2>Rhythm Ready?</h2>
             <p>Tap or hold exactly as the notes hit the line.</p>
             <select id="level-selector" class="level-select" aria-label="Select Level" onchange="jumpToLevel(this.value)"></select>
-            <button class="start-btn" onclick="startGame()">START TRACK</button>
+            
+            <div id="level-record-ui" style="display: flex; gap: 20px; background: rgba(0,0,0,0.6); padding: 12px 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); min-width: 250px; justify-content: center;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 0.7rem; color: #bdc3c7; font-weight: 900; letter-spacing: 1px;">BEST SCORE</div>
+                    <div id="record-score" style="font-size: 1.6rem; font-weight: 900; color: #4dabff; text-shadow: 0 0 10px rgba(77,171,255,0.5);">---</div>
+                </div>
+                <div style="width: 2px; background: rgba(255,255,255,0.1); border-radius: 2px;"></div>
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 0.7rem; color: #bdc3c7; font-weight: 900; letter-spacing: 1px;">RANK</div>
+                    <div id="record-rank" style="font-size: 1.6rem; font-weight: 900; color: #bdc3c7;">-</div>
+                </div>
+            </div>
+
+            <button class="start-btn" onclick="startGame()" style="margin-top: 5px;">START TRACK</button>
             <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); font-weight: bold; margin-top: 15px;">Keys: D, F, J, K or Touch</p>
         </div>
 
         <div class="overlay" id="end-overlay" style="display: none;">
-            <h2 id="end-title" style="color: #ff5a76; text-shadow: 0 0 15px rgba(255, 90, 118, 0.5);">Track Ended</h2>
-            <p style="margin-bottom: 5px; font-size: 0.9rem; font-weight: bold;">FINAL SCORE</p>
-            <p><span id="end-score" style="color: #4dabff; font-weight: 900; font-size: 2.5rem; text-shadow: 0 0 15px rgba(77,171,255,0.5);">0</span></p>
-            <div id="end-grade" style="font-size: 5.5rem; font-weight: 900; line-height: 1; margin-bottom: 15px; text-shadow: 0 0 20px currentColor; display: none;">S</div>
-            <div id="perfect-label" style="display: none; color: #ffd166; font-size: 1.8rem; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255,209,102,0.8); margin-bottom: 20px; animation: perfectPulse 0.5s ease-in-out infinite alternate;">PERFECT TRACK!</div>
-            <div style="display: flex; gap: 20px; margin-bottom: 25px; background: rgba(0,0,0,0.6); padding: 12px 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+            <h2 id="end-title" style="color: #ff5a76; text-shadow: 0 0 15px rgba(255, 90, 118, 0.5); font-size: clamp(2rem, 8vw, 3.5rem);">Track Ended</h2>
+            <p style="margin: 0 0 5px; font-size: 0.9rem; font-weight: bold;">FINAL SCORE</p>
+            <p style="margin: 0 0 10px;"><span id="end-score" style="color: #4dabff; font-weight: 900; font-size: 2.5rem; text-shadow: 0 0 15px rgba(77,171,255,0.5);">0</span></p>
+            <div id="end-grade" style="font-size: 4.5rem; font-weight: 900; line-height: 1; margin-bottom: 10px; text-shadow: 0 0 20px currentColor; display: none;">S</div>
+            <div id="perfect-label" style="display: none; color: #ffd166; font-size: 1.4rem; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255,209,102,0.8); margin-bottom: 15px; animation: perfectPulse 0.5s ease-in-out infinite alternate;">PERFECT TRACK!</div>
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
                 <div style="color: #2dfc8f; text-align: center;">
-                    <div style="font-size: 0.75rem; font-weight: 900; letter-spacing: 1px;">PERFECT</div>
-                    <div id="end-perfect" style="font-size: 1.6rem; font-weight: 900; text-shadow: 0 0 10px rgba(45,252,143,0.5);">0</div>
+                    <div style="font-size: 0.7rem; font-weight: 900; letter-spacing: 1px;">PERFECT</div>
+                    <div id="end-perfect" style="font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px rgba(45,252,143,0.5);">0</div>
                 </div>
                 <div style="color: #ffdf3f; text-align: center;">
-                    <div style="font-size: 0.75rem; font-weight: 900; letter-spacing: 1px;">GOOD</div>
-                    <div id="end-good" style="font-size: 1.6rem; font-weight: 900; text-shadow: 0 0 10px rgba(255,223,63,0.5);">0</div>
+                    <div style="font-size: 0.7rem; font-weight: 900; letter-spacing: 1px;">GOOD</div>
+                    <div id="end-good" style="font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px rgba(255,223,63,0.5);">0</div>
                 </div>
                 <div style="color: #ff5a76; text-align: center;">
-                    <div style="font-size: 0.75rem; font-weight: 900; letter-spacing: 1px;">MISS</div>
-                    <div id="end-miss" style="font-size: 1.6rem; font-weight: 900; text-shadow: 0 0 10px rgba(255,90,118,0.5);">0</div>
+                    <div style="font-size: 0.7rem; font-weight: 900; letter-spacing: 1px;">MISS</div>
+                    <div id="end-miss" style="font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px rgba(255,90,118,0.5);">0</div>
                 </div>
             </div>
-            <button id="end-btn" class="start-btn" onclick="startGame()">PLAY AGAIN</button>
-            <button class="start-btn" onclick="showStartScreen()" style="margin-top: 15px; background: transparent; color: #bdc3c7; box-shadow: none; border: 2px solid #bdc3c7;">MAIN MENU</button>
+            <button id="end-btn" class="start-btn" onclick="startGame()" style="margin-top: 0; padding: 12px 30px; font-size: 1.1rem;">PLAY AGAIN</button>
+            <button class="start-btn" onclick="showStartScreen()" style="margin-top: 10px; padding: 12px 30px; font-size: 1.1rem; background: transparent; color: #bdc3c7; box-shadow: none; border: 2px solid #bdc3c7;">MAIN MENU</button>
         </div>
 
         <div id="countdown-overlay">
@@ -389,120 +402,124 @@
             const now = audioCtx.currentTime;
 
             if (type === 'perfect') {
-                // Massive glassy synth pop (C Major 9 spread)
+                // Luscious glassy hit with a sharp transient
                 const freqs = [523.25, 783.99, 1046.50, 1567.98]; // C5, G5, C6, G6
                 freqs.forEach((f, i) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
-                    osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+                    osc.type = i === 0 ? 'triangle' : 'sine'; // Base has slight body
                     osc.frequency.setValueAtTime(f, now);
                     gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(0.2, now + 0.01);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    gain.gain.linearRampToValueAtTime(i === 0 ? 0.4 : 0.2, now + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
                     osc.connect(gain); gain.connect(audioCtx.destination);
-                    osc.start(now); osc.stop(now + 0.5);
+                    osc.start(now); osc.stop(now + 0.4);
                 });
 
-                // Sparkle transient click
-                const click = audioCtx.createOscillator();
+                // Crisp timing click (transient)
+                const clickOsc = audioCtx.createOscillator();
                 const clickGain = audioCtx.createGain();
-                click.type = 'square';
-                click.frequency.setValueAtTime(4000, now);
-                click.frequency.exponentialRampToValueAtTime(100, now + 0.06);
+                clickOsc.type = 'sine';
+                clickOsc.frequency.setValueAtTime(4000, now);
+                clickOsc.frequency.exponentialRampToValueAtTime(100, now + 0.04);
                 clickGain.gain.setValueAtTime(0, now);
-                clickGain.gain.linearRampToValueAtTime(0.15, now + 0.005);
-                clickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
-                click.connect(clickGain); clickGain.connect(audioCtx.destination);
-                click.start(now); click.stop(now + 0.06);
+                clickGain.gain.linearRampToValueAtTime(0.3, now + 0.002);
+                clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                clickOsc.connect(clickGain); clickGain.connect(audioCtx.destination);
+                clickOsc.start(now); clickOsc.stop(now + 0.04);
             } else if (type === 'good') {
-                // Warm perfect fifth chord
-                const freqs = [392.00, 587.33]; // G4, D5
-                freqs.forEach(f => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(f, now);
-                    gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                    osc.connect(gain); gain.connect(audioCtx.destination);
-                    osc.start(now); osc.stop(now + 0.3);
-                });
-
-                // Soft transient
-                const click = audioCtx.createOscillator();
-                const clickGain = audioCtx.createGain();
-                click.type = 'sine';
-                click.frequency.setValueAtTime(1200, now);
-                click.frequency.exponentialRampToValueAtTime(100, now + 0.04);
-                clickGain.gain.setValueAtTime(0, now);
-                clickGain.gain.linearRampToValueAtTime(0.15, now + 0.005);
-                clickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
-                click.connect(clickGain); clickGain.connect(audioCtx.destination);
-                click.start(now); click.stop(now + 0.04);
-            } else if (type === 'miss') {
-                // Heavy sub thud
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.exponentialRampToValueAtTime(20, now + 0.3);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.4, now + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(now); osc.stop(now + 0.3);
-
-                // Error grit
-                const buzz = audioCtx.createOscillator();
-                const buzzGain = audioCtx.createGain();
-                buzz.type = 'sawtooth';
-                buzz.frequency.setValueAtTime(80, now);
-                buzz.frequency.exponentialRampToValueAtTime(10, now + 0.2);
-                buzzGain.gain.setValueAtTime(0, now);
-                buzzGain.gain.linearRampToValueAtTime(0.1, now + 0.01);
-                buzzGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                buzz.connect(buzzGain); buzzGain.connect(audioCtx.destination);
-                buzz.start(now); buzz.stop(now + 0.2);
-            } else if (type === 'tick') {
-                // Snappy hi-hat click
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(8000, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.15, now + 0.005);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(now); osc.stop(now + 0.05);
-            } else if (type === 'go') {
-                // Glorious upward major chord burst
-                const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                // Warmer, muted hit for 'good'
+                const freqs = [523.25, 783.99]; 
                 freqs.forEach((f, i) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'sine';
-                    const startTime = now + (i * 0.05);
-                    osc.frequency.setValueAtTime(f, startTime);
-                    gain.gain.setValueAtTime(0, startTime);
-                    gain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
-                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.6);
+                    osc.frequency.setValueAtTime(f, now);
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(0.2, now + 0.02); // Slower attack
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
                     osc.connect(gain); gain.connect(audioCtx.destination);
-                    osc.start(startTime); osc.stop(startTime + 0.6);
+                    osc.start(now); osc.stop(now + 0.3);
                 });
-            } else if (type === 'click') {
-                // Satisfying short pop/click for UI and empty lanes
+            } else if (type === 'miss') {
+                // Record scratch / deep thud error
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(600, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(20, now + 0.2);
                 gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.3, now + 0.01);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                gain.gain.linearRampToValueAtTime(0.4, now + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
                 osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(now); osc.stop(now + 0.1);
+                osc.start(now); osc.stop(now + 0.2);
+
+                const buzz = audioCtx.createOscillator();
+                const buzzGain = audioCtx.createGain();
+                buzz.type = 'sawtooth';
+                buzz.frequency.setValueAtTime(100, now);
+                buzz.frequency.exponentialRampToValueAtTime(10, now + 0.15);
+                buzzGain.gain.setValueAtTime(0, now);
+                buzzGain.gain.linearRampToValueAtTime(0.15, now + 0.01);
+                buzzGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                buzz.connect(buzzGain); buzzGain.connect(audioCtx.destination);
+                buzz.start(now); buzz.stop(now + 0.15);
+            } else if (type === 'tick') {
+                // Sharp high hat tick
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(3000, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.005);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'go') {
+                // Glorious power-up chord burst
+                const freqs = [523.25, 659.25, 783.99, 1046.50, 1567.98];
+                freqs.forEach((f, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = i === 0 ? 'triangle' : 'sine';
+                    const startTime = now + (i * 0.03); // Fast arpeggio
+                    osc.frequency.setValueAtTime(f, startTime);
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(startTime); osc.stop(startTime + 0.8);
+                });
+            } else if (type === 'click') {
+                // Clean UI snap
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1000, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.04);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.25, now + 0.005);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.04);
+            }
+        }
+
+        function unlockAchievement(id, icon, title) {
+            let achievements = JSON.parse(localStorage.getItem('arcade_achievements')) || {};
+            if (!achievements[id]) {
+                achievements[id] = true;
+                localStorage.setItem('arcade_achievements', JSON.stringify(achievements));
+                
+                const toast = document.getElementById('achievement-toast');
+                document.getElementById('toast-icon').innerText = icon;
+                document.getElementById('toast-title').innerText = title;
+                toast.classList.add('show');
+                
+                playSound('go');
+                
+                setTimeout(() => toast.classList.remove('show'), 4000);
             }
         }
 
@@ -520,15 +537,59 @@
             for (let i = 1; i <= Math.min(50, maxLevel); i++) {
                 const opt = document.createElement('option');
                 opt.value = i;
+                
                 opt.text = 'Level ' + i;
                 if (i === currentLevel) opt.selected = true;
                 selector.appendChild(opt);
             }
+            updateRecordUI();
         }
 
         function jumpToLevel(lvl) {
             currentLevel = parseInt(lvl);
             localStorage.setItem('neonPulseLevel', currentLevel);
+            updateRecordUI();
+        }
+
+        function updateRecordUI() {
+            const scoreEl = document.getElementById('record-score');
+            const rankEl = document.getElementById('record-rank');
+            if (!scoreEl || !rankEl) return;
+
+            try {
+                const savedDataStr = localStorage.getItem(`neonPulse_lvl_${currentLevel}`);
+                if (savedDataStr) {
+                    const savedData = JSON.parse(savedDataStr);
+                    scoreEl.innerText = savedData.score;
+                    rankEl.innerText = savedData.grade;
+                    
+                    let color = '#fff';
+                    if(savedData.grade === 'SS') color = '#00ffff';
+                    if(savedData.grade === 'S') color = '#ffd166';
+                    if(savedData.grade === 'A') color = '#2dfc8f';
+                    if(savedData.grade === 'B') color = '#4dabff';
+                    if(savedData.grade === 'C') color = '#e056fd';
+                    if(savedData.grade === 'D') color = '#bdc3c7';
+                    if(savedData.grade === 'F') color = '#ff5a76';
+                    
+                    rankEl.style.color = color;
+                    rankEl.style.textShadow = `0 0 10px ${color}`;
+                } else {
+                    scoreEl.innerText = '---';
+                    if (currentLevel < maxLevel) {
+                        rankEl.innerText = 'CLEAR';
+                        rankEl.style.color = '#2dfc8f';
+                        rankEl.style.textShadow = '0 0 10px rgba(45,252,143,0.5)';
+                    } else {
+                        rankEl.innerText = 'UNPLAYED';
+                        rankEl.style.color = '#bdc3c7';
+                        rankEl.style.textShadow = 'none';
+                    }
+                }
+            } catch(e) {
+                scoreEl.innerText = '---';
+                rankEl.innerText = '-';
+            }
         }
 
         function showStartScreen() {
@@ -813,6 +874,7 @@
             let accuracy = ((statsPerfect + statsGood * 0.5) / total) * 100;
             
             if (lives <= 0) return { grade: 'F', color: '#ff5a76' }; // Failed
+            if (statsPerfect === total && total > 0) return { grade: 'SS', color: '#00ffff' }; // Diamond SS
             if (accuracy >= 95 && statsMiss === 0) return { grade: 'S', color: '#ffd166' }; // Gold S
             if (accuracy >= 90) return { grade: 'A', color: '#2dfc8f' }; // Green A
             if (accuracy >= 80) return { grade: 'B', color: '#4dabff' }; // Blue B
@@ -826,6 +888,10 @@
             incrementLocalCounter('neonPulseHighscore', score);
             
             let gradeInfo = calculateGrade();
+            if (gradeInfo.grade === 'SS') {
+                unlockAchievement('neon_ss', '💎', 'Flawless Rhythm');
+            }
+
             let gradeEl = document.getElementById('end-grade');
             gradeEl.innerText = gradeInfo.grade;
             gradeEl.style.color = gradeInfo.color;
@@ -837,6 +903,16 @@
             } else {
                 perfectLabel.style.display = 'none';
             }
+
+            try {
+                const levelKey = `neonPulse_lvl_${currentLevel}`;
+                const savedDataStr = localStorage.getItem(levelKey);
+                let savedData = { score: -1 };
+                if (savedDataStr) savedData = JSON.parse(savedDataStr);
+                if (score > savedData.score) {
+                    localStorage.setItem(levelKey, JSON.stringify({ score: score, grade: gradeInfo.grade }));
+                }
+            } catch(e) {}
             
             document.getElementById('end-perfect').innerText = statsPerfect;
             document.getElementById('end-good').innerText = statsGood;
@@ -855,6 +931,7 @@
                 document.getElementById('end-title').style.textShadow = "0 0 15px rgba(45, 252, 143, 0.5)";
                 document.getElementById('end-btn').innerText = "NEXT LEVEL";
             } else {
+                updateLevelSelector();
                 document.getElementById('end-title').innerText = "TRACK COMPLETE!";
                 document.getElementById('end-title').style.color = "#ffd166";
                 document.getElementById('end-title').style.textShadow = "0 0 15px rgba(255, 209, 102, 0.5)";
@@ -1081,10 +1158,23 @@
                 ctx.stroke();
                 
                 if (laneGlows[i] > 0) {
-                    ctx.fillStyle = colors[i];
-                    ctx.globalAlpha = laneGlows[i] * 0.4;
-                    ctx.fillRect(x, hitZoneY - 100, laneWidth, 200);
+                    let glowGrad = ctx.createLinearGradient(x, hitZoneY - 300, x, hitZoneY + 100);
+                    glowGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                    glowGrad.addColorStop(0.7, colors[i]);
+                    glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+                    ctx.fillStyle = glowGrad;
+                    ctx.globalAlpha = Math.min(1.0, laneGlows[i] * 0.5);
+                    ctx.fillRect(x, hitZoneY - 300, laneWidth, 400);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.globalAlpha = Math.min(1.0, laneGlows[i] * 0.9);
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = colors[i];
+                    ctx.fillRect(x + laneWidth * 0.1, hitZoneY - 3, laneWidth * 0.8, 6);
+
                     ctx.globalAlpha = 1.0;
+                    ctx.shadowBlur = 0;
                     laneGlows[i] -= 0.05;
                 }
             }
@@ -1332,4 +1422,5 @@
         });
     </script>
 </body>
+</html>
 </html>

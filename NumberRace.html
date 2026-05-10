@@ -772,6 +772,28 @@
                 gain.gain.linearRampToValueAtTime(0.15, now + 0.05);
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
                 osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'tick') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(8000, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.15, now + 0.005);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'go') {
+                const freqs = [523.25, 659.25, 783.99, 1046.50];
+                freqs.forEach((f, i) => {
+                    const chordOsc = audioCtx.createOscillator();
+                    const chordGain = audioCtx.createGain();
+                    chordOsc.type = 'sine';
+                    const startTime = now + (i * 0.05);
+                    chordOsc.frequency.setValueAtTime(f, startTime);
+                    chordGain.gain.setValueAtTime(0, startTime);
+                    chordGain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+                    chordGain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.6);
+                    chordOsc.connect(chordGain); chordGain.connect(audioCtx.destination);
+                    chordOsc.start(startTime); chordOsc.stop(startTime + 0.6);
+                });
             }
         }
 
@@ -1179,15 +1201,15 @@
             scrambleTimeout = setTimeout(() => {
                 let count = 10;
                 curtainEl.innerText = count;
-                playSound('click');
+                playSound('tick');
                 scrambleInterval = setInterval(() => {
                     count--;
                     if (count > 0) {
                         curtainEl.innerText = count;
-                        playSound('click');
+                        playSound('tick');
                     } else if (count === 0) {
                         curtainEl.innerText = "GO!";
-                        playSound('found');
+                        playSound('go');
                     } else {
                         clearInterval(scrambleInterval);
                         startRace();

@@ -41,6 +41,12 @@
                 linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
             background-size: 52px 52px;
             mask-image: radial-gradient(circle at center, black 0%, transparent 78%);
+            animation: panGridDown 5s linear infinite;
+        }
+
+        @keyframes panGridDown {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 52px; }
         }
         
         .header {
@@ -459,6 +465,8 @@
         let shootCooldown = 0;
         let recoil = 0;
         let comboMultiplier = 1;
+        let tickCounter = 0;
+        let wasPulling = false;
 
         // --- Audio Context ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -569,6 +577,22 @@
                 gain.gain.linearRampToValueAtTime(0.4, now + 0.1);
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
                 osc.start(now); osc.stop(now + 0.8);
+            } else if (type === 'tick') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.03);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.04, now + 0.005);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+                osc.start(now); osc.stop(now + 0.03);
+            } else if (type === 'zip') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc.start(now); osc.stop(now + 0.15);
             }
         }
 
@@ -765,6 +789,8 @@
             currentMarbleColor = getLevelColor();
             nextMarbleColor = getLevelColor();
             comboMultiplier = 1;
+            tickCounter = 0;
+            wasPulling = false;
             document.getElementById('level-display').innerText = level;
             
             // Reset pause UI state just in case
@@ -1110,6 +1136,11 @@
             }
 
             if (gameState === 'losing') {
+                tickCounter += 3;
+                if (tickCounter >= 20) {
+                    playSound('tick');
+                    tickCounter = 0;
+                }
                 for (let i = marbles.length - 1; i >= 0; i--) {
                     marbles[i].d += 35.0; // Accelerate rapidly into the abyss
                     if (marbles[i].d >= pathPoints.length) {
@@ -1171,6 +1202,7 @@
             }
 
             let pulling = new Array(marbles.length).fill(false);
+            let currentlyPulling = false;
 
             // 1. Identify magnetic pulls (Zuma snap mechanic)
             for (let i = 0; i < marbles.length - 1; i++) {
@@ -1178,6 +1210,7 @@
                 let gap = marbles[i].d - marbles[i+1].d;
                 if (gap > 21 && marbles[i].color === marbles[i+1].color) {
                     let pullSpeed = 8.0; // Faster magnetic snap
+                    currentlyPulling = true;
                     
                     marbles[i].d -= pullSpeed;
                     pulling[i] = true;
@@ -1201,14 +1234,22 @@
                 }
             }
             
+            if (currentlyPulling && !wasPulling) {
+                playSound('zip');
+            }
+            wasPulling = currentlyPulling;
+
+            let isChainMoving = false;
             // 2. Only the back-most ball drives the forward creeping movement.
             // Disconnected front segments will stall until pushed.
             if (marbles.length > 0 && !pulling[marbles.length - 1]) {
                 marbles[marbles.length - 1].d += 0.6; // Base creeping speed
+                isChainMoving = true;
             }
 
             // Spawner pushes the chain
             if (ballsToSpawn > 0) {
+                isChainMoving = true;
                 if (marbles.length === 0 || marbles[marbles.length - 1].d > 20) {
                     let newColor;
                     do {
@@ -1222,6 +1263,14 @@
                     ballsToSpawn--;
                 } else {
                     marbles[marbles.length - 1].d += 0.4; // Extra push from the spawner
+                }
+            }
+
+            if (isChainMoving && gameState === 'playing') {
+                tickCounter++;
+                if (tickCounter >= 20) {
+                    playSound('tick');
+                    tickCounter = 0;
                 }
             }
 
