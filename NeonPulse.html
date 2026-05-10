@@ -263,6 +263,11 @@
             85% { transform: scale(1); opacity: 1; }
             100% { transform: scale(1.5); opacity: 0; }
         }
+        
+        @keyframes perfectPulse {
+            0% { transform: scale(1); filter: brightness(1); }
+            100% { transform: scale(1.08); filter: brightness(1.3); }
+        }
     </style>
 </head>
 <body class="font-arcade">
@@ -302,6 +307,7 @@
             <p style="margin-bottom: 5px; font-size: 0.9rem; font-weight: bold;">FINAL SCORE</p>
             <p><span id="end-score" style="color: #4dabff; font-weight: 900; font-size: 2.5rem; text-shadow: 0 0 15px rgba(77,171,255,0.5);">0</span></p>
             <div id="end-grade" style="font-size: 5.5rem; font-weight: 900; line-height: 1; margin-bottom: 15px; text-shadow: 0 0 20px currentColor; display: none;">S</div>
+            <div id="perfect-label" style="display: none; color: #ffd166; font-size: 1.8rem; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255,209,102,0.8); margin-bottom: 20px; animation: perfectPulse 0.5s ease-in-out infinite alternate;">PERFECT TRACK!</div>
             <div style="display: flex; gap: 20px; margin-bottom: 25px; background: rgba(0,0,0,0.6); padding: 12px 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
                 <div style="color: #2dfc8f; text-align: center;">
                     <div style="font-size: 0.75rem; font-weight: 900; letter-spacing: 1px;">PERFECT</div>
@@ -362,6 +368,8 @@
         let statsMiss = 0;
         let comboShake = 0;
         let lastBrokenCombo = 0;
+        let sparks = [];
+        const sparkColors = ['#ff5a76', '#4dabff', '#2dfc8f', '#ffd166', '#ffffff'];
         
         let currentLevel = parseInt(localStorage.getItem('neonPulseLevel')) || 1;
         let maxLevel = parseInt(localStorage.getItem('neonPulseMaxLevel')) || currentLevel;
@@ -517,6 +525,7 @@
             document.getElementById('end-overlay').style.display = 'none';
             document.getElementById('start-overlay').style.display = 'flex';
             updateLevelSelector();
+            drawEmptyBoard();
         }
 
         function startGame() {
@@ -540,6 +549,8 @@
             document.getElementById('hud-score').innerText = score;
             document.getElementById('hud-lives').innerText = lives;
             
+            drawEmptyBoard();
+
             state = 'countdown';
             let count = 3;
             const cdOverlay = document.getElementById('countdown-overlay');
@@ -588,6 +599,18 @@
             levelComplete = false;
             comboShake = 0;
             lastBrokenCombo = 0;
+            
+            sparks = [];
+            for (let i = 0; i < 40; i++) {
+                sparks.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    speed: Math.random() * 4 + 1,
+                    size: Math.random() * 2 + 0.5,
+                    alpha: Math.random() * 0.5 + 0.1,
+                    color: sparkColors[Math.floor(Math.random() * sparkColors.length)]
+                });
+            }
             
             // Progressive level scaling
             notesLeftToSpawn = 20 + (currentLevel * 5); 
@@ -793,6 +816,13 @@
             gradeEl.style.color = gradeInfo.color;
             gradeEl.style.display = 'block';
             
+            let perfectLabel = document.getElementById('perfect-label');
+            if (statsMiss === 0) {
+                perfectLabel.style.display = 'block';
+            } else {
+                perfectLabel.style.display = 'none';
+            }
+            
             document.getElementById('end-perfect').innerText = statsPerfect;
             document.getElementById('end-good').innerText = statsGood;
             document.getElementById('end-miss').innerText = statsMiss;
@@ -828,6 +858,8 @@
             gradeEl.innerText = gradeInfo.grade;
             gradeEl.style.color = gradeInfo.color;
             gradeEl.style.display = 'block';
+            
+            document.getElementById('perfect-label').style.display = 'none';
             
             document.getElementById('end-title').innerText = "TRACK FAILED";
             document.getElementById('end-title').style.color = "#ff5a76";
@@ -944,6 +976,22 @@
 
             ctx.shadowBlur = 0;
         }
+        
+        function drawEmptyBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < 4; i++) {
+                let x = i * laneWidth;
+                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+                ctx.strokeStyle = colors[i];
+                ctx.lineWidth = 4;
+                drawRoundedRect(ctx, x + 10, hitZoneY - 15, laneWidth - 20, 30, 10);
+                ctx.stroke();
+            }
+        }
 
         function loop(time) {
             if (state !== 'playing') return;
@@ -975,6 +1023,24 @@
                 ctx.fillStyle = `rgba(255, 209, 102, ${bgPulse * 0.08})`;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
+            
+            for (let i = sparks.length - 1; i >= 0; i--) {
+                let s = sparks[i];
+                s.y -= s.speed * (dt / 16);
+                if (s.y < -10) {
+                    s.y = canvas.height + 10;
+                    s.x = Math.random() * canvas.width;
+                }
+                ctx.globalAlpha = s.alpha;
+                ctx.fillStyle = s.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = s.color;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0;
 
             for (let i = 0; i < 4; i++) {
                 let x = i * laneWidth;
@@ -1239,6 +1305,7 @@
         
         window.onload = () => {
             updateLevelSelector();
+            drawEmptyBoard();
         };
     </script>
 </body>
