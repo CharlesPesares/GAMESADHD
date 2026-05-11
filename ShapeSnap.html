@@ -69,6 +69,135 @@
             box-shadow: 0 0 15px rgba(224, 86, 253, 0.4);
         }
 
+        .help-icon-btn {
+            width: 38px;
+            height: 38px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.07);
+            color: #e056fd;
+            font-size: 1.1rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.20);
+            transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+            margin: 0;
+            padding: 0;
+            font-family: inherit;
+            line-height: 1;
+        }
+
+        .help-icon-btn:hover,
+        .help-icon-btn:focus-visible {
+            transform: translateY(-2px);
+            border-color: rgba(224, 86, 253, 0.64);
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+            outline: none;
+        }
+
+        .guide-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 120;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: rgba(9, 9, 16, 0.85);
+            backdrop-filter: blur(8px);
+            box-sizing: border-box;
+        }
+
+        .guide-modal.open {
+            display: flex;
+        }
+
+        .how-to-panel {
+            width: min(420px, 100%);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            margin: 0;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            background: linear-gradient(145deg, #172330, #0b1016);
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            box-sizing: border-box;
+            text-align: left;
+        }
+
+        .how-to-panel h2 {
+            margin: 0 0 10px;
+            color: #e056fd;
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(224, 86, 253, 0.3);
+        }
+
+        .how-to-panel h3 {
+            color: #4dabff; 
+            margin: 0 0 8px; 
+            font-size: 1.05rem; 
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .how-to-panel p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.76);
+            line-height: 1.6;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .control-list {
+            margin: 0;
+            padding-left: 20px;
+            color: rgba(255, 255, 255, 0.76);
+            line-height: 1.6;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .control-list strong {
+            color: #fff;
+        }
+        
+        .control-list li {
+            margin-bottom: 8px;
+        }
+
+        .guide-close-btn {
+            min-height: 46px;
+            border-radius: 999px;
+            border: 0;
+            background: linear-gradient(135deg, #e056fd, #4dabff);
+            color: #06111a;
+            font-weight: 900;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 5px;
+            box-shadow: 0 6px 0 #7b1fa2, 0 15px 25px rgba(0,0,0,0.5);
+            transition: all 0.1s;
+        }
+        .guide-close-btn:hover {
+            filter: brightness(1.1);
+        }
+        .guide-close-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #7b1fa2, 0 5px 10px rgba(0,0,0,0.5);
+        }
+
         .hud {
             width: 100%;
             max-width: 500px;
@@ -290,8 +419,11 @@
 </head>
 <body class="font-arcade">
     <div class="header">
-        <a href="gamedashboard.html" class="back-link">&larr; Dashboard</a>
-        <button class="back-link" onclick="togglePause()" style="cursor: pointer; font-family: inherit; border-color: #4dabff; color: #4dabff; background: rgba(77, 171, 255, 0.1);">PAUSE</button>
+        <a href="gamedashboard.html" class="back-link" style="margin: 0;">&larr; Dashboard</a>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="help-icon-btn" type="button" onclick="openGuide()" aria-label="Open how to play guide" title="How to play">?</button>
+            <button class="back-link" onclick="togglePause()" style="cursor: pointer; font-family: inherit; border-color: #4dabff; color: #4dabff; background: rgba(77, 171, 255, 0.1); margin: 0;">PAUSE</button>
+        </div>
     </div>
 
     <div class="hud">
@@ -319,6 +451,7 @@
         <h2>Shape Snap</h2>
         <p style="color:#bdc3c7; max-width:300px; line-height:1.5; margin-top:0;">Rapid pattern recognition! Tap all shapes in the grid that match the target shape AND color. Mistakes cost time!</p>
         <button class="start-btn" onclick="startGame()">PLAY NOW</button>
+        <button class="start-btn" onclick="window.location.href='gamedashboard.html'" style="margin-top: 15px; background: transparent; color: #bdc3c7; box-shadow: none; border: 2px solid #bdc3c7;">MAIN MENU</button>
     </div>
 
     <div class="overlay" id="pause-overlay" style="display:none;">
@@ -336,6 +469,24 @@
         <div style="font-size:0.9rem; color:#ffd166; margin-bottom: 15px;">HIGH SCORE: <span id="high-score-display">0</span></div>
         <button class="start-btn" onclick="startGame()">PLAY AGAIN</button>
         <button class="start-btn" onclick="window.location.href='gamedashboard.html'" style="margin-top: 15px; background: transparent; color: #bdc3c7; box-shadow: none; border: 2px solid #bdc3c7;">MAIN MENU</button>
+    </div>
+
+    <div class="guide-modal" id="guide-modal" onpointerdown="if (event.target === this) closeGuide();">
+        <section class="how-to-panel" aria-labelledby="how-to-title">
+            <div>
+                <h2 id="how-to-title">How To Play</h2>
+                <p>Rapid pattern recognition! Tap all shapes in the grid that match the target shape AND color.</p>
+            </div>
+            <div>
+                <h3>Rules & Controls</h3>
+                <ul class="control-list">
+                    <li><strong>Tap</strong> matching shapes quickly to build your combo.</li>
+                    <li><strong>Mistakes</strong> subtract time.</li>
+                    <li><strong>P or Esc</strong> to Pause.</li>
+                </ul>
+            </div>
+            <button class="guide-close-btn" type="button" onclick="closeGuide()">CLOSE GUIDE</button>
+        </section>
     </div>
 
     <div id="countdown-overlay" class="overlay" style="display: none; background: rgba(9, 9, 16, 0.8);">
@@ -368,6 +519,15 @@
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function openGuide() {
+            if (state === 'playing') togglePause();
+            document.getElementById('guide-modal').classList.add('open');
+        }
+
+        function closeGuide() {
+            document.getElementById('guide-modal').classList.remove('open');
         }
 
         function togglePause() {
