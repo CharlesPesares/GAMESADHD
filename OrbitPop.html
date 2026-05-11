@@ -21,10 +21,10 @@
             align-items: center;
             min-height: 100vh;
             background:
-                radial-gradient(circle at 18% 18%, rgba(77, 171, 255, 0.16), transparent 24rem),
-                radial-gradient(circle at 82% 20%, rgba(255, 90, 118, 0.16), transparent 24rem),
-                radial-gradient(circle at 50% 105%, rgba(255, 209, 102, 0.16), transparent 26rem),
-                linear-gradient(135deg, #111820 0%, #1d2d38 48%, #0d141c 100%);
+                radial-gradient(circle at 18% 18%, var(--highlight-1, rgba(77, 171, 255, 0.16)), transparent 24rem),
+                radial-gradient(circle at 82% 20%, var(--highlight-2, rgba(255, 90, 118, 0.16)), transparent 24rem),
+                radial-gradient(circle at 50% 105%, var(--highlight-3, rgba(255, 209, 102, 0.16)), transparent 26rem),
+                linear-gradient(135deg, var(--bg-color-1, #111820) 0%, var(--bg-color-2, #1d2d38) 48%, var(--bg-color-3, #0d141c) 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
             overflow-x: hidden;
@@ -258,6 +258,34 @@
             box-shadow: 0 3px 0 #1b6b8f, 0 8px 15px rgba(0, 0, 0, 0.38);
         }
 
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .diff-btn {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #bdc3c7;
+            padding: 8px 16px;
+            font-size: 1rem;
+            font-weight: 900;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .diff-btn:hover { border-color: rgba(255, 255, 255, 0.6); }
+        .diff-btn.active#diff-normal, .diff-btn.active#diff-normal-end {
+            background: rgba(45, 252, 143, 0.2); border-color: #2dfc8f; color: #2dfc8f; box-shadow: 0 0 10px rgba(45, 252, 143, 0.3);
+        }
+        .diff-btn.active#diff-hard, .diff-btn.active#diff-hard-end {
+            background: rgba(255, 90, 118, 0.2); border-color: #ff5a76; color: #ff5a76; box-shadow: 0 0 10px rgba(255, 90, 118, 0.3);
+        }
+
         .guide-modal {
             position: fixed;
             inset: 0;
@@ -380,16 +408,26 @@
 
         <div class="overlay" id="start-overlay">
             <h2 style="color: #ffdf3f;">Ready to Pop?</h2>
+            <div class="difficulty-selector">
+                <button class="diff-btn" id="diff-normal" onclick="setMode('normal')">NORMAL</button>
+                <button class="diff-btn" id="diff-hard" onclick="setMode('hard')">HARD MODE</button>
+            </div>
             <button class="restart-btn" onclick="startGame()">START GAME</button>
         </div>
 
         <div class="overlay" id="pause-overlay" style="display: none;">
             <h2 style="color: #4dabff; text-shadow: 0 0 24px rgba(77, 171, 255, 0.4), 0 18px 48px rgba(0, 0, 0, 0.48);">PAUSED</h2>
             <button class="restart-btn" onclick="togglePause()">RESUME</button>
+            <button class="restart-btn" onclick="startGame()" style="background: linear-gradient(135deg, #ffd166, #ff5a76); box-shadow: 0 6px 0 #a33b4e; margin-top: 15px;">RESTART</button>
+            <button class="restart-btn" onclick="showStartScreen()" style="background: transparent; color: #bdc3c7; box-shadow: none; border: 2px solid #bdc3c7; margin-top: 15px;">MAIN MENU</button>
         </div>
 
         <div class="overlay" id="overlay" style="display: none;">
             <h2 id="overlay-title">Game Over</h2>
+            <div class="difficulty-selector" id="end-diff-selector" style="display: none;">
+                <button class="diff-btn" id="diff-normal-end" onclick="setMode('normal')">NORMAL</button>
+                <button class="diff-btn" id="diff-hard-end" onclick="setMode('hard')">HARD MODE</button>
+            </div>
             <button class="restart-btn" id="overlay-btn" onclick="nextAction()">TRY AGAIN</button>
         </div>
     </div>
@@ -405,7 +443,8 @@
                 <ul class="control-list">
                     <li><strong>Mouse / touch:</strong> aim the launcher.</li>
                     <li><strong>Left click / tap:</strong> shoot a marble.</li>
-                    <li><strong>Right click / two-finger tap:</strong> swap current and next marbles.</li>
+                    <li><strong>Right click / tap:</strong> swap marbles. <strong>Trick Shots:</strong> Marbles bounce off walls once!</li>
+                    <li><strong>Power-ups:</strong> Bomb (White), Freeze (Cyan), Rewind (Magenta), Splash (Orange), Black Hole (Black).</li>
                     <li><strong>P, Esc, or Space:</strong> pause or resume.</li>
                 </ul>
             </div>
@@ -430,9 +469,31 @@
             blue: '#3a9fff',
             green: '#13ff7c',
             yellow: '#ffdf3f',
-            purple: '#e056fd'
+            purple: '#e056fd',
+            white: '#ffffff', // Bomb
+            cyan: '#00ffff',  // Freeze
+            magenta: '#ff00ff',// Rewind
+            orange: '#ff8c00', // Splash
+            black: '#111111'  // Black Hole
         };
-        const COLOR_KEYS = Object.keys(COLORS);
+        const COLOR_KEYS = ['red', 'blue', 'green', 'yellow', 'purple']; // Exclude powerups from normal pools
+
+        const THEMES = [
+            // 0: Classic Smooth Spiral (Space Blue/Red)
+            { bg1: '#111820', bg2: '#1d2d38', bg3: '#0d141c', h1: 'rgba(77, 171, 255, 0.16)', h2: 'rgba(255, 90, 118, 0.16)', h3: 'rgba(255, 209, 102, 0.16)', track: '#2c3e50' },
+            // 1: Lotus Flower (Mystic Green/Pink)
+            { bg1: '#0b1c11', bg2: '#173622', bg3: '#050f08', h1: 'rgba(45, 252, 143, 0.16)', h2: 'rgba(224, 86, 253, 0.16)', h3: 'rgba(19, 255, 124, 0.16)', track: '#1b4a2e' },
+            // 2: Diamond (Cyber Neon Purple/Cyan)
+            { bg1: '#1a0b2e', bg2: '#2b124c', bg3: '#0f051c', h1: 'rgba(0, 255, 255, 0.16)', h2: 'rgba(224, 86, 253, 0.16)', h3: 'rgba(77, 171, 255, 0.16)', track: '#4a2377' },
+            // 3: Oval (Sunset Orange/Red)
+            { bg1: '#2e120b', bg2: '#4a2012', bg3: '#1c0804', h1: 'rgba(255, 209, 102, 0.16)', h2: 'rgba(255, 76, 76, 0.16)', h3: 'rgba(255, 140, 66, 0.16)', track: '#7a3115' },
+            // 4: Cogwheel (Steampunk Grey/Amber)
+            { bg1: '#1c1c1c', bg2: '#333333', bg3: '#0a0a0a', h1: 'rgba(200, 200, 200, 0.12)', h2: 'rgba(255, 165, 0, 0.15)', h3: 'rgba(150, 150, 150, 0.15)', track: '#555555' },
+            // 5: Cross-Eyed Spiral (Indigo/Lime)
+            { bg1: '#1c122e', bg2: '#301d4a', bg3: '#0f081c', h1: 'rgba(139, 92, 246, 0.16)', h2: 'rgba(163, 230, 53, 0.16)', h3: 'rgba(196, 181, 253, 0.16)', track: '#4338ca' },
+            // 6: Serpentine Spiral (Teal/Orange)
+            { bg1: '#0c1d21', bg2: '#113c42', bg3: '#051012', h1: 'rgba(20, 184, 166, 0.16)', h2: 'rgba(249, 115, 22, 0.16)', h3: 'rgba(94, 234, 212, 0.16)', track: '#134e4a' }
+        ];
 
         let pathPoints = [];
         let marbles = [];
@@ -440,6 +501,14 @@
         let particles = [];
         let floatingTexts = [];
         let stars = [];
+        let orbitingObstacles = [];
+        let obstacleAngle = 0;
+        let freezeTimer = 0;
+        let overdriveTimer = 0;
+        let lasers = [];
+        let tunnels = [];
+        let rewindDistance = 0;
+        let currentTrackColor = '#2c3e50';
         
         // Initialize ambient background stars
         for (let i = 0; i < 150; i++) {
@@ -452,12 +521,21 @@
                 driftSpeed: Math.random() * 0.15 + 0.05
             });
         }
-        
-        let level = localStorage.getItem('orbitPopLevel') ? parseInt(localStorage.getItem('orbitPopLevel')) : 1;
-        let maxLevel = localStorage.getItem('orbitPopMaxLevel') ? parseInt(localStorage.getItem('orbitPopMaxLevel')) : level;
+
+        let gameMode = localStorage.getItem('orbitPopMode') || 'normal';
+        let level = localStorage.getItem(`orbitPopLevel_${gameMode}`) ? parseInt(localStorage.getItem(`orbitPopLevel_${gameMode}`)) : 1;
+        if (gameMode === 'normal' && !localStorage.getItem('orbitPopLevel_normal') && localStorage.getItem('orbitPopLevel')) {
+            level = parseInt(localStorage.getItem('orbitPopLevel'));
+        }
+        let maxLevel = localStorage.getItem(`orbitPopMaxLevel_${gameMode}`) ? parseInt(localStorage.getItem(`orbitPopMaxLevel_${gameMode}`)) : level;
+        if (gameMode === 'normal' && !localStorage.getItem('orbitPopMaxLevel_normal') && localStorage.getItem('orbitPopMaxLevel')) {
+            maxLevel = parseInt(localStorage.getItem('orbitPopMaxLevel'));
+        }
+
         let score = 0;
         let ballsToSpawn = 0;
         let gameState = 'start'; // start, playing, won, lost
+        let loopRunning = false;
         
         let shooterAngle = 0;
         let currentMarbleColor = 'red';
@@ -593,6 +671,85 @@
                 gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
                 osc.start(now); osc.stop(now + 0.15);
+            } else if (type === 'bomb') {
+                // Deep, rumbling low-frequency explosion
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(1.0, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                
+                // Added layer of distortion/grit
+                const subOsc = audioCtx.createOscillator();
+                const subGain = audioCtx.createGain();
+                subOsc.type = 'square';
+                subOsc.frequency.setValueAtTime(100, now);
+                subOsc.frequency.exponentialRampToValueAtTime(20, now + 0.5);
+                subGain.gain.setValueAtTime(0, now);
+                subGain.gain.linearRampToValueAtTime(0.8, now + 0.02);
+                subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                subOsc.connect(subGain);
+                subGain.connect(audioCtx.destination);
+                subOsc.start(now); subOsc.stop(now + 0.5);
+                
+                osc.start(now); osc.stop(now + 0.5);
+            } else if (type === 'freeze') {
+                // Glassy, icy high-frequency sweep with a crystal shimmer
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(2000, now + 0.1);
+                osc.frequency.exponentialRampToValueAtTime(3000, now + 0.4);
+                
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.5, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                
+                const shimmer = audioCtx.createOscillator();
+                const shimmerGain = audioCtx.createGain();
+                shimmer.type = 'triangle';
+                shimmer.frequency.setValueAtTime(3000, now);
+                shimmer.frequency.exponentialRampToValueAtTime(1500, now + 0.4);
+                shimmerGain.gain.setValueAtTime(0, now);
+                shimmerGain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+                shimmerGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                shimmer.connect(shimmerGain);
+                shimmerGain.connect(audioCtx.destination);
+                shimmer.start(now); shimmer.stop(now + 0.4);
+                
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'laser') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.4, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'overdrive') {
+                const freqs = [300, 400, 500, 600, 800];
+                freqs.forEach((f, i) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.type = 'square';
+                    const start = now + (i * 0.08);
+                    o.frequency.setValueAtTime(f, start);
+                    o.frequency.exponentialRampToValueAtTime(f * 2, start + 0.3);
+                    g.gain.setValueAtTime(0, start);
+                    g.gain.linearRampToValueAtTime(0.2, start + 0.05);
+                    g.gain.exponentialRampToValueAtTime(0.01, start + 0.4);
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.start(start); o.stop(start + 0.4);
+                });
+            } else if (type === 'blackhole') {
+                // Deep descending frequency sweep
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(10, now + 1.0);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(1.0, now + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+                osc.start(now); osc.stop(now + 1.0);
             }
         }
 
@@ -656,21 +813,21 @@
             pathPoints = [];
             let cx = 400, cy = 300;
             
-            // 5 Distinct beautifully designed map shapes that rotate
-            let mapType = (level - 1) % 5;
+            // 7 Distinct beautifully designed map shapes that rotate
+            let mapType = (level - 1) % 7;
             
             // Progressive difficulty: more loops, longer track
             let loops = 2.5 + Math.min(level * 0.15, 3.5); 
             let t_max = Math.PI * 2 * loops;
             
-            let maxAvailable = 250; // Max radius leaving room for UI borders
+            let maxAvailable = 280; // Max radius leaving room for UI borders
             let baseR = 75; // Sinkhole radius (prevents overlapping the cannon)
             
-            if (mapType === 3) maxAvailable = 190; // Oval stretches outwards, so base radius must be smaller
+            if (mapType === 3) maxAvailable = 270; // Oval stretches outwards, so base radius must be smaller
 
             let b = (maxAvailable - baseR) / t_max;
-            if (b < 7.5) { // Keeps minimum track spacing so balls never overlap tracks visually
-                b = 7.5;
+            if (b < 5.5) { // Keeps minimum track spacing so balls never overlap tracks visually
+                b = 5.5;
                 t_max = (maxAvailable - baseR) / b;
             }
             
@@ -698,13 +855,24 @@
                         
                     case 3: // Oval / Infinity Spiral
                         x = cx + (r * 1.35) * Math.cos(t);
-                        y = cy + (r * 0.75) * Math.sin(t);
+                        y = cy + (r * 0.82) * Math.sin(t);
                         break;
                         
                     case 4: // Cogwheel / Geared Spiral
                         let wobbleR = r + 8 * Math.sin(t * 10);
                         x = cx + wobbleR * Math.cos(t);
                         y = cy + wobbleR * Math.sin(t);
+                        break;
+
+                    case 5: // Cross-Eyed Spiral (self-intersecting)
+                        let crossT = t + Math.sin(t * 1.5) * 1.5;
+                        x = cx + r * Math.cos(crossT);
+                        y = cy + r * Math.sin(crossT);
+                        break;
+                    case 6: // Serpentine Spiral (wide, obscuring curves)
+                        let serpentineR = r + 50 * Math.sin(t * 2.5);
+                        x = cx + serpentineR * Math.cos(t);
+                        y = cy + serpentineR * Math.sin(t);
                         break;
                 }
                 return { x, y };
@@ -732,6 +900,24 @@
                 
                 pathPoints.push(getPoint(t));
             }
+
+            tunnels = [];
+            if (level >= 3) {
+                // Add first tunnel
+                let tunnelLength = Math.floor(pathPoints.length * 0.12);
+                let startIndex = Math.floor(pathPoints.length * 0.25);
+                if (startIndex + tunnelLength < pathPoints.length) {
+                    tunnels.push({ start: startIndex, end: startIndex + tunnelLength });
+                }
+            }
+            if (level >= 6) {
+                // Add second tunnel
+                let tunnelLength = Math.floor(pathPoints.length * 0.10);
+                let startIndex = Math.floor(pathPoints.length * 0.65);
+                if (startIndex + tunnelLength < pathPoints.length) {
+                    tunnels.push({ start: startIndex, end: startIndex + tunnelLength });
+                }
+            }
         }
 
         function getLevelColor() {
@@ -742,8 +928,10 @@
 
         function getShooterColor() {
             if (marbles.length > 0) {
-                let colorsOnBoard = [...new Set(marbles.map(m => m.color))];
-                return colorsOnBoard[Math.floor(Math.random() * colorsOnBoard.length)];
+                let colorsOnBoard = [...new Set(marbles.map(m => m.color))].filter(c => c !== 'white' && c !== 'cyan');
+                if (colorsOnBoard.length > 0) {
+                    return colorsOnBoard[Math.floor(Math.random() * colorsOnBoard.length)];
+                }
             }
             return getLevelColor(); // Fallback for when the board is completely empty at the start
         }
@@ -763,7 +951,7 @@
         function jumpToLevel(levelVal) {
             let wasStart = (gameState === 'start');
             level = parseInt(levelVal);
-            localStorage.setItem('orbitPopLevel', level);
+            localStorage.setItem(`orbitPopLevel_${gameMode}`, level);
             score = 0;
             document.getElementById('score-display').innerText = score;
             document.getElementById('overlay').style.display = 'none';
@@ -774,8 +962,36 @@
             gameState = 'playing';
             startBGM();
             
-            if (wasStart) {
+            if (!loopRunning) {
+                loopRunning = true;
                 requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function showStartScreen() {
+            gameState = 'start';
+            stopBGM();
+            if (audioCtx.state === 'running') audioCtx.suspend();
+            document.getElementById('pause-overlay').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('start-overlay').style.display = 'flex';
+            document.querySelector('.game-container').classList.remove('shake');
+            
+            marbles = [];
+            projectiles = [];
+            particles = [];
+            floatingTexts = [];
+            lasers = [];
+            tunnels = [];
+            overdriveTimer = 0;
+            rewindDistance = 0;
+            
+            let pauseBtn = document.getElementById('pause-btn');
+            if (pauseBtn) {
+                pauseBtn.innerText = 'PAUSE';
+                pauseBtn.style.color = '#4dabff';
+                pauseBtn.style.borderColor = '#4dabff';
+                pauseBtn.style.background = 'rgba(77, 171, 255, 0.1)';
             }
         }
 
@@ -785,6 +1001,23 @@
             projectiles = [];
             particles = [];
             floatingTexts = [];
+            orbitingObstacles = [];
+            lasers = [];
+            tunnels = [];
+            overdriveTimer = 0;
+            rewindDistance = 0;
+            obstacleAngle = 0;
+            freezeTimer = 0;
+            let numShields = 0;
+            if (gameMode === 'hard') {
+                numShields = Math.min(4, 1 + Math.floor((level - 1) / 2));
+            }
+            for (let i = 0; i < numShields; i++) {
+                orbitingObstacles.push({
+                    angleOffset: (Math.PI * 2 / numShields) * i,
+                    distance: 95
+                });
+            }
             ballsToSpawn = 30 + (level * 10);
             currentMarbleColor = getLevelColor();
             nextMarbleColor = getLevelColor();
@@ -803,6 +1036,16 @@
             }
             document.getElementById('pause-overlay').style.display = 'none';
             updateLevelSelector();
+            
+            let mapType = (level - 1) % 5;
+            let theme = THEMES[mapType];
+            document.body.style.setProperty('--bg-color-1', theme.bg1);
+            document.body.style.setProperty('--bg-color-2', theme.bg2);
+            document.body.style.setProperty('--bg-color-3', theme.bg3);
+            document.body.style.setProperty('--highlight-1', theme.h1);
+            document.body.style.setProperty('--highlight-2', theme.h2);
+            document.body.style.setProperty('--highlight-3', theme.h3);
+            currentTrackColor = theme.track;
         }
 
         function toggleFullscreen() {
@@ -817,12 +1060,17 @@
 
         function startGame() {
             document.getElementById('start-overlay').style.display = 'none';
+            document.getElementById('pause-overlay').style.display = 'none';
             score = 0;
             document.getElementById('score-display').innerText = score;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             loadLevel();
             gameState = 'playing';
             startBGM();
-            requestAnimationFrame(gameLoop);
+            if (!loopRunning) {
+                loopRunning = true;
+                requestAnimationFrame(gameLoop);
+            }
         }
 
         // --- Input Handling ---
@@ -858,13 +1106,18 @@
 
         function shootMarble() {
             if (shootCooldown > 0) return;
+            if (overdriveTimer > 0) {
+                fireLaser();
+                return;
+            }
             comboMultiplier = 1; // Reset combo multiplier for the new shot sequence
             projectiles.push({
                 x: 400 + Math.cos(shooterAngle) * 25,
                 y: 300 + Math.sin(shooterAngle) * 25,
                 vx: Math.cos(shooterAngle) * 16,
                 vy: Math.sin(shooterAngle) * 16,
-                color: currentMarbleColor
+                color: currentMarbleColor,
+                bounces: 0
             });
             createCannonSparks(shooterAngle, currentMarbleColor);
             currentMarbleColor = nextMarbleColor;
@@ -872,6 +1125,57 @@
             shootCooldown = 15; // frames
             recoil = 12; // kickback amount
             playSound('shoot');
+        }
+
+        function fireLaser() {
+            playSound('laser');
+            
+            // Shatter shields in path
+            for (let s = orbitingObstacles.length - 1; s >= 0; s--) {
+                let obs = orbitingObstacles[s];
+                let obsX = 400 + Math.cos(obstacleAngle + obs.angleOffset) * obs.distance;
+                let obsY = 300 + Math.sin(obstacleAngle + obs.angleOffset) * obs.distance;
+                let dx = obsX - 400;
+                let dy = obsY - 300;
+                let angleDiff = Math.abs(Math.atan2(dy, dx) - shooterAngle);
+                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                angleDiff = Math.abs(angleDiff);
+                
+                if (Math.cos(angleDiff) > 0 && Math.hypot(dx, dy) * Math.sin(angleDiff) <= 35) {
+                    createPopParticles(obsX, obsY, '#4dabff');
+                    orbitingObstacles.splice(s, 1);
+                    score += 100 * comboMultiplier;
+                }
+            }
+
+            // Hit marbles in path
+            let hitIndices = marbles.map((m, i) => {
+                let pos = pathPoints[Math.floor(m.d)];
+                if (!pos) return { idx: i, dist: Infinity, hit: false };
+                let dx = pos.x - 400;
+                let dy = pos.y - 300;
+                let angleDiff = Math.abs(Math.atan2(dy, dx) - shooterAngle);
+                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                angleDiff = Math.abs(angleDiff);
+                return { idx: i, dist: Math.hypot(dx, dy), hit: (Math.cos(angleDiff) > 0) && (Math.hypot(dx, dy) * Math.sin(angleDiff) <= 30), pos: pos, m: m };
+            }).filter(item => item.hit).sort((a, b) => a.dist - b.dist).slice(0, 5).map(item => item.idx).sort((a, b) => b - a);
+            
+            for (let idx of hitIndices) {
+                let m = marbles[idx];
+                let pos = pathPoints[Math.floor(m.d)];
+                if (pos) {
+                    createPopParticles(pos.x, pos.y, m.color);
+                    createPopParticles(pos.x, pos.y, '#ffffff');
+                    score += 50 * comboMultiplier;
+                }
+                marbles.splice(idx, 1);
+            }
+            document.getElementById('score-display').innerText = score;
+            
+            lasers.push({ x: 400, y: 300, angle: shooterAngle, life: 1.0 });
+            
+            shootCooldown = 15;
+            recoil = 30; // Big recoil
         }
 
         let lastTouchShotAt = 0;
@@ -1049,10 +1353,74 @@
                     createFloatingText(centerPos.x, centerPos.y - 15, `${prefix}+${pointsGained}`, COLORS[color]);
                 }
                 playSound('pop', comboMultiplier);
+                
+                if (comboMultiplier === 4) {
+                    overdriveTimer = 300; // 5 seconds of overdrive
+                    playSound('overdrive');
+                    createFloatingText(400, 240, 'OVERDRIVE!', '#ffdf3f');
+                    for (let i = 0; i < 30; i++) {
+                        let angle = Math.random() * Math.PI * 2;
+                        let speed = Math.random() * 5 + 2;
+                        particles.push({
+                            x: 400, y: 300, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                            color: '#ffdf3f', life: 1.0, fadeRate: 0.02, size: Math.random() * 4 + 2
+                        });
+                    }
+                }
+                
                 comboMultiplier++;
             } else {
                 playSound('thud');
             }
+        }
+
+        function activateBomb(bx, by) {
+            playSound('bomb'); 
+            createPopParticles(bx, by, 'white'); 
+            createPopParticles(bx, by, 'yellow');
+            createFloatingText(bx, by - 15, 'BOOM!', '#ff4c4c');
+            
+            for (let i = marbles.length - 1; i >= 0; i--) {
+                let pos = pathPoints[Math.floor(marbles[i].d)];
+                if (pos && Math.hypot(pos.x - bx, pos.y - by) <= 80) { // 80px blast radius
+                    createPopParticles(pos.x, pos.y, marbles[i].color);
+                    score += 20 * comboMultiplier;
+                    marbles.splice(i, 1);
+                }
+            }
+            document.getElementById('score-display').innerText = score;
+        }
+
+        function activateBlackHole(bx, by) {
+            playSound('blackhole'); 
+            createFloatingText(bx, by - 15, 'BLACK HOLE!', '#a200ff');
+            
+            // Inward sucking particles
+            for (let i = 0; i < 40; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let dist = 60 + Math.random() * 90;
+                particles.push({
+                    x: bx + Math.cos(angle) * dist,
+                    y: by + Math.sin(angle) * dist,
+                    vx: -Math.cos(angle) * (dist / 15), // Reverse velocity to move towards center
+                    vy: -Math.sin(angle) * (dist / 15),
+                    color: '#a200ff',
+                    life: 1.0,
+                    fadeRate: 0.06,
+                    size: 3 + Math.random() * 4
+                });
+            }
+
+            // Suck up marbles (160px radius)
+            for (let i = marbles.length - 1; i >= 0; i--) {
+                let pos = pathPoints[Math.floor(marbles[i].d)];
+                if (pos && Math.hypot(pos.x - bx, pos.y - by) <= 160) { 
+                    createPopParticles(pos.x, pos.y, marbles[i].color);
+                    score += 25 * comboMultiplier;
+                    marbles.splice(i, 1);
+                }
+            }
+            document.getElementById('score-display').innerText = score;
         }
 
         function update() {
@@ -1073,6 +1441,13 @@
                 ft.y += ft.vy;
                 ft.life -= 0.02; // Fades out completely in ~75 frames
                 if (ft.life <= 0) floatingTexts.splice(i, 1);
+            }
+
+            // Update Lasers
+            for (let i = lasers.length - 1; i >= 0; i--) {
+                let l = lasers[i];
+                l.life -= 0.08; 
+                if (l.life <= 0) lasers.splice(i, 1);
             }
 
             // Update ambient stars
@@ -1134,6 +1509,9 @@
                     });
                 }
             }
+
+            if (freezeTimer > 0) freezeTimer--;
+            if (overdriveTimer > 0) overdriveTimer--;
 
             if (gameState === 'losing') {
                 tickCounter += 3;
@@ -1240,29 +1618,46 @@
             wasPulling = currentlyPulling;
 
             let isChainMoving = false;
-            // 2. Only the back-most ball drives the forward creeping movement.
-            // Disconnected front segments will stall until pushed.
-            if (marbles.length > 0 && !pulling[marbles.length - 1]) {
-                marbles[marbles.length - 1].d += 0.6; // Base creeping speed
-                isChainMoving = true;
-            }
+            if (rewindDistance > 0) {
+                let step = Math.min(rewindDistance, 4.0); // Smooth backward animation speed
+                for (let m of marbles) {
+                    m.d = Math.max(0, m.d - step);
+                }
+                rewindDistance -= step;
+                isChainMoving = true; // Keeps the mechanical ticking sound active
+            } else if (freezeTimer <= 0) {
+                // 2. Only the back-most ball drives the forward creeping movement.
+                // Disconnected front segments will stall until pushed.
+                if (marbles.length > 0 && !pulling[marbles.length - 1]) {
+                    marbles[marbles.length - 1].d += 0.6; // Base creeping speed
+                    isChainMoving = true;
+                }
 
-            // Spawner pushes the chain
-            if (ballsToSpawn > 0) {
-                isChainMoving = true;
-                if (marbles.length === 0 || marbles[marbles.length - 1].d > 20) {
-                    let newColor;
-                    do {
-                        newColor = getLevelColor();
-                    } while (
-                        marbles.length >= 2 &&
-                        marbles[marbles.length - 1].color === newColor &&
-                        marbles[marbles.length - 2].color === newColor
-                    );
-                    marbles.push({ d: 0, color: newColor, scale: 1 });
-                    ballsToSpawn--;
-                } else {
-                    marbles[marbles.length - 1].d += 0.4; // Extra push from the spawner
+                // Spawner pushes the chain
+                if (ballsToSpawn > 0) {
+                    isChainMoving = true;
+                    if (marbles.length === 0 || marbles[marbles.length - 1].d > 20) {
+                        let newColor;
+                        let rand = Math.random();
+                        if (rand < 0.02) newColor = 'white'; // 2% chance for Bomb
+                        else if (rand < 0.04) newColor = 'cyan'; // 2% chance for Freeze
+                        else if (rand < 0.06) newColor = 'magenta'; // 2% chance for Rewind
+                        else if (rand < 0.08) newColor = 'orange'; // 2% chance for Splash
+                        else if (rand < 0.10) newColor = 'black'; // 2% chance for Black Hole
+                        else {
+                            do {
+                                newColor = getLevelColor();
+                            } while (
+                                marbles.length >= 2 &&
+                                marbles[marbles.length - 1].color === newColor &&
+                                marbles[marbles.length - 2].color === newColor
+                            );
+                        }
+                        marbles.push({ d: 0, color: newColor, scale: 1 });
+                        ballsToSpawn--;
+                    } else {
+                        marbles[marbles.length - 1].d += 0.4; // Extra push from the spawner
+                    }
                 }
             }
 
@@ -1292,13 +1687,63 @@
                 }
             }
 
+            obstacleAngle += 0.02 + (level * 0.002);
+
             // Update Projectiles
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 let p = projectiles[i];
                 p.x += p.vx;
                 p.y += p.vy;
 
-                if (p.x < 0 || p.x > 800 || p.y < 0 || p.y > 600) {
+                let bounced = false;
+                if (p.x < 0) { p.x = 0; p.vx *= -1; bounced = true; }
+                else if (p.x > 800) { p.x = 800; p.vx *= -1; bounced = true; }
+                
+                if (p.y < 0) { p.y = 0; p.vy *= -1; bounced = true; }
+                else if (p.y > 600) { p.y = 600; p.vy *= -1; bounced = true; }
+                
+                if (bounced) {
+                    if (p.bounces >= 1) { // Allow exactly 1 bounce for trick shots
+                        projectiles.splice(i, 1);
+                        continue;
+                    }
+                    p.bounces++;
+                    playSound('thud');
+                    createPopParticles(p.x, p.y, p.color);
+                }
+
+                let hitShield = false;
+                for (let obs of orbitingObstacles) {
+                    let obsX = 400 + Math.cos(obstacleAngle + obs.angleOffset) * obs.distance;
+                    let obsY = 300 + Math.sin(obstacleAngle + obs.angleOffset) * obs.distance;
+                    if (Math.hypot(p.x - obsX, p.y - obsY) < 25) { 
+                        hitShield = true;
+                        createPopParticles(p.x, p.y, p.color);
+                        playSound('thud');
+                        break;
+                    }
+                }
+                
+                if (hitShield) {
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+
+                let hitTunnel = false;
+                for (let t of tunnels) {
+                    for (let j = t.start; j <= t.end; j += 4) {
+                        let pPos = pathPoints[j];
+                        if (pPos && Math.hypot(p.x - pPos.x, p.y - pPos.y) < 23) {
+                            hitTunnel = true;
+                            createPopParticles(p.x, p.y, '#7f8c8d');
+                            playSound('thud');
+                            break;
+                        }
+                    }
+                    if (hitTunnel) break;
+                }
+                
+                if (hitTunnel) {
                     projectiles.splice(i, 1);
                     continue;
                 }
@@ -1311,6 +1756,49 @@
 
                     if (Math.hypot(p.x - pos.x, p.y - pos.y) < 30) {
                         hit = true;
+                        
+                        if (mb.color === 'white') {
+                            activateBomb(pos.x, pos.y);
+                            comboMultiplier++;
+                            marbles.splice(m, 1);
+                            break;
+                        } else if (mb.color === 'cyan') {
+                            freezeTimer = 300; // 5 seconds at 60fps
+                            playSound('freeze');
+                            createPopParticles(pos.x, pos.y, 'cyan');
+                            createFloatingText(pos.x, pos.y - 15, 'FROZEN!', '#00ffff');
+                            score += 10 * comboMultiplier;
+                            document.getElementById('score-display').innerText = score;
+                            comboMultiplier++;
+                            marbles.splice(m, 1);
+                            break;
+                        } else if (mb.color === 'magenta') {
+                            playSound('zip');
+                            createPopParticles(pos.x, pos.y, 'magenta');
+                            createFloatingText(pos.x, pos.y - 15, 'REWIND!', '#ff00ff');
+                            score += 30 * comboMultiplier;
+                            rewindDistance += 80; // Queue the rewind animation instead of instantly snapping
+                            marbles.splice(m, 1);
+                            comboMultiplier++;
+                            break;
+                        } else if (mb.color === 'orange') {
+                            playSound('pop', 2);
+                            createPopParticles(pos.x, pos.y, 'orange');
+                            createFloatingText(pos.x, pos.y - 15, 'SPLASH!', '#ff8c00');
+                            score += 30 * comboMultiplier;
+                            let splashColor = p.color; 
+                            for (let k = Math.max(0, m - 3); k <= Math.min(marbles.length - 1, m + 3); k++) {
+                                if (k !== m) { marbles[k].color = splashColor; marbles[k].needsMatchCheck = true; }
+                            }
+                            marbles.splice(m, 1);
+                            comboMultiplier++;
+                            break;
+                        } else if (mb.color === 'black') {
+                            activateBlackHole(pos.x, pos.y);
+                            comboMultiplier++;
+                            marbles.splice(m, 1);
+                            break;
+                        }
                         
                         // Figure out which side of the hit marble to insert into
                         let pos_f = pathPoints[Math.min(pathPoints.length - 1, Math.floor(mb.d + 14))] || pos;
@@ -1390,6 +1878,86 @@
                 ctx.stroke();
                 return;
             }
+            
+            if (colorHex === '#00ffff') {
+                // Draw Ice Base
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                let iceGrad = ctx.createRadialGradient(x - radius*0.3, y - radius*0.3, 0, x, y, radius);
+                iceGrad.addColorStop(0, '#ffffff');
+                iceGrad.addColorStop(0.4, '#a6f1ff');
+                iceGrad.addColorStop(1, '#0088aa');
+                ctx.fillStyle = iceGrad;
+                ctx.fill();
+                
+                // Draw Snowflake Lines
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = Math.max(1, radius * 0.15);
+                ctx.beginPath();
+                ctx.moveTo(x - radius*0.6, y); ctx.lineTo(x + radius*0.6, y);
+                ctx.moveTo(x, y - radius*0.6); ctx.lineTo(x, y + radius*0.6);
+                ctx.moveTo(x - radius*0.4, y - radius*0.4); ctx.lineTo(x + radius*0.4, y + radius*0.4);
+                ctx.moveTo(x - radius*0.4, y + radius*0.4); ctx.lineTo(x + radius*0.4, y - radius*0.4);
+                ctx.stroke();
+                return;
+            }
+            
+            if (colorHex === '#ff00ff') {
+                ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2);
+                let magGrad = ctx.createRadialGradient(x - radius*0.3, y - radius*0.3, 0, x, y, radius);
+                magGrad.addColorStop(0, '#ffffff'); magGrad.addColorStop(0.4, '#ff88ff'); magGrad.addColorStop(1, '#aa00aa');
+                ctx.fillStyle = magGrad; ctx.fill();
+                // Draw Rewind Icon (<<)
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(x - radius*0.1, y); ctx.lineTo(x + radius*0.4, y - radius*0.4); ctx.lineTo(x + radius*0.4, y + radius*0.4);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(x - radius*0.5, y); ctx.lineTo(x, y - radius*0.4); ctx.lineTo(x, y + radius*0.4);
+                ctx.fill();
+                return;
+            }
+
+            if (colorHex === '#ff8c00') {
+                ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2);
+                let orGrad = ctx.createRadialGradient(x - radius*0.3, y - radius*0.3, 0, x, y, radius);
+                orGrad.addColorStop(0, '#ffffff'); orGrad.addColorStop(0.4, '#ffbb55'); orGrad.addColorStop(1, '#aa5500');
+                ctx.fillStyle = orGrad; ctx.fill();
+                // Draw Splash / Starburst
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                for(let a=0; a<8; a++) {
+                    ctx.beginPath();
+                    ctx.moveTo(x + Math.cos(a * Math.PI/4) * radius * 0.2, y + Math.sin(a * Math.PI/4) * radius * 0.2);
+                    ctx.lineTo(x + Math.cos(a * Math.PI/4) * radius * 0.6, y + Math.sin(a * Math.PI/4) * radius * 0.6);
+                    ctx.stroke();
+                }
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 0.2, 0, Math.PI*2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                return;
+            }
+
+            if (colorHex === '#111111') {
+                ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2);
+                let bhGrad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                bhGrad.addColorStop(0, '#000000'); bhGrad.addColorStop(0.7, '#2b0055'); bhGrad.addColorStop(1, '#111111');
+                ctx.fillStyle = bhGrad; ctx.fill();
+                // Spiral accretion disk
+                ctx.strokeStyle = '#a200ff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                for(let i=0; i<Math.PI*4; i+=0.5) {
+                    let r = (i / (Math.PI*4)) * radius * 0.8;
+                    let px = x + Math.cos(i + Date.now()/200) * r;
+                    let py = y + Math.sin(i + Date.now()/200) * r;
+                    if (i===0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+                return;
+            }
 
             // Base color
             ctx.beginPath();
@@ -1465,13 +2033,30 @@
         
         // Outer metallic rim
         ctx.lineWidth = 38;
-        ctx.strokeStyle = '#2c3e50';
+        ctx.strokeStyle = currentTrackColor;
         ctx.stroke();
 
         // Inner dark groove where the marbles roll
         ctx.lineWidth = 30;
         ctx.strokeStyle = '#0a0f14';
         ctx.stroke();
+
+            // Draw Freeze Frost Overlay on Track
+            if (freezeTimer > 0) {
+                ctx.save();
+                ctx.strokeStyle = `rgba(0, 255, 255, ${Math.min(0.25, freezeTimer / 60)})`;
+                ctx.lineWidth = 30;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                for(let i=0; i<pathPoints.length; i+=10) {
+                    let p = pathPoints[i];
+                    if (i===0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
 
             // Draw Sinkhole
             let endP = pathPoints[pathPoints.length - 1];
@@ -1623,6 +2208,53 @@
             ctx.globalAlpha = 1.0;
             ctx.shadowBlur = 0; // reset
 
+            // Draw Tunnels
+            for (let t of tunnels) {
+                ctx.save();
+                ctx.lineCap = 'square';
+                ctx.lineJoin = 'round';
+                
+                ctx.beginPath();
+                for(let i = t.start; i <= t.end; i+=5) {
+                    let p = pathPoints[i];
+                    if (p) {
+                        if (i === t.start) ctx.moveTo(p.x, p.y);
+                        else ctx.lineTo(p.x, p.y);
+                    }
+                }
+                if (pathPoints[t.end]) ctx.lineTo(pathPoints[t.end].x, pathPoints[t.end].y);
+                
+                ctx.lineWidth = 50;
+                ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                ctx.stroke();
+
+                ctx.lineWidth = 46;
+                ctx.strokeStyle = currentTrackColor;
+                ctx.stroke();
+
+                ctx.lineWidth = 36;
+                ctx.strokeStyle = '#4a6278';
+                ctx.stroke();
+
+                ctx.lineWidth = 12;
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.stroke();
+
+                let startP = pathPoints[t.start];
+                if (startP) {
+                    ctx.beginPath(); ctx.arc(startP.x, startP.y, 23, 0, Math.PI*2);
+                    ctx.fillStyle = '#05080a'; ctx.fill();
+                    ctx.lineWidth = 3; ctx.strokeStyle = '#ffdf3f'; ctx.stroke();
+                }
+                let endP = pathPoints[t.end];
+                if (endP) {
+                    ctx.beginPath(); ctx.arc(endP.x, endP.y, 23, 0, Math.PI*2);
+                    ctx.fillStyle = '#05080a'; ctx.fill();
+                    ctx.lineWidth = 3; ctx.strokeStyle = '#ffdf3f'; ctx.stroke();
+                }
+                ctx.restore();
+            }
+
             // Draw Start Tunnel (covers spawning balls)
             let startP = pathPoints[0];
             let nextP = pathPoints[10] || pathPoints[pathPoints.length - 1];
@@ -1694,6 +2326,28 @@
                 drawMarble(ctx, p.x, p.y, 15, COLORS[p.color]);
             }
 
+            // Draw Lasers
+            for (let l of lasers) {
+                ctx.save();
+                ctx.translate(l.x, l.y);
+                ctx.rotate(l.angle);
+                
+                ctx.globalAlpha = Math.max(0, l.life);
+                ctx.beginPath();
+                ctx.moveTo(50, 0);
+                ctx.lineTo(2000, 0); // shoot way off screen
+                
+                ctx.lineWidth = 20 * l.life;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.shadowBlur = 30; ctx.shadowColor = '#ffdf3f'; ctx.stroke();
+                ctx.lineWidth = 8 * l.life; ctx.strokeStyle = '#ffdf3f'; ctx.stroke();
+                ctx.lineWidth = 3 * l.life; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+                
+                ctx.restore();
+            }
+            ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0;
+
             // Draw Shooter Turret
             ctx.save();
             ctx.translate(400, 300);
@@ -1748,7 +2402,19 @@
             ctx.stroke();
 
             // Loaded Marble
-            drawMarble(ctx, 0, 0, 15, COLORS[currentMarbleColor]);
+            if (overdriveTimer > 0) {
+                ctx.beginPath();
+                ctx.arc(0, 0, 15, 0, Math.PI*2);
+                let coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 15);
+                coreGrad.addColorStop(0, '#ffffff'); coreGrad.addColorStop(0.5, '#ffdf3f'); coreGrad.addColorStop(1, '#ff4c4c');
+                ctx.fillStyle = coreGrad;
+                ctx.shadowBlur = 20 + Math.sin(Date.now() / 50) * 10;
+                ctx.shadowColor = '#ffdf3f';
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            } else {
+                drawMarble(ctx, 0, 0, 15, COLORS[currentMarbleColor]);
+            }
             
             ctx.restore();
 
@@ -1761,6 +2427,45 @@
             ctx.strokeStyle = '#2c3e50';
             ctx.stroke();
             drawMarble(ctx, 380, 280, 8, COLORS[nextMarbleColor]);
+
+            // Draw Orbiting Shields
+            for (let obs of orbitingObstacles) {
+                let obsX = 400 + Math.cos(obstacleAngle + obs.angleOffset) * obs.distance;
+                let obsY = 300 + Math.sin(obstacleAngle + obs.angleOffset) * obs.distance;
+                
+                ctx.save();
+                ctx.translate(obsX, obsY);
+                ctx.rotate(obstacleAngle * 2 + obs.angleOffset);
+                
+                // Draw a sleek high-tech energy shield
+                ctx.beginPath();
+                ctx.moveTo(0, -18);
+                ctx.lineTo(14, 0);
+                ctx.lineTo(0, 18);
+                ctx.lineTo(-14, 0);
+                ctx.closePath();
+                
+                let shieldGrad = ctx.createLinearGradient(-14, 0, 14, 0);
+                shieldGrad.addColorStop(0, '#7f8c8d');
+                shieldGrad.addColorStop(0.5, '#ecf0f1');
+                shieldGrad.addColorStop(1, '#2c3e50');
+                ctx.fillStyle = shieldGrad;
+                ctx.fill();
+                
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#4dabff';
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#4dabff';
+                ctx.stroke();
+                
+                // Inner core
+                ctx.beginPath();
+                ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                
+                ctx.restore();
+            }
 
             // Danger Vignette Overlay
             if (dangerLevel > 0) {
@@ -1784,6 +2489,11 @@
             document.getElementById('overlay-title').innerText = title;
             document.getElementById('overlay-title').style.color = color;
             document.getElementById('overlay-btn').innerText = btnText;
+            if (gameState === 'lost') {
+                document.getElementById('end-diff-selector').style.display = 'flex';
+            } else {
+                document.getElementById('end-diff-selector').style.display = 'none';
+            }
             document.getElementById('overlay').style.display = 'flex';
         }
 
@@ -1793,8 +2503,8 @@
             if (gameState === 'won') {
                 level++;
                 maxLevel = Math.max(maxLevel, level);
-                localStorage.setItem('orbitPopLevel', level);
-                localStorage.setItem('orbitPopMaxLevel', maxLevel);
+                localStorage.setItem(`orbitPopLevel_${gameMode}`, level);
+                localStorage.setItem(`orbitPopMaxLevel_${gameMode}`, maxLevel);
                 loadLevel();
             } else {
                 score = 0;
@@ -1813,8 +2523,35 @@
             requestAnimationFrame(gameLoop);
         }
 
+        function setMode(mode, init = false) {
+            if (!init) playSound('tick');
+            gameMode = mode;
+            localStorage.setItem('orbitPopMode', mode);
+            
+            document.getElementById('diff-normal').classList.remove('active');
+            document.getElementById('diff-hard').classList.remove('active');
+            document.getElementById('diff-normal-end').classList.remove('active');
+            document.getElementById('diff-hard-end').classList.remove('active');
+            
+            document.getElementById(`diff-${mode}`).classList.add('active');
+            document.getElementById(`diff-${mode}-end`).classList.add('active');
+
+            level = parseInt(localStorage.getItem(`orbitPopLevel_${mode}`)) || 1;
+            if (mode === 'normal' && !localStorage.getItem('orbitPopLevel_normal') && localStorage.getItem('orbitPopLevel')) {
+                level = parseInt(localStorage.getItem('orbitPopLevel'));
+            }
+            maxLevel = parseInt(localStorage.getItem(`orbitPopMaxLevel_${mode}`)) || level;
+            if (mode === 'normal' && !localStorage.getItem('orbitPopMaxLevel_normal') && localStorage.getItem('orbitPopMaxLevel')) {
+                maxLevel = parseInt(localStorage.getItem('orbitPopMaxLevel'));
+            }
+            
+            document.getElementById('level-display').innerText = level;
+            updateLevelSelector();
+        }
+
         document.getElementById('level-display').innerText = level;
         updateLevelSelector();
+        setMode(gameMode, true);
     </script>
 </body>
 </html>
