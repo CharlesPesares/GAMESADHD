@@ -271,9 +271,10 @@
     </style>
 </head>
 <body class="font-arcade">
-    <div class="header">
-        <a href="gamedashboard.html" class="back-link">&larr; Dashboard</a>
-        <h1>Neon Pulse</h1>
+    <div class="header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 400px; padding: 0 10px; margin: 15px auto 10px; box-sizing: border-box;">
+        <a href="gamedashboard.html" class="back-link" style="margin: 0;">&larr; Back</a>
+        <h1 style="font-size: 1.8rem; margin: 0;">Neon Pulse</h1>
+        <button class="back-link" id="pause-btn" onclick="togglePause()" style="cursor: pointer; font-family: inherit; border-color: #4dabff; color: #4dabff; background: rgba(77, 171, 255, 0.1); margin: 0;">PAUSE</button>
     </div>
 
     <div class="game-container">
@@ -313,6 +314,13 @@
 
             <button class="start-btn" onclick="startGame()" style="margin-top: 5px;">START TRACK</button>
             <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); font-weight: bold; margin-top: 15px;">Keys: D, F, J, K or Touch</p>
+        </div>
+
+        <div class="overlay" id="pause-overlay" style="display: none;">
+            <h2 style="color: #4dabff; text-shadow: 0 0 24px rgba(77, 171, 255, 0.4), 0 18px 48px rgba(0, 0, 0, 0.48);">PAUSED</h2>
+            <button class="start-btn" onclick="togglePause()">RESUME</button>
+            <button class="start-btn" onclick="startGame()" style="background: linear-gradient(135deg, #ffd166, #ff5a76); box-shadow: 0 6px 0 #a33b4e; margin-top: 15px;">RESTART</button>
+            <button class="start-btn" onclick="showStartScreen()" style="background: transparent; color: #bdc3c7; box-shadow: none; border: 2px solid #bdc3c7; margin-top: 15px;">MAIN MENU</button>
         </div>
 
         <div class="overlay" id="end-overlay" style="display: none;">
@@ -597,6 +605,7 @@
             if (countdownTimeout) clearTimeout(countdownTimeout);
             document.getElementById('countdown-overlay').style.display = 'none';
             document.getElementById('end-overlay').style.display = 'none';
+            document.getElementById('pause-overlay').style.display = 'none';
             document.getElementById('start-overlay').style.display = 'flex';
             updateLevelSelector();
             drawEmptyBoard();
@@ -608,6 +617,7 @@
             
             document.getElementById('start-overlay').style.display = 'none';
             document.getElementById('end-overlay').style.display = 'none';
+            document.getElementById('pause-overlay').style.display = 'none';
             
             score = 0;
             combo = 0;
@@ -1085,6 +1095,34 @@
             }
         }
 
+        function togglePause() {
+            if (state === 'playing') {
+                state = 'paused';
+                document.getElementById('pause-overlay').style.display = 'flex';
+                let btn = document.getElementById('pause-btn');
+                if (btn) {
+                    btn.innerText = 'RESUME';
+                    btn.style.color = '#13ff7c';
+                    btn.style.borderColor = '#13ff7c';
+                    btn.style.background = 'rgba(19, 255, 124, 0.1)';
+                }
+                if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
+            } else if (state === 'paused') {
+                state = 'playing';
+                document.getElementById('pause-overlay').style.display = 'none';
+                let btn = document.getElementById('pause-btn');
+                if (btn) {
+                    btn.innerText = 'PAUSE';
+                    btn.style.color = '#4dabff';
+                    btn.style.borderColor = '#4dabff';
+                    btn.style.background = 'rgba(77, 171, 255, 0.1)';
+                }
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                lastTime = performance.now();
+                requestAnimationFrame(loop);
+            }
+        }
+
         function loop(time) {
             if (state !== 'playing') return;
             
@@ -1367,7 +1405,13 @@
         // Keyboard Input
         const keys = ['d', 'f', 'j', 'k'];
         window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'p' || e.key === 'Escape') {
+                if (state === 'playing' || state === 'paused') togglePause();
+                return;
+            }
+
             if (e.repeat) return;
+            if (state === 'paused') return;
             const idx = keys.indexOf(e.key.toLowerCase());
             if (idx !== -1) {
                 document.getElementById('btn-' + idx).classList.add('active');
