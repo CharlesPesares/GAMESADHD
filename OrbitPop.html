@@ -383,9 +383,39 @@
                 padding: 72px 16px 16px;
             }
         }
+        .achievement-toast {
+            position: fixed;
+            bottom: -120px;
+            right: clamp(16px, 4vw, 40px);
+            background: linear-gradient(145deg, #172330, #0b1016);
+            border: 2px solid #ffd166;
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 25px rgba(255,209,102,0.25);
+            z-index: 1000;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .achievement-toast.show {
+            bottom: clamp(16px, 4vw, 40px);
+        }
+        .toast-icon { font-size: 2.8rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+        .toast-text h4 { margin: 0 0 4px 0; color: #ffd166; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; }
+        .toast-text p { margin: 0; color: #fff; font-size: 1.2rem; font-weight: 950; }
     </style>
 </head>
 <body class="font-arcade min-h-screen antialiased selection:bg-cyan-400/30">
+    <!-- Achievement Toast -->
+    <div id="achievement-toast" class="achievement-toast">
+        <div class="toast-icon" id="toast-icon">🏆</div>
+        <div class="toast-text">
+            <h4>Achievement Unlocked!</h4>
+            <p id="toast-title">Title</p>
+        </div>
+    </div>
 
     <div class="header">
         <a href="gamedashboard.html" class="back-link">← Back to Dashboard</a>
@@ -498,7 +528,13 @@
             // 5: Cross-Eyed Spiral (Indigo/Lime)
             { bg1: '#1c122e', bg2: '#301d4a', bg3: '#0f081c', h1: 'rgba(139, 92, 246, 0.16)', h2: 'rgba(163, 230, 53, 0.16)', h3: 'rgba(196, 181, 253, 0.16)', track: '#4338ca' },
             // 6: Serpentine Spiral (Teal/Orange)
-            { bg1: '#0c1d21', bg2: '#113c42', bg3: '#051012', h1: 'rgba(20, 184, 166, 0.16)', h2: 'rgba(249, 115, 22, 0.16)', h3: 'rgba(94, 234, 212, 0.16)', track: '#134e4a' }
+            { bg1: '#0c1d21', bg2: '#113c42', bg3: '#051012', h1: 'rgba(20, 184, 166, 0.16)', h2: 'rgba(249, 115, 22, 0.16)', h3: 'rgba(94, 234, 212, 0.16)', track: '#134e4a' },
+            // 7: The Serpentine S-Bend (Ocean Blue/Coral)
+            { bg1: '#0b162c', bg2: '#1a2a44', bg3: '#050a16', h1: 'rgba(0, 191, 255, 0.16)', h2: 'rgba(255, 127, 80, 0.16)', h3: 'rgba(32, 178, 170, 0.16)', track: '#1d3557' },
+            // 8: The Labyrinth (Retro Gold/Crimson)
+            { bg1: '#261414', bg2: '#3d1f1f', bg3: '#140a0a', h1: 'rgba(255, 215, 0, 0.16)', h2: 'rgba(220, 20, 60, 0.16)', h3: 'rgba(255, 140, 0, 0.16)', track: '#5c2a2a' },
+            // 9: The Spectacles (Acid Green/Magenta)
+            { bg1: '#121c12', bg2: '#1d331d', bg3: '#090e09', h1: 'rgba(173, 255, 47, 0.16)', h2: 'rgba(255, 0, 255, 0.16)', h3: 'rgba(0, 250, 154, 0.16)', track: '#2d4c2d' }
         ];
 
         let pathPoints = [];
@@ -582,58 +618,25 @@
                 }
                 if (pathPoints[t.end]) uctx.lineTo(pathPoints[t.end].x, pathPoints[t.end].y);
                 
-                // 1. Deep Shadow
-                uctx.shadowBlur = 25;
-                uctx.shadowColor = 'rgba(0,0,0,0.9)';
-                uctx.lineWidth = 60;
-                uctx.strokeStyle = 'rgba(0,0,0,0.9)';
+                // 1. Neon Outer Edge (Rails)
+                uctx.shadowBlur = 15;
+                uctx.shadowColor = currentTrackColor;
+                uctx.lineWidth = 54;
+                uctx.strokeStyle = currentTrackColor;
                 uctx.stroke();
                 uctx.shadowBlur = 0;
 
-                // 2. Outer Dark Casing
-                uctx.lineWidth = 54;
-                uctx.strokeStyle = '#05080a';
-                uctx.stroke();
-
-                // 3. Metallic Rim
+                // 2. Carve out the center to make it purely transparent
+                uctx.globalCompositeOperation = 'destination-out';
                 uctx.lineWidth = 48;
-                uctx.strokeStyle = currentTrackColor;
+                uctx.strokeStyle = 'black';
                 uctx.stroke();
+                uctx.globalCompositeOperation = 'source-over';
 
-                // 4. Dark Glass Core
-                uctx.lineWidth = 42;
-                uctx.strokeStyle = '#0f171e';
+                // 3. Faint Tinted Glass Core (highly transparent so marbles show)
+                uctx.lineWidth = 48;
+                uctx.strokeStyle = 'rgba(15, 25, 35, 0.4)';
                 uctx.stroke();
-
-                // 5. Glass Reflection Highlight
-                uctx.lineWidth = 16;
-                uctx.strokeStyle = 'rgba(255,255,255,0.08)';
-                uctx.stroke();
-
-                // 6. Neon Structural Ribs
-                for (let i = t.start + 5; i <= t.end - 5; i += 15) {
-                    let p1 = pathPoints[i];
-                    let p2 = pathPoints[Math.min(i + 1, t.end)];
-                    if (!p1 || !p2) continue;
-                    let angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-                    let perp = angle + Math.PI / 2;
-                    
-                    let w = 23; // Half-width to stay within casing
-                    uctx.beginPath();
-                    uctx.moveTo(p1.x + Math.cos(perp) * w, p1.y + Math.sin(perp) * w);
-                    uctx.lineTo(p1.x - Math.cos(perp) * w, p1.y - Math.sin(perp) * w);
-                    
-                    uctx.lineWidth = 6;
-                    uctx.strokeStyle = '#05080a';
-                    uctx.stroke();
-
-                    uctx.lineWidth = 2;
-                    uctx.strokeStyle = '#13ff7c';
-                    uctx.shadowBlur = 10;
-                    uctx.shadowColor = '#13ff7c';
-                    uctx.stroke();
-                    uctx.shadowBlur = 0;
-                }
 
                 // 7. Portals (Entrance and Exit arches)
                 let startP = pathPoints[t.start];
@@ -644,31 +647,12 @@
                     uctx.translate(startP.x, startP.y);
                     uctx.rotate(angle);
                     
-                    let shadowGrad = uctx.createLinearGradient(0, 0, -45, 0);
-                    shadowGrad.addColorStop(0, 'rgba(0,0,0,0.9)');
-                    shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                    uctx.fillStyle = shadowGrad;
-                    uctx.beginPath(); uctx.arc(0, 0, 40, Math.PI/2, Math.PI*1.5); uctx.fill();
+                    // Neon Portal Arch
 
-                    // Volumetric Inner Ceiling
-                    uctx.beginPath();
-                    uctx.ellipse(0, 0, 12, 27, 0, Math.PI/2, Math.PI*1.5);
-                    uctx.lineTo(0, 27);
-                    uctx.closePath();
-                    uctx.fillStyle = '#0a0f14';
-                    uctx.fill();
-
-                    // Outer Casing Rim
+                    // Neon Portal Arch
                     uctx.beginPath(); uctx.ellipse(0, 0, 12, 27, 0, Math.PI/2, Math.PI*1.5);
-                    uctx.lineWidth = 6; uctx.strokeStyle = '#05080a'; uctx.stroke();
-                    
-                    // Metallic Rim
-                    uctx.beginPath(); uctx.ellipse(0, 0, 12, 24, 0, Math.PI/2, Math.PI*1.5);
-                    uctx.lineWidth = 6; uctx.strokeStyle = currentTrackColor; uctx.stroke();
-
-                    // Neon Edge
-                    uctx.beginPath(); uctx.ellipse(0, 0, 12, 21, 0, Math.PI/2, Math.PI*1.5);
-                    uctx.lineWidth = 2; uctx.strokeStyle = '#13ff7c'; uctx.shadowBlur = 10; uctx.shadowColor = '#13ff7c'; uctx.stroke();
+                    uctx.lineWidth = 4; uctx.strokeStyle = currentTrackColor; uctx.shadowBlur = 15; uctx.shadowColor = currentTrackColor; uctx.stroke();
+                    uctx.shadowBlur = 0;
                     uctx.restore();
                 }
 
@@ -680,31 +664,12 @@
                     uctx.translate(endP.x, endP.y);
                     uctx.rotate(angle);
                     
-                    let shadowGrad = uctx.createLinearGradient(0, 0, 45, 0);
-                    shadowGrad.addColorStop(0, 'rgba(0,0,0,0.9)');
-                    shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                    uctx.fillStyle = shadowGrad;
-                    uctx.beginPath(); uctx.arc(0, 0, 40, -Math.PI/2, Math.PI/2); uctx.fill();
+                    // Neon Portal Arch
 
-                    // Volumetric Inner Ceiling
-                    uctx.beginPath();
-                    uctx.ellipse(0, 0, 12, 27, 0, -Math.PI/2, Math.PI/2);
-                    uctx.lineTo(0, -27);
-                    uctx.closePath();
-                    uctx.fillStyle = '#0a0f14';
-                    uctx.fill();
-
-                    // Outer Casing Rim
+                    // Neon Portal Arch
                     uctx.beginPath(); uctx.ellipse(0, 0, 12, 27, 0, -Math.PI/2, Math.PI/2);
-                    uctx.lineWidth = 6; uctx.strokeStyle = '#05080a'; uctx.stroke();
-                    
-                    // Metallic Rim
-                    uctx.beginPath(); uctx.ellipse(0, 0, 12, 24, 0, -Math.PI/2, Math.PI/2);
-                    uctx.lineWidth = 6; uctx.strokeStyle = currentTrackColor; uctx.stroke();
-
-                    // Neon Edge
-                    uctx.beginPath(); uctx.ellipse(0, 0, 12, 21, 0, -Math.PI/2, Math.PI/2);
-                    uctx.lineWidth = 2; uctx.strokeStyle = '#13ff7c'; uctx.shadowBlur = 10; uctx.shadowColor = '#13ff7c'; uctx.stroke();
+                    uctx.lineWidth = 4; uctx.strokeStyle = currentTrackColor; uctx.shadowBlur = 15; uctx.shadowColor = currentTrackColor; uctx.stroke();
+                    uctx.shadowBlur = 0;
                     uctx.restore();
                 }
                 uctx.restore();
@@ -757,8 +722,8 @@
                 uctx.ellipse(0, 0, 12, 36, 0, -Math.PI/2, Math.PI/2);
                 uctx.lineWidth = 4;
                 uctx.shadowBlur = 15;
-                uctx.shadowColor = '#13ff7c';
-                uctx.strokeStyle = '#13ff7c';
+                uctx.shadowColor = currentTrackColor;
+                uctx.strokeStyle = currentTrackColor;
                 uctx.stroke();
                 uctx.shadowBlur = 0; 
                 
@@ -813,6 +778,70 @@
             return offCanvas;
         }
 
+        let marbleSpriteCache = {};
+
+        function initMarbleCache() {
+            let standardColors = ['#ff4c4c', '#3a9fff', '#13ff7c', '#ffdf3f', '#e056fd'];
+            let radius = 15;
+            let size = radius * 2 + 6; // Padding to ensure shadows/strokes don't clip
+            
+            for (let color of standardColors) {
+                marbleSpriteCache[color] = [];
+                for (let frame = 0; frame < 16; frame++) {
+                    let mCanvas = document.createElement('canvas');
+                    mCanvas.width = size;
+                    mCanvas.height = size;
+                    let mCtx = mCanvas.getContext('2d');
+                    
+                    let cx = size / 2;
+                    let cy = size / 2;
+                    
+                    // Base color
+                    mCtx.beginPath();
+                    mCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+                    mCtx.fillStyle = color;
+                    mCtx.fill();
+                    
+                    mCtx.save();
+                    mCtx.translate(cx, cy);
+                    mCtx.beginPath();
+                    mCtx.arc(0, 0, radius, 0, Math.PI * 2);
+                    mCtx.clip();
+                    
+                    let theta = (frame / 16) * (Math.PI * 2);
+                    
+                    let drawBand = (waveAmp, waveFreq, yOffset, colorStr, thickness) => {
+                        mCtx.beginPath();
+                        for(let t = 0; t <= Math.PI + 0.1; t += 0.2) { 
+                            let alpha = t + theta;
+                            let beta = Math.sin(alpha * waveFreq) * waveAmp + yOffset;
+                            let pX = Math.cos(t) * Math.cos(beta) * radius;
+                            let pY = Math.sin(beta) * radius;
+                            
+                            if (t === 0) mCtx.moveTo(pX, pY);
+                            else mCtx.lineTo(pX, pY);
+                        }
+                        mCtx.lineCap = 'round';
+                        mCtx.lineJoin = 'round';
+                        mCtx.lineWidth = radius * thickness;
+                        mCtx.strokeStyle = colorStr;
+                        mCtx.stroke();
+                    };
+
+                    drawBand(0.35, 3, 0, 'rgba(255, 255, 255, 0.45)', 0.15); // Light wave
+                    drawBand(-0.35, 3, 0, 'rgba(0, 0, 0, 0.35)', 0.15);      // Dark wave
+                    drawBand(0, 0, 0, 'rgba(255, 255, 255, 0.15)', 0.08);    // Center equator
+                    
+                    mCtx.restore();
+                    
+                    let overlay = getMarbleOverlay();
+                    mCtx.drawImage(overlay, cx - radius - 1, cy - radius - 1, radius * 2 + 2, radius * 2 + 2);
+                    
+                    marbleSpriteCache[color].push(mCanvas);
+                }
+            }
+        }
+
         // Initialize ambient background stars
         for (let i = 0; i < 150; i++) {
             stars.push({
@@ -854,7 +883,17 @@
         
         let bgmInterval = null;
         let bgmIndex = 0;
-        const bgmNotes = [220.00, 261.63, 329.63, 440.00, 493.88, 440.00, 329.63, 261.63]; // Atmospheric A minor 9
+        // Synthwave Bassline + Arpeggio Sequence
+        const bgmNotes = [
+            { base: 110.00, melody: 440.00 }, // A2, A4
+            { base: 110.00, melody: 523.25 }, // A2, C5
+            { base: 130.81, melody: 659.25 }, // C3, E5
+            { base: 130.81, melody: 880.00 }, // C3, A5
+            { base: 146.83, melody: 587.33 }, // D3, D5
+            { base: 146.83, melody: 698.46 }, // D3, F5
+            { base: 98.00,  melody: 493.88 }, // G2, B4
+            { base: 98.00,  melody: 392.00 }  // G2, G4
+        ];
 
         function playSound(type, combo = 1) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -966,6 +1005,41 @@
                 gain.gain.linearRampToValueAtTime(0.04, now + 0.005);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
                 osc.start(now); osc.stop(now + 0.03);
+            } else if (type === 'rewind') {
+                // Tape Rewind sound! Fast descending sweep + white noise
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                
+                let biquad = audioCtx.createBiquadFilter();
+                biquad.type = 'lowpass';
+                biquad.frequency.setValueAtTime(2000, now);
+                biquad.frequency.exponentialRampToValueAtTime(300, now + 0.3);
+                
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.4, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                
+                osc.connect(biquad);
+                biquad.connect(gain);
+                osc.start(now); osc.stop(now + 0.3);
+                
+                // Tape hiss
+                let bufferSize = audioCtx.sampleRate * 0.3;
+                let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                let data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                
+                let noiseSource = audioCtx.createBufferSource();
+                noiseSource.buffer = buffer;
+                let noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0, now);
+                noiseGain.gain.linearRampToValueAtTime(0.15, now + 0.05);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                
+                noiseSource.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noiseSource.start(now);
             } else if (type === 'zip') {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(200, now);
@@ -998,29 +1072,45 @@
                 
                 osc.start(now); osc.stop(now + 0.5);
             } else if (type === 'freeze') {
-                // Glassy, icy high-frequency sweep with a crystal shimmer
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(2000, now + 0.1);
-                osc.frequency.exponentialRampToValueAtTime(3000, now + 0.4);
+                // Icy freezing crack + wind hiss
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.2); // sharp pitch drop for the "crack"
+                
+                let biquad = audioCtx.createBiquadFilter();
+                biquad.type = 'highpass';
+                biquad.frequency.value = 1000;
                 
                 gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.5, now + 0.05);
+                gain.gain.linearRampToValueAtTime(0.5, now + 0.02);
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
                 
-                const shimmer = audioCtx.createOscillator();
-                const shimmerGain = audioCtx.createGain();
-                shimmer.type = 'triangle';
-                shimmer.frequency.setValueAtTime(3000, now);
-                shimmer.frequency.exponentialRampToValueAtTime(1500, now + 0.4);
-                shimmerGain.gain.setValueAtTime(0, now);
-                shimmerGain.gain.linearRampToValueAtTime(0.3, now + 0.02);
-                shimmerGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                shimmer.connect(shimmerGain);
-                shimmerGain.connect(audioCtx.destination);
-                shimmer.start(now); shimmer.stop(now + 0.4);
-                
+                osc.connect(biquad);
+                biquad.connect(gain);
                 osc.start(now); osc.stop(now + 0.4);
+                
+                // Add white noise hiss for the freezing wind
+                let bufferSize = audioCtx.sampleRate * 0.5;
+                let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                let data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                
+                let noiseSource = audioCtx.createBufferSource();
+                noiseSource.buffer = buffer;
+                let noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.value = 4000;
+                noiseFilter.Q.value = 2;
+                
+                let noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0, now);
+                noiseGain.gain.linearRampToValueAtTime(0.4, now + 0.1);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                
+                noiseSource.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noiseSource.start(now);
             } else if (type === 'laser') {
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(1200, now);
@@ -1063,34 +1153,45 @@
             function playNextNote() {
                 if (gameState !== 'playing' && gameState !== 'losing') return;
                 
-                let osc1 = audioCtx.createOscillator();
-                let osc2 = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
+                let oscBass = audioCtx.createOscillator();
+                let oscArp = audioCtx.createOscillator();
+                let gainBass = audioCtx.createGain();
+                let gainArp = audioCtx.createGain();
+                
+                let note = bgmNotes[bgmIndex];
+                
+                oscBass.type = 'sawtooth';
+                oscBass.frequency.value = note.base;
+                
+                oscArp.type = 'sine';
+                oscArp.frequency.value = note.melody;
+                
                 let filter = audioCtx.createBiquadFilter();
-                
-                osc1.type = 'sine';
-                osc1.frequency.value = bgmNotes[bgmIndex];
-                
-                osc2.type = 'triangle';
-                osc2.frequency.value = bgmNotes[bgmIndex] * 2; // Add a higher octave for shimmer
-                
                 filter.type = 'lowpass';
-                filter.frequency.value = 800; // Slightly brighter spacey tone
+                // Dynamic filter sweep based on the sequence index
+                filter.frequency.value = 600 + Math.sin(bgmIndex)*200; 
                 
-                gain.connect(filter);
-                filter.connect(audioCtx.destination);
-                osc1.connect(gain);
-                osc2.connect(gain);
+                oscBass.connect(filter);
+                filter.connect(gainBass);
+                oscArp.connect(gainArp);
+                
+                gainBass.connect(audioCtx.destination);
+                gainArp.connect(audioCtx.destination);
                 
                 let now = audioCtx.currentTime;
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.1, now + 0.05); // Smoother attack
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8); // Longer fading trail
                 
-                osc1.start(now);
-                osc1.stop(now + 0.8);
-                osc2.start(now);
-                osc2.stop(now + 0.8);
+                // Plucky Bass Envelope
+                gainBass.gain.setValueAtTime(0, now);
+                gainBass.gain.linearRampToValueAtTime(0.06, now + 0.02);
+                gainBass.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                
+                // Shimmering Arp Envelope
+                gainArp.gain.setValueAtTime(0, now);
+                gainArp.gain.linearRampToValueAtTime(0.12, now + 0.05);
+                gainArp.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                
+                oscBass.start(now); oscBass.stop(now + 0.3);
+                oscArp.start(now); oscArp.stop(now + 0.6);
                 
                 bgmIndex = (bgmIndex + 1) % bgmNotes.length;
                 
@@ -1123,8 +1224,8 @@
             pathPoints = [];
             let cx = 400, cy = 300;
             
-            // 7 Distinct beautifully designed map shapes that rotate
-            let mapType = (level - 1) % 7;
+            // 10 Distinct beautifully designed map shapes that rotate
+            let mapType = (level - 1) % 10;
             
             // Progressive difficulty: more loops, longer track
             let loops = 2.5 + Math.min(level * 0.15, 3.5); 
@@ -1174,15 +1275,40 @@
                         y = cy + wobbleR * Math.sin(t);
                         break;
 
-                    case 5: // Cross-Eyed Spiral (self-intersecting)
-                        let crossT = t + Math.sin(t * 1.5) * 1.5;
-                        x = cx + r * Math.cos(crossT);
-                        y = cy + r * Math.sin(crossT);
+                    case 5: // Hexagonal Spiral
+                        let hexR = r + 12 * Math.cos(t * 6);
+                        x = cx + hexR * Math.cos(t);
+                        y = cy + hexR * Math.sin(t);
                         break;
-                    case 6: // Serpentine Spiral (wide, obscuring curves)
-                        let serpentineR = r + 50 * Math.sin(t * 2.5);
-                        x = cx + serpentineR * Math.cos(t);
-                        y = cy + serpentineR * Math.sin(t);
+                        
+                    case 6: // Triforce / 3-Lobe Spiral
+                        let triR = r + 20 * Math.sin(t * 3);
+                        x = cx + triR * Math.cos(t);
+                        y = cy + triR * Math.sin(t);
+                        break;
+                        
+                    case 7: // The Serpentine S-Bend
+                        let progress7 = t / t_max;
+                        y = 60 + (1 - progress7) * 440; // 60 at start, 500 at end
+                        x = cx + 250 * Math.sin((1 - progress7) * Math.PI * 4); // 2 full sweeps
+                        break;
+                        
+                    case 8: // The Labyrinth (Square)
+                        let cosT = Math.cos(t);
+                        let sinT = Math.sin(t);
+                        let maxCS = Math.max(Math.abs(cosT), Math.abs(sinT));
+                        let sqFactor = 0.2 + 0.8 * (1 / maxCS); // Soft rounded square
+                        x = cx + r * cosT * sqFactor;
+                        y = cy + r * sinT * sqFactor;
+                        break;
+                        
+                    case 9: // The Heart Spiral
+                        let scaleH = r * 1.1; // Scale factor
+                        // Parametric equation for a heart shape
+                        x = cx + scaleH * Math.pow(Math.sin(t), 3);
+                        // Normalized coefficients from the standard 16, 13, 5, 2, 1 formula
+                        let heartY = (13/16)*Math.cos(t) - (5/16)*Math.cos(2*t) - (2/16)*Math.cos(3*t) - (1/16)*Math.cos(4*t);
+                        y = cy - (scaleH * heartY) - 30; // Shifted up slightly to center it
                         break;
                 }
                 return { x, y };
@@ -1212,20 +1338,53 @@
             }
 
             tunnels = [];
-            if (level >= 3) {
-                // Add first tunnel
-                let tunnelLength = Math.floor(pathPoints.length * 0.12);
-                let startIndex = Math.floor(pathPoints.length * 0.25);
-                if (startIndex + tunnelLength < pathPoints.length) {
-                    tunnels.push({ start: startIndex, end: startIndex + tunnelLength });
+            
+            // Custom designed tunnels for the new maps
+            if (mapType === 7) {
+                // Serpentine has perfectly fair tunnels on the straight horizontal sweeps
+                let quarter = Math.floor(pathPoints.length * 0.25);
+                let half = Math.floor(pathPoints.length * 0.50);
+                tunnels.push({ start: quarter - 25, end: quarter + 25 });
+                tunnels.push({ start: half - 25, end: half + 25 });
+            } else if (mapType === 8) {
+                // Labyrinth tunnels cover specific straight corridors
+                let corridor1 = Math.floor(pathPoints.length * 0.35);
+                let corridor2 = Math.floor(pathPoints.length * 0.70);
+                tunnels.push({ start: corridor1, end: corridor1 + Math.floor(pathPoints.length * 0.06) });
+                tunnels.push({ start: corridor2, end: corridor2 + Math.floor(pathPoints.length * 0.05) });
+            } else if (mapType === 9) {
+                // The Heart uses tunnels on the top two rounded "lobes"
+                // We dynamically find all track points that are high up on the screen (y < cy - 90)
+                let inTunnel = false;
+                let tunnelStart = 0;
+                for (let i = 0; i < pathPoints.length; i++) {
+                    if (pathPoints[i].y < 300 - 90 && !inTunnel) {
+                        inTunnel = true;
+                        tunnelStart = i;
+                    } else if (pathPoints[i].y >= 300 - 90 && inTunnel) {
+                        inTunnel = false;
+                        tunnels.push({ start: tunnelStart, end: i });
+                    }
                 }
-            }
-            if (level >= 6) {
-                // Add second tunnel
-                let tunnelLength = Math.floor(pathPoints.length * 0.10);
-                let startIndex = Math.floor(pathPoints.length * 0.65);
-                if (startIndex + tunnelLength < pathPoints.length) {
-                    tunnels.push({ start: startIndex, end: startIndex + tunnelLength });
+                if (inTunnel) {
+                    tunnels.push({ start: tunnelStart, end: pathPoints.length - 1 });
+                }
+            }  
+            // Standard procedural tunnels for older maps
+            else {
+                if (level >= 3) {
+                    let tunnelLength = Math.floor(pathPoints.length * 0.05);
+                    let startIndex = Math.floor(pathPoints.length * 0.05); // Move to absolute outer edge
+                    if (startIndex + tunnelLength < pathPoints.length) {
+                        tunnels.push({ start: startIndex, end: startIndex + tunnelLength });
+                    }
+                }
+                if (level >= 6) {
+                    let tunnelLength = Math.floor(pathPoints.length * 0.04);
+                    let startIndex = Math.floor(pathPoints.length * 0.20); // Keep on the outer rings
+                    if (startIndex + tunnelLength < pathPoints.length) {
+                        tunnels.push({ start: startIndex, end: startIndex + tunnelLength });
+                    }
                 }
             }
         }
@@ -1824,8 +1983,8 @@
                 if (p.sizeChange) p.size += p.sizeChange;
                 if (p.life <= 0) particles.splice(i, 1);
             }
-
-            // Update Floating Texts
+            
+            // Update floating texts
             for (let i = floatingTexts.length - 1; i >= 0; i--) {
                 let ft = floatingTexts[i];
                 ft.y += ft.vy;
@@ -2213,7 +2372,7 @@
                             marbles.splice(m, 1);
                             break;
                         } else if (mb.color === 'magenta') {
-                            playSound('zip');
+                            playSound('rewind'); // Changed from zip
                             createPopParticles(pos.x, pos.y, 'magenta');
                             createFloatingText(pos.x, pos.y - 15, 'REWIND!', '#ff00ff', 1.2);
                             score += 30 * comboMultiplier;
@@ -2411,58 +2570,76 @@
                 return;
             }
 
-            // Base color
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = colorHex;
-            ctx.fill();
-
-            // Add texture to simulate rolling
-            ctx.save();
-            ctx.translate(x, y);
-            
-            if (pathAngle !== null) {
-                // Rolling ALONG a track (Fake 3D rolling)
-                ctx.rotate(pathAngle); // Align X-axis with the track tangent
-            } else {
-                // Flying through the air (Tumbling motion)
-                ctx.rotate(rollDistance * 0.2); 
-            }
-            
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.clip(); // Keep drawing inside the marble bounds
-            
-            let theta = rollDistance * 0.12; 
-
-            let drawBand = (waveAmp, waveFreq, yOffset, color, thickness) => {
-                ctx.beginPath();
-                for(let t = 0; t <= Math.PI + 0.1; t += 0.2) { 
-                    let alpha = t + theta;
-                    let beta = Math.sin(alpha * waveFreq) * waveAmp + yOffset;
-                    
-                    let pX = Math.cos(t) * Math.cos(beta) * radius;
-                    let pY = Math.sin(beta) * radius;
-                    
-                    if (t === 0) ctx.moveTo(pX, pY);
-                    else ctx.lineTo(pX, pY);
+            if (marbleSpriteCache[colorHex]) {
+                let frameIndex = Math.floor(((rollDistance * 0.12) % (Math.PI * 2)) / (Math.PI * 2) * 16);
+                if (frameIndex < 0) frameIndex += 16;
+                frameIndex = frameIndex % 16;
+                
+                ctx.save();
+                ctx.translate(x, y);
+                if (pathAngle !== null) {
+                    ctx.rotate(pathAngle); // Align X-axis with the track tangent
+                } else {
+                    ctx.rotate(rollDistance * 0.2); 
                 }
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.lineWidth = radius * thickness;
-                ctx.strokeStyle = color;
-                ctx.stroke();
-            };
+                
+                let mCanvas = marbleSpriteCache[colorHex][frameIndex];
+                let scale = radius / 15; // Cache was generated at radius=15
+                ctx.scale(scale, scale);
+                ctx.drawImage(mCanvas, -mCanvas.width/2, -mCanvas.height/2);
+                ctx.restore();
+            } else {
+                // Base color
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = colorHex;
+                ctx.fill();
 
-            // Draw the sci-fi helix DNA pattern
-            drawBand(0.35, 3, 0, 'rgba(255, 255, 255, 0.45)', 0.15); // Light wave
-            drawBand(-0.35, 3, 0, 'rgba(0, 0, 0, 0.35)', 0.15);      // Dark wave
-            drawBand(0, 0, 0, 'rgba(255, 255, 255, 0.15)', 0.08);    // Center equator
+                // Add texture to simulate rolling
+                ctx.save();
+                ctx.translate(x, y);
+                
+                if (pathAngle !== null) {
+                    ctx.rotate(pathAngle); // Align X-axis with the track tangent
+                } else {
+                    ctx.rotate(rollDistance * 0.2); 
+                }
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.clip(); // Keep drawing inside the marble bounds
+                
+                let theta = rollDistance * 0.12; 
 
-            ctx.restore();
+                let drawBand = (waveAmp, waveFreq, yOffset, colorStr, thickness) => {
+                    ctx.beginPath();
+                    for(let t = 0; t <= Math.PI + 0.1; t += 0.2) { 
+                        let alpha = t + theta;
+                        let beta = Math.sin(alpha * waveFreq) * waveAmp + yOffset;
+                        
+                        let pX = Math.cos(t) * Math.cos(beta) * radius;
+                        let pY = Math.sin(beta) * radius;
+                        
+                        if (t === 0) ctx.moveTo(pX, pY);
+                        else ctx.lineTo(pX, pY);
+                    }
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.lineWidth = radius * thickness;
+                    ctx.strokeStyle = colorStr;
+                    ctx.stroke();
+                };
 
-            let overlay = getMarbleOverlay();
-            ctx.drawImage(overlay, x - radius - 1, y - radius - 1, radius * 2 + 2, radius * 2 + 2);
+                // Draw the sci-fi helix DNA pattern
+                drawBand(0.35, 3, 0, 'rgba(255, 255, 255, 0.45)', 0.15); // Light wave
+                drawBand(-0.35, 3, 0, 'rgba(0, 0, 0, 0.35)', 0.15);      // Dark wave
+                drawBand(0, 0, 0, 'rgba(255, 255, 255, 0.15)', 0.08);    // Center equator
+
+                ctx.restore();
+
+                let overlay = getMarbleOverlay();
+                ctx.drawImage(overlay, x - radius - 1, y - radius - 1, radius * 2 + 2, radius * 2 + 2);
+            }
         }
 
         function draw() {
@@ -2497,18 +2674,112 @@
 
             // Draw Freeze Frost Overlay on Track
             if (freezeTimer > 0) {
+                let intensity = Math.min(1.0, freezeTimer / 60);
+                
+                // Track Frost (Jagged glowing ice)
                 ctx.save();
-                ctx.strokeStyle = `rgba(0, 255, 255, ${Math.min(0.25, freezeTimer / 60)})`;
-                ctx.lineWidth = 30;
+                ctx.strokeStyle = `rgba(180, 255, 255, ${intensity * 0.4})`;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#00ffff';
+                ctx.lineWidth = 34 + Math.sin(Date.now()/50)*2;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
                 ctx.beginPath();
-                for(let i=0; i<pathPoints.length; i+=10) {
+                for(let i=0; i<pathPoints.length; i+=8) {
                     let p = pathPoints[i];
-                    if (i===0) ctx.moveTo(p.x, p.y);
-                    else ctx.lineTo(p.x, p.y);
+                    // Add jaggedness to simulate frost crystals
+                    let jx = p.x + (Math.random() - 0.5) * 8 * intensity;
+                    let jy = p.y + (Math.random() - 0.5) * 8 * intensity;
+                    if (i===0) ctx.moveTo(jx, jy);
+                    else ctx.lineTo(jx, jy);
                 }
                 ctx.stroke();
+                
+                // Inner solid ice line
+                ctx.strokeStyle = `rgba(255, 255, 255, ${intensity * 0.8})`;
+                ctx.lineWidth = 8;
+                ctx.shadowBlur = 0;
+                ctx.stroke();
+                ctx.restore();
+                
+                // Screen Frost Vignette
+                ctx.save();
+                let grad = ctx.createRadialGradient(400, 300, 200, 400, 300, 600);
+                grad.addColorStop(0, 'rgba(0, 255, 255, 0)');
+                grad.addColorStop(1, `rgba(0, 200, 255, ${intensity * 0.25})`);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 800, 600);
+                
+                // Random ice crystal shards on screen edges
+                ctx.strokeStyle = `rgba(255, 255, 255, ${intensity * 0.4})`;
+                ctx.lineWidth = 2;
+                for (let k = 0; k < 12; k++) {
+                    ctx.beginPath();
+                    let cx = (k % 4 === 0) ? 0 : (k % 4 === 1) ? 800 : Math.random() * 800;
+                    let cy = (k % 4 === 2) ? 0 : (k % 4 === 3) ? 600 : Math.random() * 600;
+                    ctx.moveTo(cx, cy);
+                    let len = 40 + Math.random() * 80;
+                    let ang = Math.atan2(300 - cy, 400 - cx) + (Math.random()-0.5)*0.8;
+                    
+                    // Main spike
+                    let tx = cx + Math.cos(ang)*len;
+                    let ty = cy + Math.sin(ang)*len;
+                    ctx.lineTo(tx, ty);
+                    
+                    // Branch
+                    let bang = ang + (Math.random() > 0.5 ? 0.4 : -0.4);
+                    let blen = len * 0.5;
+                    ctx.moveTo(tx - Math.cos(ang)*10, ty - Math.sin(ang)*10);
+                    ctx.lineTo(tx - Math.cos(ang)*10 + Math.cos(bang)*blen, ty - Math.sin(ang)*10 + Math.sin(bang)*blen);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // Draw Rewind VHS Glitch Overlay
+            if (rewindDistance > 0) {
+                ctx.save();
+                // Magenta scanlines
+                ctx.fillStyle = `rgba(255, 0, 255, 0.15)`;
+                for (let y = 0; y < 600; y += 8) {
+                    ctx.fillRect(0, y, 800, 4);
+                }
+                
+                // RGB Split Glitch Effect on the track
+                ctx.globalCompositeOperation = 'screen';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ff00ff';
+                ctx.strokeStyle = `rgba(255, 0, 255, 0.4)`;
+                ctx.lineWidth = 20;
+                ctx.beginPath();
+                for(let i=0; i<pathPoints.length; i+=10) {
+                    let p = pathPoints[i];
+                    if (i===0) ctx.moveTo(p.x - 8 + Math.random()*4, p.y);
+                    else ctx.lineTo(p.x - 8 + Math.random()*4, p.y);
+                }
+                ctx.stroke();
+                
+                ctx.shadowColor = '#00ffff';
+                ctx.strokeStyle = `rgba(0, 255, 255, 0.4)`;
+                ctx.beginPath();
+                for(let i=0; i<pathPoints.length; i+=10) {
+                    let p = pathPoints[i];
+                    if (i===0) ctx.moveTo(p.x + 8 - Math.random()*4, p.y);
+                    else ctx.lineTo(p.x + 8 - Math.random()*4, p.y);
+                }
+                ctx.stroke();
+                
+                // Screen border flash
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = 'rgba(255, 0, 255, 0.8)';
+                ctx.lineWidth = 15;
+                ctx.strokeRect(0, 0, 800, 600);
+                
+                // VCR style play text
+                ctx.fillStyle = '#ff00ff';
+                ctx.font = '900 40px "Segoe UI"';
+                ctx.textAlign = 'left';
+                ctx.fillText('◄◄ REWIND', 30, 50);
                 ctx.restore();
             }
 
@@ -2727,57 +2998,69 @@
             ctx.globalAlpha = 1.0;
             ctx.shadowBlur = 0;
 
-            // Draw Shooter Turret
+            // Draw Shooter Turret (Sleek Railgun Design)
             ctx.save();
             ctx.translate(400, 300);
             ctx.rotate(shooterAngle);
             
-            ctx.save();
-            ctx.translate(-recoil, 0); // Apply recoil pushback
-
-            // Barrel Shadow / Under-layer
-            ctx.fillStyle = '#1a252f';
-            ctx.fillRect(10, -16, 45, 32);
-            
-            // Barrel Main Cylinder Gradient
-            let barrelGrad = ctx.createLinearGradient(0, -14, 0, 14);
-            barrelGrad.addColorStop(0, '#7f8c8d');
-            barrelGrad.addColorStop(0.3, '#ecf0f1');
-            barrelGrad.addColorStop(1, '#2c3e50');
-            ctx.fillStyle = barrelGrad;
-            ctx.fillRect(10, -14, 42, 28);
-            
-            // Barrel Accents/Rings
-            ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(20, -15, 6, 30); // Middle band
-            ctx.fillRect(42, -15, 8, 30); // End band
-
-            // Barrel Muzzle Opening (Dark indent)
-            ctx.fillStyle = '#0a0f14';
-            ctx.fillRect(50, -10, 3, 20);
-            
-            ctx.restore(); // reset translation for base
-
-            // Base Mount
+            // --- Next Marble Indicator (Magazine/Breech) ---
             ctx.beginPath();
-            ctx.arc(0, 0, 32, 0, Math.PI*2);
-            let baseGrad = ctx.createRadialGradient(-10, -10, 5, 0, 0, 32);
-            baseGrad.addColorStop(0, '#5c7a96');
-            baseGrad.addColorStop(0.6, '#2c3e50');
-            baseGrad.addColorStop(1, '#0f171e');
-            ctx.fillStyle = baseGrad;
-            ctx.fill();
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = '#111820';
-            ctx.stroke();
-
-            // Inner Loading Bay Socket
-            ctx.beginPath();
-            ctx.arc(0, 0, 18, 0, Math.PI*2);
+            ctx.arc(-26, 0, 11, 0, Math.PI*2);
             ctx.fillStyle = '#0a0f14';
             ctx.fill();
             ctx.lineWidth = 2;
-            ctx.strokeStyle = '#4a6278';
+            ctx.strokeStyle = '#2c3e50';
+            ctx.stroke();
+            // Draw the tiny next marble inside the magazine
+            drawMarble(ctx, -26, 0, 7, COLORS[nextMarbleColor]);
+
+            ctx.save();
+            ctx.translate(-recoil, 0); // Apply recoil pushback
+
+            // --- Railgun Prongs ---
+            let railGrad = ctx.createLinearGradient(0, -20, 0, 20);
+            railGrad.addColorStop(0, '#5c7a96');
+            railGrad.addColorStop(0.5, '#ecf0f1');
+            railGrad.addColorStop(1, '#2c3e50');
+            ctx.fillStyle = railGrad;
+
+            // Left Rail
+            ctx.beginPath();
+            ctx.moveTo(10, -16); ctx.lineTo(46, -11); ctx.lineTo(46, -7); ctx.lineTo(10, -9);
+            ctx.fill();
+            
+            // Right Rail
+            ctx.beginPath();
+            ctx.moveTo(10, 16); ctx.lineTo(46, 11); ctx.lineTo(46, 7); ctx.lineTo(10, 9);
+            ctx.fill();
+
+            // Energy Rails (Glowing lines inside the prongs)
+            ctx.beginPath();
+            ctx.moveTo(14, -10); ctx.lineTo(42, -8);
+            ctx.moveTo(14, 10); ctx.lineTo(42, 8);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(77, 171, 255, 0.8)';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#4dabff';
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            ctx.restore(); // reset translation for base
+
+            // --- Base Mount ---
+            ctx.beginPath();
+            ctx.arc(0, 0, 26, 0, Math.PI*2);
+            ctx.fillStyle = '#0f171e';
+            ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#2c3e50';
+            ctx.stroke();
+
+            // Inner Glowing Ring
+            ctx.beginPath();
+            ctx.arc(0, 0, 20, 0, Math.PI*2);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(77, 171, 255, 0.4)';
             ctx.stroke();
 
             // Loaded Marble
@@ -2796,16 +3079,6 @@
             }
             
             ctx.restore();
-
-            // Next Marble Indicator Socket
-            ctx.beginPath();
-            ctx.arc(380, 280, 12, 0, Math.PI*2);
-            ctx.fillStyle = '#1a252f';
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#2c3e50';
-            ctx.stroke();
-            drawMarble(ctx, 380, 280, 8, COLORS[nextMarbleColor]);
 
             // Draw Orbiting Shields
             for (let obs of orbitingObstacles) {
@@ -2868,6 +3141,29 @@
             document.getElementById('overlay-title').innerText = title;
             document.getElementById('overlay-title').style.color = color;
             document.getElementById('overlay-btn').innerText = btnText;
+            
+            let existingPointsMsg = document.getElementById('overlay-points');
+            if (existingPointsMsg) existingPointsMsg.remove();
+            
+            if (gameState === 'won') {
+                let currentPoko = parseInt(localStorage.getItem('poko_points') || '0', 10);
+                localStorage.setItem('poko_points', currentPoko + 10);
+                
+                if (level === 1) unlockAchievement('orbit_1', '💥', 'First Pop');
+                if (level === 5) unlockAchievement('orbit_5', '🚀', 'Orbit Master');
+                
+                let pointsMsg = document.createElement('div');
+                pointsMsg.id = 'overlay-points';
+                pointsMsg.innerHTML = '+10 POKO POINTS!';
+                pointsMsg.style.color = '#2dfc8f';
+                pointsMsg.style.fontSize = '1.2rem';
+                pointsMsg.style.fontWeight = 'bold';
+                pointsMsg.style.marginBottom = '20px';
+                
+                let btn = document.getElementById('overlay-btn');
+                btn.parentNode.insertBefore(pointsMsg, btn);
+            }
+            
             if (gameState === 'lost') {
                 document.getElementById('end-diff-selector').style.display = 'flex';
             } else {
@@ -2934,6 +3230,7 @@
         }
 
         document.getElementById('level-display').innerText = level;
+        initMarbleCache();
         updateLevelSelector();
         setMode(gameMode, true);
         loadLevel();
@@ -2941,6 +3238,22 @@
         if (!loopRunning) {
             loopRunning = true;
             requestAnimationFrame(gameLoop);
+        }
+        function unlockAchievement(id, icon, title) {
+            let achievements = JSON.parse(localStorage.getItem('arcade_achievements')) || {};
+            if (!achievements[id]) {
+                achievements[id] = true;
+                localStorage.setItem('arcade_achievements', JSON.stringify(achievements));
+                
+                const toast = document.getElementById('achievement-toast');
+                if (toast) {
+                    document.getElementById('toast-icon').innerText = icon;
+                    document.getElementById('toast-title').innerText = title;
+                    toast.classList.add('show');
+                    if (typeof playSound === 'function') playSound('go');
+                    setTimeout(() => toast.classList.remove('show'), 4000);
+                }
+            }
         }
     </script>
 </body>

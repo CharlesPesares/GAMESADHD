@@ -1303,6 +1303,10 @@
             incrementLocalCounter('neonPulseHighscore', score);
             
             let gradeInfo = calculateGrade();
+            unlockAchievement('neon_track', '🎵', 'First Track');
+            if (['SS', 'S', 'A'].includes(gradeInfo.grade)) {
+                unlockAchievement('neon_a', '✨', 'Pulse Master');
+            }
             if (gradeInfo.grade === 'SS') {
                 unlockAchievement('neon_ss', '💎', 'Flawless Rhythm');
             }
@@ -1353,6 +1357,7 @@
                 document.getElementById('end-btn').innerText = "PLAY AGAIN";
             }
             document.getElementById('end-score').innerText = score;
+            awardPokoPoints(score);
             document.getElementById('end-overlay').style.display = 'flex';
         }
 
@@ -1378,7 +1383,31 @@
             document.getElementById('end-perfect').innerText = statsPerfect;
             document.getElementById('end-good').innerText = statsGood;
             document.getElementById('end-miss').innerText = statsMiss;
+            awardPokoPoints(score);
             document.getElementById('end-overlay').style.display = 'flex';
+        }
+
+        function awardPokoPoints(finalScore) {
+            let existing = document.getElementById('poko-points-display');
+            if (existing) existing.remove();
+            
+            let points = Math.floor(finalScore / 500);
+            if (points > 0) {
+                let currentPoko = parseInt(localStorage.getItem('poko_points') || '0', 10);
+                localStorage.setItem('poko_points', currentPoko + points);
+                
+                let pointsMsg = document.createElement('div');
+                pointsMsg.id = 'poko-points-display';
+                pointsMsg.innerHTML = `+${points} POKO POINTS!`;
+                pointsMsg.style.color = '#2dfc8f';
+                pointsMsg.style.fontSize = '1.2rem';
+                pointsMsg.style.fontWeight = 'bold';
+                pointsMsg.style.marginBottom = '20px';
+                pointsMsg.style.textAlign = 'center';
+                
+                let btn = document.getElementById('end-btn');
+                btn.parentNode.insertBefore(pointsMsg, btn);
+            }
         }
 
         function drawRoundedRect(ctx, x, y, w, h, r) {

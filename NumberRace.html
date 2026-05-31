@@ -848,9 +848,39 @@
             .side-panel { text-align: center; }
             #number-grid.race-mode { height: 340px; }
         }
+        .achievement-toast {
+            position: fixed;
+            bottom: -120px;
+            right: clamp(16px, 4vw, 40px);
+            background: linear-gradient(145deg, #172330, #0b1016);
+            border: 2px solid #ffd166;
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 25px rgba(255,209,102,0.25);
+            z-index: 1000;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .achievement-toast.show {
+            bottom: clamp(16px, 4vw, 40px);
+        }
+        .toast-icon { font-size: 2.8rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+        .toast-text h4 { margin: 0 0 4px 0; color: #ffd166; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; }
+        .toast-text p { margin: 0; color: #fff; font-size: 1.2rem; font-weight: 950; }
     </style>
 </head>
 <body class="font-arcade min-h-screen antialiased selection:bg-yellow-300/30">
+    <!-- Achievement Toast -->
+    <div id="achievement-toast" class="achievement-toast">
+        <div class="toast-icon" id="toast-icon">🏆</div>
+        <div class="toast-text">
+            <h4>Achievement Unlocked!</h4>
+            <p id="toast-title">Title</p>
+        </div>
+    </div>
     <div class="header">
         <div class="header-actions">
             <a href="gamedashboard.html" class="back-link">Back to Dashboard</a>
@@ -1764,7 +1794,16 @@
                 stopBGM();
                 playSound('win');
                 incrementLocalCounter('numberRaceWins');
-                document.getElementById('winner-text').innerText = "Player 1 Wins!";
+                if (isVsCpu) unlockAchievement('num_first', '🏁', 'First Place');
+                
+                let winMsg = "Player 1 Wins!";
+                if (isVsCpu) {
+                    let currentPoko = parseInt(localStorage.getItem('poko_points') || '0', 10);
+                    localStorage.setItem('poko_points', currentPoko + 3);
+                    winMsg += '\n+3 POKO Points!';
+                }
+                
+                document.getElementById('winner-text').innerText = winMsg;
                 document.getElementById('winner-text').style.color = "var(--p1)";
                 overlay.style.display = 'flex';
                 createExplosion('var(--p1)');
@@ -1871,6 +1910,22 @@
             initGrids();
             startRps();
         };
+        function unlockAchievement(id, icon, title) {
+            let achievements = JSON.parse(localStorage.getItem('arcade_achievements')) || {};
+            if (!achievements[id]) {
+                achievements[id] = true;
+                localStorage.setItem('arcade_achievements', JSON.stringify(achievements));
+                
+                const toast = document.getElementById('achievement-toast');
+                if (toast) {
+                    document.getElementById('toast-icon').innerText = icon;
+                    document.getElementById('toast-title').innerText = title;
+                    toast.classList.add('show');
+                    if (typeof playSound === 'function') playSound('go');
+                    setTimeout(() => toast.classList.remove('show'), 4000);
+                }
+            }
+        }
     </script>
 </body>
 </html>

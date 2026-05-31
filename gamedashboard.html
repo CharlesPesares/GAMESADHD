@@ -1005,6 +1005,15 @@
                 localKeys: ['shapeSnapHighScore'],
                 optionLabel: 'Shape Snap (High Score)',
                 scorePrefix: 'Score'
+            },
+            {
+                title: 'POKO Tree',
+                image: 'images/poko-tree-profile.png',
+                url: 'POKOTree.html',
+                scoreKey: 'poko_points',
+                localKeys: ['poko_points'],
+                optionLabel: 'POKO Tree (Points)',
+                scorePrefix: 'Points'
             }
         ];
 
@@ -1012,7 +1021,7 @@
         const gameConfigByTitle = new Map(dashboardGames.map(g => [g.title, g]));
         window.dashboardGameItems = dashboardGames.map(g => ({
             image: g.image, text: g.title, url: g.url, scoreKey: g.scoreKey
-        })).concat({ image: 'images/poko-tree.svg', text: 'POKO Tree', url: 'POKOTree.html', comingSoon: true });
+        }));
 
         // ----------------------------------------------------------------
         // Helpers
@@ -1258,13 +1267,37 @@
         // Trophy Room
         // ----------------------------------------------------------------
         const achievementsList = [
+            // Simon Says
             { id: 'simon_5',   icon: '🧠', title: 'Brain Warmup',  desc: 'Reach Level 5 in Simon Says' },
             { id: 'simon_10',  icon: '🔥', title: 'On Fire',        desc: 'Reach Level 10 in Simon Says' },
+            { id: 'simon_20',  icon: '🧠', title: 'Memory Master',  desc: 'Reach Level 20 in Simon Says' },
             { id: 'simon_time',icon: '⏱️', title: 'Tick Tock',      desc: 'Play Time Attack Mode' },
+            // Hammer & Shield
             { id: 'hammer_win',icon: '👑', title: 'Gladiator',      desc: 'Win a match in Hammer & Shield' },
+            { id: 'hs_win',    icon: '⚔️', title: 'First Blood',   desc: 'Win a match vs CPU' },
+            { id: 'hs_flawless',icon: '🏆', title: 'Flawless Victory',desc: 'Win vs CPU with 100 Health' },
+            // Color Sort
             { id: 'color_sort',icon: '🧪', title: 'Scientist',      desc: 'Solve a Color Sort puzzle' },
+            { id: 'color_first',icon: '🧪', title: 'First Mix',     desc: 'Solve your first Color Sort' },
+            { id: 'color_lv5',  icon: '🧫', title: 'Lab Assistant', desc: 'Reach Level 5 in Color Sort' },
+            { id: 'color_lv10', icon: '🧑‍🔬', title: 'Mad Scientist',desc: 'Reach Level 10 in Color Sort' },
+            // Orbit Pop
+            { id: 'orbit_1',    icon: '💥', title: 'First Pop',     desc: 'Clear Level 1 in Orbit Pop' },
+            { id: 'orbit_5',    icon: '🚀', title: 'Orbit Master',  desc: 'Clear Level 5 in Orbit Pop' },
             { id: 'orbit_10',  icon: '🪐', title: 'Orbit Cleared',  desc: 'Reach Level 10 in Orbit Pop' },
-            { id: 'neon_ss',   icon: '💎', title: 'Flawless Rhythm',desc: 'Get an SS Rank in Neon Pulse' }
+            // Neon Pulse
+            { id: 'neon_track', icon: '🎵', title: 'First Track',   desc: 'Finish a Neon Pulse track' },
+            { id: 'neon_a',     icon: '✨', title: 'Pulse Master',  desc: 'Get A rank or higher in Neon Pulse' },
+            { id: 'neon_ss',   icon: '💎', title: 'Flawless Rhythm',desc: 'Get an SS Rank in Neon Pulse' },
+            // Number Race
+            { id: 'num_first',  icon: '🏁', title: 'First Place',   desc: 'Win a Number Race against CPU' },
+            // Shape Snap
+            { id: 'shape_100',  icon: '🎯', title: 'Sharp Eye',     desc: 'Score 100 in Shape Snap' },
+            { id: 'shape_300',  icon: '🦅', title: 'Eagle Eye',     desc: 'Score 300 in Shape Snap' },
+            // Stacker
+            { id: 'stack_10',   icon: '🧱', title: 'Builder',       desc: 'Reach 10 rows in Stacker' },
+            { id: 'stack_20',   icon: '🏗️', title: 'Architect',     desc: 'Reach 20 rows in Stacker' },
+            { id: 'stack_30',   icon: '🗼', title: 'Skyscraper',    desc: 'Reach 30 rows in Stacker' }
         ];
 
         const trophyModal = document.getElementById('trophy-modal');
@@ -2037,7 +2070,7 @@
             { image: 'images/NumberRace.jpg', text: 'Number Race', url: 'NumberRace.html' },
             { image: 'images/neon-pulse.jpg', text: 'Neon Pulse', url: 'NeonPulse.html' },
             { image: 'images/shape-snap.jpg', text: 'Shape Snap', url: 'ShapeSnap.html' },
-            { image: 'images/poko-tree.svg', text: 'POKO Tree', url: 'POKOTree.html', comingSoon: true }
+            { image: 'images/poko-tree-profile.png', text: 'POKO Tree', url: 'POKOTree.html' }
         ];
 
         const container = document.getElementById('gallery-container');

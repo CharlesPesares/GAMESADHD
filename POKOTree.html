@@ -3,29 +3,1124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POKO Tree</title>
-    <script>
-        window.tailwind = window.tailwind || {};
-        window.tailwind.config = {
-            corePlugins: { preflight: false },
-            theme: { extend: { fontFamily: { arcade: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'] } } }
-        };
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>POKO Tree - ADHD Arcade</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', 'Segoe UI', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            color: #fff;
+            background: #0a0e17;
+        }
+
+        /* ── SCENE & PHASES ── */
+        .scene {
+            position: absolute; inset: 0;
+            overflow: hidden;
+        }
+        .scene-bg {
+            position: absolute; inset: -5%; /* slightly larger to allow filter bleeds */
+            background: url('images/poko-tree-bg.png') center center / cover no-repeat;
+        }
+        .scene::after {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 20%, transparent 75%, rgba(0,0,0,0.45) 100%),
+                radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.2) 100%);
+            pointer-events: none; z-index: 1;
+        }
+
+        /* ── TREE PHASES (EVERY 5 LEVELS) ── */
+        body[data-phase="1"] .scene-bg { filter: none; }
+        
+        /* Phase 2 (Lv 5-9): Golden Awakening */
+        body[data-phase="2"] .scene-bg { filter: sepia(0.3) saturate(1.4) brightness(1.1) hue-rotate(-10deg); }
+        
+        /* Phase 3 (Lv 10-14): Mystic Teal */
+        body[data-phase="3"] .scene-bg { filter: saturate(1.2) hue-rotate(90deg) brightness(0.85); }
+        
+        /* Phase 4 (Lv 15-19): Ethereal Night */
+        body[data-phase="4"] .scene-bg { filter: saturate(1.3) hue-rotate(150deg) brightness(0.75); }
+        
+        /* Phase 5 (Lv 20): Divine Rainbow */
+        body[data-phase="5"] .scene-bg { filter: saturate(1.2) brightness(0.9); }
+
+        /* Atmosphere overlays */
+        .scene-atmosphere {
+            position: absolute; inset: 0;
+            pointer-events: none;
+            transition: opacity 3s ease-in-out;
+            opacity: 0;
+        }
+        body[data-phase="2"] .atmosphere-2 { opacity: 1; }
+        body[data-phase="3"] .atmosphere-3 { opacity: 1; }
+        body[data-phase="4"] .atmosphere-4 { opacity: 1; }
+        body[data-phase="5"] .atmosphere-5 { opacity: 1; }
+
+        .atmosphere-2 { background: radial-gradient(circle at 50% 30%, rgba(255, 215, 0, 0.2) 0%, transparent 60%); mix-blend-mode: overlay; }
+        .atmosphere-3 { background: radial-gradient(circle at 50% 40%, rgba(0, 255, 255, 0.25) 0%, transparent 70%); mix-blend-mode: screen; }
+        .atmosphere-4 { background: linear-gradient(to top, rgba(20, 0, 50, 0.8), rgba(255, 100, 200, 0.25)); mix-blend-mode: overlay; }
+        .atmosphere-5 { mix-blend-mode: color; }
+        .atmosphere-5::before {
+            content: ''; position: absolute; 
+            top: -5%; bottom: -5%; left: 0; width: 200%;
+            background: linear-gradient(90deg, #ff6b6b, #ffd166, #4dabff, #ab47bc, #ff6b6b, #ffd166);
+            background-size: 50% 100%;
+            animation: rainbowScroll 8s linear infinite, divinePulse 3s infinite alternate; 
+            will-change: transform, opacity;
+        }
+        
+        @keyframes rainbowScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        @keyframes divinePulse {
+            0% { opacity: 0.4; }
+            100% { opacity: 0.8; }
+        }
+
+        /* Magic leaves for higher phases */
+        body[data-phase="3"] .leaf { filter: hue-rotate(90deg) brightness(1.5); text-shadow: 0 0 5px #0ff; }
+        body[data-phase="4"] .leaf { filter: hue-rotate(150deg) brightness(1.5); text-shadow: 0 0 5px #f0f; }
+        body[data-phase="5"] .leaf { filter: hue-rotate(280deg) brightness(1.8); text-shadow: 0 0 8px #fff; }
+
+        /* ── FALLING LEAVES ── */
+        .leaf {
+            position: absolute; z-index: 5;
+            pointer-events: none; opacity: 0;
+            animation: leafFall linear infinite;
+            will-change: transform, opacity;
+        }
+        @keyframes leafFall {
+            0%   { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(1); }
+            10%  { opacity: 0.85; }
+            50%  { transform: translate(var(--sway), 45vh) rotate(200deg) scale(0.8); }
+            90%  { opacity: 0.6; }
+            100% { opacity: 0; transform: translate(calc(var(--sway) * -0.5), 100vh) rotate(400deg) scale(0.5); }
+        }
+
+        /* ── TOP BAR ── */
+        .top-bar {
+            position: fixed; top: 0; left: 0; right: 0;
+            padding: 16px 22px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+        .back-btn {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 10px 22px; border-radius: 50px;
+            color: #fff; text-decoration: none;
+            font-weight: 800; font-size: 0.88rem;
+            letter-spacing: 0.06em; transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .back-btn:hover {
+            background: rgba(0,0,0,0.6);
+            border-color: rgba(255,255,255,0.4);
+            transform: translateY(-2px);
+        }
+        .points-badge {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,209,102,0.4);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 10px 22px; border-radius: 50px;
+            text-align: right;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .points-label { font-size: 0.75rem; font-weight: 900; color: #ffd166; text-transform: uppercase; letter-spacing: 0.18em; text-shadow: 0 1px 6px rgba(0,0,0,0.8); }
+        .points-value { font-size: 1.8rem; font-weight: 900; color: #fff; line-height: 1; margin-top: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+
+        /* ── BOTTOM PANEL ── */
+        .bottom-panel {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            z-index: 100;
+            background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            padding: 20px 24px 28px;
+        }
+        .panel-title {
+            text-align: center;
+            font-size: 1.8rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 0.15em;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,1), 0 0 30px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+        .progress-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.9rem; font-weight: 800;
+            margin-bottom: 6px; padding: 0 4px;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+        }
+        .progress-row .lv { color: #ffd166; }
+        .progress-row .nxt { color: rgba(255,255,255,0.8); }
+        .bar-track {
+            height: 10px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #ff6b6b, #ffd166);
+            border-radius: 6px;
+        }
+
+        /* ── FRUIT CONTAINER ── */
+        .fruit-container {
+            position: absolute; inset: 0;
+            z-index: 10; pointer-events: none;
+        }
+        .fruit {
+            position: absolute;
+            display: flex; flex-direction: column; align-items: center;
+            pointer-events: auto; cursor: default;
+            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: fruitSwing var(--swing-speed, 4s) infinite ease-in-out;
+            transform-origin: top center;
+        }
+        .fruit:hover .fruit-orb { transform: scale(1.12); }
+
+        /* Hanging thread/vine */
+        .fruit-stem {
+            width: 2px; height: 60px;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+            border-radius: 2px;
+            margin-bottom: -4px;
+        }
+        .fruit.locked .fruit-stem { opacity: 0.2; }
+        .fruit.next .fruit-stem { opacity: 0.6; }
+
+        @keyframes fruitSwing {
+            0%, 100% { transform: rotate(var(--swing-deg, -2deg)); }
+            50%      { transform: rotate(calc(var(--swing-deg, -2deg) * -1)); }
+        }
+
+        /* ── UNLOCK ANIMATION ── */
+        .fruit.just-unlocked {
+            animation: unlockPop 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+            z-index: 50;
+        }
+        @keyframes unlockPop {
+            0%   { transform: scale(0.8); filter: brightness(1) sepia(1) hue-rotate(30deg); }
+            30%  { transform: scale(1.6); filter: brightness(2) contrast(1.2); }
+            70%  { transform: scale(1.1); filter: brightness(1.2); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .unlock-particle {
+            position: absolute;
+            top: 50px; left: 50%;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 20;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            animation: burstOut 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            box-shadow: 0 0 10px currentColor;
+        }
+        @keyframes burstOut {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            20% { opacity: 1; transform: translate(calc(-50% + var(--tx) * 0.4), calc(-50% + var(--ty) * 0.4)) scale(1.5); }
+            100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0); opacity: 0; }
+        }
+
+        /* ── FRUIT ORB (BASE) ── */
+        .fruit-orb {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2.2rem;
+            border: 3px solid transparent;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        /* ── FRUIT TAG ── */
+        .fruit-tag {
+            margin-top: 5px; padding: 5px 12px;
+            background: rgba(10, 14, 23, 0.95);
+            border-radius: 10px;
+            font-size: 0.72rem; font-weight: 800;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.15);
+            white-space: nowrap; text-align: center;
+            line-height: 1.4;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+        }
+        .fruit-pts {
+            display: block;
+            font-size: 0.62rem;
+            color: #ffd166;
+            font-weight: 700;
+        }
+
+        /* ══════════════════════════════════════════
+           LOCKED STATE — all fruits start gray
+           ══════════════════════════════════════════ */
+        .fruit.locked .fruit-orb {
+            background: rgba(80,80,80,0.5);
+            border-color: rgba(120,120,120,0.4);
+            filter: grayscale(1) brightness(0.45);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+        }
+        .fruit.locked .fruit-tag { color: rgba(255,255,255,0.4); }
+        .fruit.locked .fruit-pts { color: rgba(255,200,100,0.5); }
+
+        /* Next fruit highlighted */
+        .fruit.next .fruit-orb {
+            background: rgba(100,100,100,0.6);
+            border-color: rgba(255,255,255,0.8);
+            border-style: dashed;
+            filter: grayscale(0) brightness(1.2);
+            box-shadow: 0 0 15px rgba(255,255,255,0.4), inset 0 0 10px rgba(255,255,255,0.2);
+            animation: nextPulse 2s infinite alternate ease-in-out;
+        }
+        .fruit.next .fruit-tag { border-color: rgba(255,255,255,0.8); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .fruit.next .fruit-pts { color: #ffd166; font-size: 0.65rem; }
+        @keyframes nextPulse {
+            0%   { filter: brightness(1); transform: scale(1); border-color: rgba(255,255,255,0.4); }
+            100% { filter: brightness(1.3); transform: scale(1.1); border-color: rgba(255,255,255,1); box-shadow: 0 0 20px rgba(255,255,255,0.6); }
+        }
+
+        /* Current fruit highlighted */
+        .fruit.current .fruit-tag {
+            border-color: #ffd166;
+            box-shadow: 0 0 15px rgba(255,209,102,0.6);
+            color: #ffd166;
+        }
+        .fruit.current::before {
+            content: '▼';
+            position: absolute;
+            top: -25px;
+            color: #ffd166;
+            font-size: 1.2rem;
+            animation: bounceArrow 1s infinite ease-in-out;
+            text-shadow: 0 0 10px #ffd166;
+            z-index: 20;
+        }
+        @keyframes bounceArrow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(8px); }
+        }
+
+        /* ══════════════════════════════════════════
+           UNLOCKED STATES — unique per level
+           ══════════════════════════════════════════ */
+
+        /* Lv1 🍎 Seedling Apple — simple warm red */
+        .fruit.unlocked.tier-1 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #ff9b9b, #e03030 70%);
+            border-color: #ff6b6b;
+            box-shadow: 0 0 14px rgba(224,48,48,0.5), 0 4px 14px rgba(0,0,0,0.3);
+        }
+
+        /* Lv2 🍊 Novice Orange — warm orange glow */
+        .fruit.unlocked.tier-2 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #ffcc70, #e67e22 70%);
+            border-color: #f39c12;
+            box-shadow: 0 0 16px rgba(243,156,18,0.5), 0 4px 14px rgba(0,0,0,0.3);
+        }
+
+        /* Lv3 🍋 Adept Lemon — bright yellow shine */
+        .fruit.unlocked.tier-3 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #fff9a8, #f1c40f 70%);
+            border-color: #f1c40f;
+            box-shadow: 0 0 18px rgba(241,196,15,0.5), 0 0 30px rgba(241,196,15,0.15), 0 4px 14px rgba(0,0,0,0.3);
+        }
+
+        /* Lv4 🍉 Skilled Melon — green/pink split */
+        .fruit.unlocked.tier-4 .fruit-orb {
+            background: radial-gradient(circle at 40% 35%, #ff8a9e, #27ae60 80%);
+            border-color: #2ecc71;
+            box-shadow: 0 0 18px rgba(46,204,113,0.4), 0 0 30px rgba(255,138,158,0.15), 0 4px 14px rgba(0,0,0,0.3);
+        }
+
+        /* Lv5 🍇 Expert Grapes — rich purple glow */
+        .fruit.unlocked.tier-5 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #d4a0ff, #8e44ad 70%);
+            border-color: #9b59b6;
+            box-shadow: 0 0 20px rgba(155,89,182,0.5), 0 0 35px rgba(142,68,173,0.2), 0 4px 14px rgba(0,0,0,0.3);
+            animation: grapeShimmer 3s infinite alternate ease-in-out;
+        }
+        @keyframes grapeShimmer {
+            0%   { filter: brightness(1); transform: scale(1); }
+            100% { filter: brightness(1.2); transform: scale(1.02); }
+        }
+
+        /* Lv6 🍓 Master Berry — deep red with sparkle ring */
+        .fruit.unlocked.tier-6 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #ff6b8a, #c0392b 70%);
+            border-color: #e74c3c;
+            box-shadow: 0 0 22px rgba(231,76,60,0.5), 0 0 40px rgba(192,57,43,0.2), 0 4px 14px rgba(0,0,0,0.3);
+            animation: berryGlow 2.8s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-6 .fruit-orb::after {
+            content: ''; position: absolute; inset: -6px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(231,76,60,0.4);
+            animation: ringRotate 6s linear infinite;
+        }
+        @keyframes berryGlow {
+            0%   { filter: brightness(1); transform: scale(1); }
+            100% { filter: brightness(1.25); transform: scale(1.03); }
+        }
+        @keyframes ringRotate {
+            0%   { transform: rotate(0deg); border-color: rgba(231,76,60,0.5); }
+            50%  { border-color: rgba(255,200,100,0.6); }
+            100% { transform: rotate(360deg); border-color: rgba(231,76,60,0.5); }
+        }
+
+        /* Lv7 🍒 Grandmaster Cherry — twin glow with orbiting ring */
+        .fruit.unlocked.tier-7 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #ff7eb3, #9b1b30 70%);
+            border-color: #e84393;
+            box-shadow: 0 0 24px rgba(232,67,147,0.5), 0 0 45px rgba(155,27,48,0.25), 0 4px 14px rgba(0,0,0,0.3);
+            animation: cherryPulse 2.5s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-7 .fruit-orb::after {
+            content: ''; position: absolute; inset: -8px;
+            border-radius: 50%;
+            border: 2px dashed rgba(232,67,147,0.4);
+            animation: ringRotate 5s linear infinite;
+        }
+        @keyframes cherryPulse {
+            0%   { filter: brightness(1); transform: scale(1); }
+            100% { filter: brightness(1.3); transform: scale(1.04); }
+        }
+
+        /* Lv8 🍑 Epic Peach — warm golden-pink halo */
+        .fruit.unlocked.tier-8 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #ffd6a5, #e17055 70%);
+            border-color: #fab1a0;
+            box-shadow: 0 0 26px rgba(225,112,85,0.5), 0 0 50px rgba(250,177,160,0.25), 0 4px 14px rgba(0,0,0,0.3);
+            animation: peachRadiate 2.2s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-8 .fruit-orb::before {
+            content: ''; position: absolute; inset: -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(250,177,160,0.15) 0%, transparent 70%);
+            animation: haloBreath 3s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-8 .fruit-orb::after {
+            content: ''; position: absolute; inset: -8px;
+            border-radius: 50%;
+            border: 2px solid rgba(250,177,160,0.35);
+            animation: ringRotate 4s linear infinite;
+        }
+        @keyframes peachRadiate {
+            0%   { filter: brightness(1); transform: scale(1); }
+            100% { filter: brightness(1.35); transform: scale(1.05); }
+        }
+        @keyframes haloBreath {
+            0%   { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.3); opacity: 0.9; }
+        }
+
+        /* Lv9 🍍 Legendary Pine — golden crown with dual rings */
+        .fruit.unlocked.tier-9 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #fff3b0, #d4a017 70%);
+            border-color: #f9ca24;
+            box-shadow: 0 0 28px rgba(249,202,36,0.6), 0 0 55px rgba(212,160,23,0.3), 0 4px 14px rgba(0,0,0,0.3);
+            animation: pineGlow 2s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-9 .fruit-orb::before {
+            content: ''; position: absolute; inset: -12px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(249,202,36,0.12) 0%, transparent 70%);
+            animation: haloBreath 2.5s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-9 .fruit-orb::after {
+            content: ''; position: absolute; inset: -10px;
+            border-radius: 50%;
+            border: 2px solid rgba(249,202,36,0.4);
+            animation: ringRotate 3.5s linear infinite;
+        }
+        @keyframes pineGlow {
+            0%   { filter: brightness(1); transform: scale(1); }
+            100% { filter: brightness(1.4); transform: scale(1.06); }
+        }
+
+        /* Lv10 🌟 OMNI Star — spectacular rainbow halo */
+        .fruit.unlocked.tier-10 .fruit-orb {
+            background: conic-gradient(from 0deg, #ff6b6b, #f9ca24, #2ecc71, #4dabff, #9b59b6, #e84393, #ff6b6b);
+            border: 3px solid #fff;
+            box-shadow: 0 0 35px rgba(255,255,255,0.5), 0 0 70px rgba(249,202,36,0.4), 0 0 100px rgba(77,171,255,0.2);
+            animation: starSpin 4s linear infinite, starPulse 2s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-10 .fruit-orb::before {
+            content: ''; position: absolute; inset: -16px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, rgba(255,107,107,0.15), rgba(249,202,36,0.15), rgba(46,204,113,0.15), rgba(77,171,255,0.15), rgba(155,89,182,0.15), rgba(232,67,147,0.15), rgba(255,107,107,0.15));
+            animation: starSpin 6s linear infinite reverse;
+            filter: blur(4px);
+        }
+        .fruit.unlocked.tier-10 .fruit-orb::after {
+            content: ''; position: absolute; inset: -12px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            animation: ringRotate 3s linear infinite;
+        }
+        @keyframes starSpin {
+            0%   { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+        @keyframes starPulse {
+            0%   { filter: brightness(1); transform: scale(1); }
+            100% { filter: brightness(1.5); transform: scale(1.08); }
+        }
+
+        /* ══════════════════════════════════════════
+           TIER 11-20: ADVANCED UNLOCKED DESIGNS
+           ══════════════════════════════════════════ */
+
+        /* Lv11 🥝 Veteran Kiwi — fresh green pulse */
+        .fruit.unlocked.tier-11 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #b5e48c, #2d6a4f 70%);
+            border-color: #52b788;
+            box-shadow: 0 0 20px rgba(82,183,136,0.5), 0 0 35px rgba(45,106,79,0.2), 0 4px 14px rgba(0,0,0,0.3);
+            animation: grapeShimmer 2.8s infinite alternate ease-in-out;
+        }
+
+        /* Lv12 🥭 Champion Mango — tropical golden glow */
+        .fruit.unlocked.tier-12 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #ffe066, #e67e22 80%);
+            border-color: #f0932b;
+            box-shadow: 0 0 22px rgba(240,147,43,0.5), 0 0 40px rgba(230,126,34,0.2), 0 4px 14px rgba(0,0,0,0.3);
+            animation: berryGlow 2.5s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-12 .fruit-orb::after {
+            content: ''; position: absolute; inset: -6px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(240,147,43,0.4);
+            animation: ringRotate 5s linear infinite;
+        }
+
+        /* Lv13 🫐 Sage Blueberry — deep blue aura */
+        .fruit.unlocked.tier-13 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #a0c4ff, #1d3557 70%);
+            border-color: #457b9d;
+            box-shadow: 0 0 24px rgba(69,123,157,0.5), 0 0 45px rgba(29,53,87,0.25), 0 4px 14px rgba(0,0,0,0.3);
+            animation: cherryPulse 2.5s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-13 .fruit-orb::after {
+            content: ''; position: absolute; inset: -8px;
+            border-radius: 50%;
+            border: 2px dashed rgba(69,123,157,0.4);
+            animation: ringRotate 5s linear infinite;
+        }
+
+        /* Lv14 🥥 Titan Coconut — earthy brown with golden ring */
+        .fruit.unlocked.tier-14 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #f5e6ca, #8d6e63 70%);
+            border-color: #a1887f;
+            box-shadow: 0 0 22px rgba(141,110,99,0.5), 0 0 40px rgba(161,136,127,0.25), 0 4px 14px rgba(0,0,0,0.3);
+            animation: peachRadiate 2.4s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-14 .fruit-orb::before {
+            content: ''; position: absolute; inset: -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(245,230,202,0.12) 0%, transparent 70%);
+            animation: haloBreath 3s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-14 .fruit-orb::after {
+            content: ''; position: absolute; inset: -8px;
+            border-radius: 50%;
+            border: 2px solid rgba(245,230,202,0.35);
+            animation: ringRotate 4.5s linear infinite;
+        }
+
+        /* Lv15 💎 Diamond Fruit — icy blue crystal */
+        .fruit.unlocked.tier-15 .fruit-orb {
+            background: radial-gradient(circle at 30% 25%, #e0f7fa, #00bcd4 50%, #006064 100%);
+            border-color: #00e5ff;
+            box-shadow: 0 0 28px rgba(0,229,255,0.5), 0 0 50px rgba(0,188,212,0.25), 0 4px 14px rgba(0,0,0,0.3);
+            animation: pineGlow 2s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-15 .fruit-orb::before {
+            content: ''; position: absolute; inset: -12px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,229,255,0.15) 0%, transparent 70%);
+            animation: haloBreath 2.5s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-15 .fruit-orb::after {
+            content: ''; position: absolute; inset: -10px;
+            border-radius: 50%;
+            border: 2px solid rgba(0,229,255,0.4);
+            animation: ringRotate 3.5s linear infinite;
+        }
+
+        /* Lv16 🔮 Mystic Orb — deep purple nebula */
+        .fruit.unlocked.tier-16 .fruit-orb {
+            background: radial-gradient(circle at 40% 30%, #ce93d8, #4a148c 70%);
+            border-color: #ab47bc;
+            box-shadow: 0 0 30px rgba(171,71,188,0.5), 0 0 55px rgba(74,20,140,0.3), 0 4px 14px rgba(0,0,0,0.3);
+            animation: pineGlow 1.8s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-16 .fruit-orb::before {
+            content: ''; position: absolute; inset: -14px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(171,71,188,0.15) 0%, transparent 70%);
+            animation: haloBreath 2.2s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-16 .fruit-orb::after {
+            content: ''; position: absolute; inset: -10px;
+            border-radius: 50%;
+            border: 2px dashed rgba(206,147,216,0.4);
+            animation: ringRotate 3s linear infinite;
+        }
+
+        /* Lv17 ⚡ Thunder Fruit — electric yellow-blue */
+        .fruit.unlocked.tier-17 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #fff9c4, #f57f17 50%, #e65100 100%);
+            border-color: #ffab00;
+            box-shadow: 0 0 30px rgba(255,171,0,0.6), 0 0 55px rgba(245,127,23,0.3), 0 4px 14px rgba(0,0,0,0.3);
+            animation: thunderFlash 2s infinite ease-in-out;
+        }
+        .fruit.unlocked.tier-17 .fruit-orb::before {
+            content: ''; position: absolute; inset: -14px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,171,0,0.2) 0%, transparent 70%);
+            animation: haloBreath 1.8s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-17 .fruit-orb::after {
+            content: ''; position: absolute; inset: -11px;
+            border-radius: 50%;
+            border: 2.5px solid rgba(255,171,0,0.5);
+            animation: ringRotate 2.5s linear infinite;
+        }
+        @keyframes thunderFlash {
+            0%, 100% { filter: brightness(1) contrast(1); transform: scale(1); }
+            50% { filter: brightness(1.6) contrast(1.2); transform: scale(1.1); }
+        }
+
+        /* Lv18 🔥 Phoenix Flame — red-orange inferno */
+        .fruit.unlocked.tier-18 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #ffe082, #ff5722 50%, #b71c1c 100%);
+            border-color: #ff6e40;
+            box-shadow: 0 0 32px rgba(255,110,64,0.6), 0 0 60px rgba(183,28,28,0.3), 0 4px 14px rgba(0,0,0,0.3);
+            animation: thunderFlash 1.8s infinite ease-in-out;
+        }
+        .fruit.unlocked.tier-18 .fruit-orb::before {
+            content: ''; position: absolute; inset: -16px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,110,64,0.18) 0%, transparent 70%);
+            animation: haloBreath 1.5s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-18 .fruit-orb::after {
+            content: ''; position: absolute; inset: -12px;
+            border-radius: 50%;
+            border: 2.5px solid rgba(255,110,64,0.5);
+            animation: ringRotate 2s linear infinite;
+        }
+
+        /* Lv19 🌙 Celestial Moon — silver-blue cosmic */
+        .fruit.unlocked.tier-19 .fruit-orb {
+            background: radial-gradient(circle at 35% 30%, #e8eaf6, #5c6bc0 50%, #1a237e 100%);
+            border-color: #7986cb;
+            box-shadow: 0 0 34px rgba(121,134,203,0.6), 0 0 65px rgba(26,35,126,0.35), 0 4px 14px rgba(0,0,0,0.3);
+            animation: starSpin 5s linear infinite, starPulse 2s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-19 .fruit-orb::before {
+            content: ''; position: absolute; inset: -16px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(121,134,203,0.15) 0%, transparent 70%);
+            animation: haloBreath 2s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-19 .fruit-orb::after {
+            content: ''; position: absolute; inset: -12px;
+            border-radius: 50%;
+            border: 2.5px dashed rgba(197,202,233,0.4);
+            animation: ringRotate 2.5s linear infinite;
+        }
+
+        /* Lv20 👑 POKO Crown — ultimate rainbow with double halo */
+        .fruit.unlocked.tier-20 .fruit-orb {
+            background: conic-gradient(from 0deg, #ff6b6b, #ffd166, #2ecc71, #00e5ff, #ab47bc, #ff6e40, #ff6b6b);
+            border: 3.5px solid #fff;
+            box-shadow: 0 0 40px rgba(255,255,255,0.6), 0 0 80px rgba(255,209,102,0.4), 0 0 120px rgba(77,171,255,0.2);
+            animation: starSpin 3s linear infinite, starPulse 1.5s infinite alternate ease-in-out;
+        }
+        .fruit.unlocked.tier-20 .fruit-orb::before {
+            content: ''; position: absolute; inset: -18px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, rgba(255,107,107,0.2), rgba(255,209,102,0.2), rgba(46,204,113,0.2), rgba(0,229,255,0.2), rgba(171,71,188,0.2), rgba(255,110,64,0.2), rgba(255,107,107,0.2));
+            animation: starSpin 5s linear infinite reverse;
+            filter: blur(6px);
+        }
+        .fruit.unlocked.tier-20 .fruit-orb::after {
+            content: ''; position: absolute; inset: -14px;
+            border-radius: 50%;
+            border: 2.5px solid rgba(255,255,255,0.5);
+            animation: ringRotate 2s linear infinite;
+        }
+
+        /* ══════════════════════════════════════════
+           DIVINE FRUITS (Lv 10 & 20)
+           ══════════════════════════════════════════ */
+        .fruit.unlocked.tier-10, .fruit.unlocked.tier-20 {
+            animation: divineLevitate 4s ease-in-out infinite !important;
+            z-index: 20;
+        }
+        .fruit.unlocked.tier-10:hover .fruit-orb, .fruit.unlocked.tier-20:hover .fruit-orb {
+            transform: scale(1.4);
+        }
+        .fruit.unlocked.tier-10 .fruit-orb, .fruit.unlocked.tier-20 .fruit-orb {
+            transform: scale(1.25);
+            margin-top: 25px;
+        }
+        .fruit.unlocked.tier-10 .fruit-stem, .fruit.unlocked.tier-20 .fruit-stem {
+            width: 3px; height: 80px;
+            position: absolute; bottom: 100%; left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to top, rgba(255,255,255,0.8) 0%, transparent 100%);
+            box-shadow: 0 0 10px rgba(255,255,255,0.6);
+            border-radius: 2px;
+            margin-bottom: -15px;
+            filter: none; opacity: 1;
+        }
+        @keyframes divineLevitate {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-20px); }
+        }
+
+        /* Unlocked tag styling */
+        .fruit.unlocked .fruit-tag { color: #fff; }
+        .fruit.unlocked .fruit-pts { display: none; }
+
+        /* ── WILDLIFE ── */
+        .butterfly {
+            position: absolute; z-index: 8;
+            font-size: 1.2rem; pointer-events: none; opacity: 0;
+            animation: bFloat 14s infinite ease-in-out;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        @keyframes bFloat {
+            0%   { opacity: 0; transform: translate(0,0) rotate(0deg) scaleX(1); }
+            8%   { opacity: 1; }
+            20%  { transform: translate(60px,-40px) rotate(8deg) scaleX(-1); }
+            40%  { transform: translate(-30px,-90px) rotate(-5deg) scaleX(1); }
+            60%  { transform: translate(80px,-50px) rotate(10deg) scaleX(-1); }
+            80%  { transform: translate(20px,-20px) rotate(-3deg) scaleX(1); }
+            92%  { opacity: 1; }
+            100% { opacity: 0; transform: translate(0,0) rotate(0deg) scaleX(1); }
+        }
+
+        /* ── LEVEL UP EFFECTS ── */
+        .level-up-banner {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000; pointer-events: none;
+            opacity: 0;
+        }
+        .level-up-banner.show {
+            animation: bannerPop 2.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        .banner-text {
+            font-size: 4.5rem; font-weight: 900; color: #ffd166;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            text-shadow: 0 4px 20px rgba(0,0,0,1), 0 0 30px rgba(255,209,102,0.8);
+            margin-bottom: 10px;
+        }
+        .banner-sub {
+            font-size: 1.8rem; font-weight: 800; color: #fff;
+            background: rgba(0,0,0,0.6); padding: 5px 20px; border-radius: 50px;
+            border: 2px solid rgba(255,255,255,0.2);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+        @keyframes bannerPop {
+            0% { opacity: 0; transform: scale(0.5) translateY(50px); }
+            15% { opacity: 1; transform: scale(1.1) translateY(0); filter: brightness(1.5); }
+            25% { opacity: 1; transform: scale(1) translateY(0); }
+            80% { opacity: 1; transform: scale(1) translateY(0); }
+            100% { opacity: 0; transform: scale(1.2) translateY(-30px); }
+        }
+
+        /* ── CUSTOM ALERT ── */
+        .custom-alert {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .custom-alert.show { opacity: 1; pointer-events: auto; }
+        .custom-alert-box {
+            background: rgba(20, 15, 30, 0.95);
+            border: 2px solid #ab47bc;
+            border-radius: 12px; padding: 25px;
+            text-align: center; max-width: 85%; width: 340px;
+            box-shadow: 0 0 30px rgba(171, 71, 188, 0.4);
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .custom-alert.show .custom-alert-box { transform: scale(1); }
+        .custom-alert-title {
+            color: #ab47bc; font-size: 1.4rem; font-weight: 900;
+            margin-bottom: 15px; text-transform: uppercase;
+            letter-spacing: 2px; text-shadow: 0 0 10px rgba(171,71,188,0.5);
+        }
+        .custom-alert-message {
+            color: #fff; font-size: 1.1rem; line-height: 1.5;
+            margin-bottom: 25px;
+        }
+        .custom-alert-buttons { display: flex; gap: 15px; justify-content: center; }
+        .alert-btn {
+            background: transparent; border: 2px solid #fff;
+            color: #fff; font-size: 1rem; font-weight: bold;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer;
+            transition: all 0.2s; flex: 1; text-transform: uppercase;
+        }
+        .alert-btn.cancel { border-color: #ff6b6b; color: #ff6b6b; }
+        .alert-btn.cancel:hover { background: rgba(255,107,107,0.2); box-shadow: 0 0 15px rgba(255,107,107,0.4); }
+        .alert-btn.confirm { border-color: #2ecc71; color: #2ecc71; }
+        .alert-btn.confirm:hover { background: rgba(46,204,113,0.2); box-shadow: 0 0 15px rgba(46,204,113,0.4); }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .fruit-orb { width: 44px; height: 44px; font-size: 1.3rem; }
+            .panel-title { font-size: 1.2rem; }
+            .back-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .points-badge { padding: 8px 14px; }
+            .points-value { font-size: 1.2rem; }
+            .fruit-tag { font-size: 0.48rem; padding: 2px 6px; }
+            .banner-text { font-size: 3rem; }
+            .banner-sub { font-size: 1.2rem; }
+        }
+    </style>
 </head>
-<body class="font-arcade min-h-screen antialiased bg-slate-950 text-white flex items-center justify-center p-6">
-    <main class="w-full max-w-xl">
-        <section class="rounded-lg border border-emerald-400/40 bg-slate-900/85 p-8 text-center shadow-2xl shadow-emerald-950/40">
-            <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-emerald-300/40 bg-emerald-300/10 text-4xl">
-                🌳
-            </div>
-            <p class="mt-6 text-sm font-black uppercase tracking-[0.3em] text-emerald-300">POKO Tree</p>
-            <h1 class="mt-3 text-5xl font-black uppercase text-white">Coming Soon</h1>
-            <p class="mx-auto mt-4 max-w-md text-base leading-7 text-slate-300">
-                The arcade points and level tree will grow here in a future update.
-            </p>
-            <a class="mt-7 inline-block rounded-full bg-emerald-300 px-6 py-3 font-black uppercase tracking-wider text-slate-950 no-underline" href="gamedashboard.html">Back to Dashboard</a>
-        </section>
-    </main>
+<body>
+
+<div class="top-bar">
+    <a href="gamedashboard.html" class="back-btn">← Back</a>
+    <div class="points-badge">
+        <div class="points-label">POKO Points</div>
+        <div class="points-value" id="pts">0</div>
+    </div>
+</div>
+
+<div id="level-up-banner" class="level-up-banner">
+    <div class="banner-text">LEVEL UP!</div>
+    <div class="banner-sub" id="banner-sub">Level 2: Novice Orange</div>
+</div>
+
+<div id="custom-alert" class="custom-alert">
+    <div class="custom-alert-box">
+        <div class="custom-alert-title">DEV MENU</div>
+        <div class="custom-alert-message" id="custom-alert-message">...</div>
+        <div class="custom-alert-buttons">
+            <button class="alert-btn cancel" id="alert-cancel">Cancel</button>
+            <button class="alert-btn confirm" id="alert-confirm">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div class="scene" id="scene">
+    <div class="scene-bg" id="scene-bg"></div>
+    <div class="scene-atmosphere atmosphere-2"></div>
+    <div class="scene-atmosphere atmosphere-3"></div>
+    <div class="scene-atmosphere atmosphere-4"></div>
+    <div class="scene-atmosphere atmosphere-5"></div>
+    <div class="fruit-container" id="fruits"></div>
+    <div id="wildlife"></div>
+</div>
+
+<div class="bottom-panel">
+    <div class="panel-title">🌳 POKO Tree 🌳</div>
+    <div class="progress-row">
+        <span class="lv" id="lv-text">Level 0</span>
+        <span class="nxt" id="nxt-text">Next: 50 pts</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="bar"></div></div>
+</div>
+
+<script>
+    const LEVELS = [
+        { lv:1,  pts:50,    icon:'🍎', name:'Seedling Apple' },
+        { lv:2,  pts:100,   icon:'🍊', name:'Novice Orange' },
+        { lv:3,  pts:300,   icon:'🍋', name:'Adept Lemon' },
+        { lv:4,  pts:500,   icon:'🍉', name:'Skilled Melon' },
+        { lv:5,  pts:750,   icon:'🍇', name:'Expert Grapes' },
+        { lv:6,  pts:1000,  icon:'🍓', name:'Master Berry' },
+        { lv:7,  pts:1250,  icon:'🍒', name:'Grandmaster Cherry' },
+        { lv:8,  pts:1500,  icon:'🍑', name:'Epic Peach' },
+        { lv:9,  pts:1750,  icon:'🍍', name:'Legendary Pine' },
+        { lv:10, pts:2000,  icon:'🌟', name:'Star Fruit' },
+        { lv:11, pts:2500,  icon:'🥝', name:'Veteran Kiwi' },
+        { lv:12, pts:3000,  icon:'🥭', name:'Champion Mango' },
+        { lv:13, pts:3750,  icon:'🫐', name:'Sage Blueberry' },
+        { lv:14, pts:4500,  icon:'🥥', name:'Titan Coconut' },
+        { lv:15, pts:5500,  icon:'💎', name:'Diamond Fruit' },
+        { lv:16, pts:7000,  icon:'🔮', name:'Mystic Orb' },
+        { lv:17, pts:9000,  icon:'⚡', name:'Thunder Fruit' },
+        { lv:18, pts:11000, icon:'🔥', name:'Phoenix Flame' },
+        { lv:19, pts:13500, icon:'🌙', name:'Celestial Moon' },
+        { lv:20, pts:16000, icon:'👑', name:'POKO Crown' }
+    ];
+
+    // Fruit positions — 20 spots spread across the whole canopy, staggered to avoid overlapping tags
+    const FRUIT_POS = [
+        { left: '50%', bottom: '33%' },   // lv1  - center low
+        { left: '33%', bottom: '38%' },   // lv2  - left low
+        { left: '67%', bottom: '38%' },   // lv3  - right low
+        { left: '18%', bottom: '46%' },   // lv4  - left mid-low
+        { left: '82%', bottom: '46%' },   // lv5  - right mid-low
+        { left: '40%', bottom: '48%' },   // lv6  - left-center lower
+        { left: '60%', bottom: '48%' },   // lv7  - right-center lower
+        { left: '10%', bottom: '58%' },   // lv8  - far left mid
+        { left: '90%', bottom: '58%' },   // lv9  - far right mid
+        { left: '50%', bottom: '58%' },   // lv10 - center mid
+        { left: '26%', bottom: '57%' },   // lv11 - left mid
+        { left: '74%', bottom: '57%' },   // lv12 - right mid
+        { left: '40%', bottom: '64%' },   // lv13 - left-center mid-high
+        { left: '60%', bottom: '64%' },   // lv14 - right-center mid-high
+        { left: '24%', bottom: '68%' },   // lv15 - left high
+        { left: '76%', bottom: '68%' },   // lv16 - right high
+        { left: '34%', bottom: '74%' },   // lv17 - left upper
+        { left: '66%', bottom: '74%' },   // lv18 - right upper
+        { left: '50%', bottom: '71%' },   // lv19 - center upper
+        { left: '50%', bottom: '82%' },   // lv20 - crown
+    ];
+
+    function renderTree() {
+        document.querySelectorAll('.leaf').forEach(e => e.remove());
+        document.getElementById('fruits').innerHTML = '';
+        document.getElementById('wildlife').innerHTML = '';
+
+        // ── POINTS & LEVEL ──
+        let pokoPoints = parseInt(localStorage.getItem('poko_points') || '0', 10);
+        let seenLv = parseInt(localStorage.getItem('poko_level_seen') || '0', 10);
+
+        let curLv = 0, prevPts = 0, nextPts = LEVELS[0].pts;
+        for (let i = 0; i < LEVELS.length; i++) {
+            if (pokoPoints >= LEVELS[i].pts) {
+                curLv = LEVELS[i].lv;
+                prevPts = LEVELS[i].pts;
+                nextPts = i < LEVELS.length - 1 ? LEVELS[i+1].pts : LEVELS[i].pts;
+            } else break;
+        }
+
+        // Immediately save the seen level to localStorage
+        if (curLv > seenLv) {
+            localStorage.setItem('poko_level_seen', curLv);
+        }
+
+        // ── UI ──
+        let phase = 1;
+        if (curLv >= 20) phase = 5;
+        else if (curLv >= 15) phase = 4;
+        else if (curLv >= 10) phase = 3;
+        else if (curLv >= 5) phase = 2;
+        document.body.setAttribute('data-phase', phase);
+
+        document.getElementById('pts').textContent = pokoPoints;
+        document.getElementById('lv-text').textContent = `Level ${curLv}`;
+        const bar = document.getElementById('bar');
+        const nxtEl = document.getElementById('nxt-text');
+
+        if (curLv < 20) {
+            nxtEl.textContent = `Next: Level ${curLv+1} (${nextPts} pts)`;
+            const pct = Math.min(100, Math.max(0, ((pokoPoints - prevPts) / (nextPts - prevPts)) * 100));
+            
+            const lastPct = sessionStorage.getItem('last_bar_pct') || '0';
+            bar.style.transition = 'none';
+            bar.style.width = lastPct + '%';
+            void bar.offsetWidth; 
+
+            bar.style.transition = 'width 1s cubic-bezier(0.4, 0, 0.2, 1)';
+            bar.style.width = pct + '%';
+            sessionStorage.setItem('last_bar_pct', pct);
+        } else {
+            nxtEl.textContent = '👑 MAX LEVEL!';
+            nxtEl.style.color = '#ffd166';
+            
+            const lastPct = sessionStorage.getItem('last_bar_pct') || '0';
+            bar.style.transition = 'none';
+            bar.style.width = lastPct + '%';
+            void bar.offsetWidth; 
+
+            bar.style.transition = 'width 1s cubic-bezier(0.4, 0, 0.2, 1)';
+            bar.style.width = '100%';
+            bar.style.background = 'linear-gradient(90deg, #ffd166, #f472b6, #fbbf24)';
+            sessionStorage.setItem('last_bar_pct', '100');
+        }
+
+        // ── FALLING LEAVES ──
+        const scene = document.getElementById('scene');
+        const leafChars = ['🍃', '🍂', '🌿', '☘️'];
+        const leafCount = Math.min(45, 15 + curLv * 1.5); // reduced max leaves
+        for (let i = 0; i < leafCount; i++) {
+            const p = document.createElement('div');
+            p.className = 'leaf';
+            p.textContent = leafChars[Math.floor(Math.random() * leafChars.length)];
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = -(Math.random() * 20) + '%';
+            p.style.fontSize = (0.6 + Math.random() * 0.7) + 'rem';
+            p.style.setProperty('--sway', (Math.random() * 120 - 60) + 'px');
+            p.style.animationDuration = (8 + Math.random() * 10) + 's';
+            p.style.animationDelay = (Math.random() * 12) + 's';
+            scene.appendChild(p);
+        }
+
+        // ── FRUITS ──
+        const fruitsEl = document.getElementById('fruits');
+        LEVELS.forEach((l, i) => {
+            const f = document.createElement('div');
+            f.className = `fruit tier-${l.lv}`;
+
+            let isJustUnlocked = false;
+            if (l.lv <= curLv) {
+                if (l.lv > seenLv) {
+                    isJustUnlocked = true;
+                    f.classList.add('next'); 
+                } else {
+                    f.classList.add('unlocked');
+                }
+                if (l.lv === curLv) f.classList.add('current');
+            }
+            else if (l.lv === curLv + 1) f.classList.add('next');
+            else f.classList.add('locked');
+
+            f.style.left = FRUIT_POS[i].left;
+            f.style.bottom = FRUIT_POS[i].bottom;
+
+            const ptsNeededText = (l.lv <= curLv && !isJustUnlocked) ? '' : `<span class="fruit-pts">${l.pts} pts to unlock</span>`;
+
+            f.style.setProperty('--swing-deg', (1.5 + Math.random() * 2.5) + 'deg');
+            f.style.setProperty('--swing-speed', (3 + Math.random() * 3) + 's');
+            f.style.animationDelay = (Math.random() * 3) + 's';
+
+            f.innerHTML = `
+                <div class="fruit-stem"></div>
+                <div class="fruit-orb">${l.icon}</div>
+                <div class="fruit-tag">Lv${l.lv} · ${l.name}${ptsNeededText}</div>
+            `;
+            fruitsEl.appendChild(f);
+
+            if (isJustUnlocked) {
+                setTimeout(() => {
+                    f.classList.remove('next', 'locked');
+                    f.classList.add('unlocked', 'just-unlocked');
+                    
+                    const ptsSpan = f.querySelector('.fruit-pts');
+                    if (ptsSpan) ptsSpan.remove();
+
+                    for(let p=0; p<20; p++) {
+                        const part = document.createElement('div');
+                        part.className = 'unlock-particle';
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = 60 + Math.random() * 80;
+                        part.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+                        part.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+                        part.style.background = ['#ffd166', '#ff6b6b', '#4dabff', '#2ecc71', '#fff'][Math.floor(Math.random()*5)];
+                        f.appendChild(part);
+                        setTimeout(() => part.remove(), 1500);
+                    }
+
+                    setTimeout(() => f.classList.remove('just-unlocked'), 1500);
+
+                    // Show the Level Up Banner
+                    const banner = document.getElementById('level-up-banner');
+                    const bannerSub = document.getElementById('banner-sub');
+                    bannerSub.textContent = `Level ${l.lv}: ${l.name}`;
+                    banner.classList.remove('show');
+                    void banner.offsetWidth; // Trigger reflow to restart animation
+                    banner.classList.add('show');
+                    
+                    // Optional sound if globally available
+                    if (typeof playSound === 'function') playSound('go');
+
+                }, 800 + (l.lv - seenLv) * 600);
+            }
+        });
+
+        // ── BUTTERFLIES ──
+        const wildlife = document.getElementById('wildlife');
+        if (curLv >= 5) {
+            for (let i = 0; i < Math.min(5, curLv - 3); i++) {
+                const bf = document.createElement('div');
+                bf.className = 'butterfly';
+                bf.textContent = '🦋';
+                bf.style.left = (20 + Math.random() * 60) + '%';
+                bf.style.bottom = (30 + Math.random() * 40) + '%';
+                bf.style.animationDuration = (10 + Math.random() * 8) + 's';
+                bf.style.animationDelay = (Math.random() * 8) + 's';
+                wildlife.appendChild(bf);
+            }
+        }
+    }
+
+    renderTree();
+
+    // ── SECRET TEST CHEATS (5 rapid clicks + custom alert) ──
+    function showDevAlert(message, onConfirm) {
+        const alertOverlay = document.getElementById('custom-alert');
+        const alertMsg = document.getElementById('custom-alert-message');
+        const btnConfirm = document.getElementById('alert-confirm');
+        const btnCancel = document.getElementById('alert-cancel');
+        
+        alertMsg.textContent = message;
+        alertOverlay.classList.add('show');
+        
+        const cleanup = () => {
+            alertOverlay.classList.remove('show');
+            btnConfirm.onclick = null;
+            btnCancel.onclick = null;
+        };
+        
+        btnCancel.onclick = cleanup;
+        btnConfirm.onclick = () => {
+            cleanup();
+            onConfirm();
+        };
+    }
+
+    let titleClicks = 0;
+    let titleClickTimer = null;
+    document.querySelector('.panel-title').addEventListener('click', () => {
+        titleClicks++;
+        clearTimeout(titleClickTimer);
+        if (titleClicks >= 5) {
+            titleClicks = 0;
+            showDevAlert('Add 500 POKO Points?', () => {
+                let pts = parseInt(localStorage.getItem('poko_points') || '0', 10);
+                pts += 500;
+                localStorage.setItem('poko_points', pts);
+                renderTree();
+            });
+        } else {
+            titleClickTimer = setTimeout(() => { titleClicks = 0; }, 1000);
+        }
+    });
+
+    // Reset points
+    let badgeClicks = 0;
+    let badgeClickTimer = null;
+    document.querySelector('.points-badge').addEventListener('click', () => {
+        badgeClicks++;
+        clearTimeout(badgeClickTimer);
+        if (badgeClicks >= 5) {
+            badgeClicks = 0;
+            showDevAlert('Reset all POKO Points to 0?\nWARNING: This cannot be undone!', () => {
+                localStorage.setItem('poko_points', '0');
+                localStorage.setItem('poko_level_seen', '0');
+                sessionStorage.setItem('last_bar_pct', '0');
+                renderTree();
+            });
+        } else {
+            badgeClickTimer = setTimeout(() => { badgeClicks = 0; }, 1000);
+        }
+    });
+</script>
 </body>
 </html>

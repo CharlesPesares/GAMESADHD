@@ -411,9 +411,39 @@
                 font-size: 0.72rem;
             }
         }
+        .achievement-toast {
+            position: fixed;
+            bottom: -120px;
+            right: clamp(16px, 4vw, 40px);
+            background: linear-gradient(145deg, #172330, #0b1016);
+            border: 2px solid #ffd166;
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 25px rgba(255,209,102,0.25);
+            z-index: 1000;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .achievement-toast.show {
+            bottom: clamp(16px, 4vw, 40px);
+        }
+        .toast-icon { font-size: 2.8rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+        .toast-text h4 { margin: 0 0 4px 0; color: #ffd166; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; }
+        .toast-text p { margin: 0; color: #fff; font-size: 1.2rem; font-weight: 950; }
     </style>
 </head>
 <body class="font-arcade min-h-screen antialiased selection:bg-red-400/30">
+    <!-- Achievement Toast -->
+    <div id="achievement-toast" class="achievement-toast">
+        <div class="toast-icon" id="toast-icon">🏆</div>
+        <div class="toast-text">
+            <h4>Achievement Unlocked!</h4>
+            <p id="toast-title">Title</p>
+        </div>
+    </div>
 
     <div class="header">
         <a href="gamedashboard.html" class="back-link">&larr; Back to Dashboard</a>
@@ -890,6 +920,16 @@
             checkHighScore();
             stopBGM();
             playSound('lose');
+            
+            if (currentRow >= 10) unlockAchievement('stack_10', '🧱', 'Builder');
+            if (currentRow >= 20) unlockAchievement('stack_20', '🏗️', 'Architect');
+            if (currentRow >= 30) unlockAchievement('stack_30', '🗼', 'Skyscraper');
+            
+            let earnedPoko = Math.floor(currentRow / 2);
+            if (earnedPoko > 0) {
+                let currentPoko = parseInt(localStorage.getItem('poko_points') || '0', 10);
+                localStorage.setItem('poko_points', currentPoko + earnedPoko);
+            }
         }
 
         function gameLoop(timestamp) {
@@ -942,7 +982,9 @@
                     gameState = 'gameover';
                     document.getElementById('end-title').innerText = "Game Over";
                     document.getElementById('end-title').style.color = "#ff4c4c";
-                    document.getElementById('end-desc').innerHTML = `REACHED ROW ${currentRow + 1}<br><span style="color:#6dff8f; font-size:1.2rem; margin-top:5px; display:block;">SCORE: ${score}</span><span style="color:#ffdf3f; font-size:1rem; margin-top:10px; display:block;">BEST ROW: ${highScore}</span>`;
+                    let earnedPoko = Math.floor(currentRow / 2);
+                    let pokoText = earnedPoko > 0 ? `<br><span style="color:#2dfc8f; font-size:0.9rem; margin-top:10px; display:block;">+${earnedPoko} POKO POINTS!</span>` : '';
+                    document.getElementById('end-desc').innerHTML = `REACHED ROW ${currentRow + 1}<br><span style="color:#6dff8f; font-size:1.2rem; margin-top:5px; display:block;">SCORE: ${score}</span><span style="color:#ffdf3f; font-size:1rem; margin-top:10px; display:block;">BEST ROW: ${highScore}</span>${pokoText}`;
                     document.getElementById('end-overlay').style.display = 'flex';
 
                     const container = document.querySelector('.game-container');
@@ -1122,6 +1164,22 @@
             else if (gameState !== 'start') startGame();
         }, { passive: false });
 
+        function unlockAchievement(id, icon, title) {
+            let achievements = JSON.parse(localStorage.getItem('arcade_achievements')) || {};
+            if (!achievements[id]) {
+                achievements[id] = true;
+                localStorage.setItem('arcade_achievements', JSON.stringify(achievements));
+                
+                const toast = document.getElementById('achievement-toast');
+                if (toast) {
+                    document.getElementById('toast-icon').innerText = icon;
+                    document.getElementById('toast-title').innerText = title;
+                    toast.classList.add('show');
+                    if (typeof playSound === 'function') playSound('go');
+                    setTimeout(() => toast.classList.remove('show'), 4000);
+                }
+            }
+        }
     </script>
 </body>
 </html>

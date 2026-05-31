@@ -513,9 +513,39 @@
             .tube { transform: scale(0.9); margin-bottom: -15px; }
             .tube:hover { transform: scale(0.9) translateY(-8px); }
         }
+        .achievement-toast {
+            position: fixed;
+            bottom: -120px;
+            right: clamp(16px, 4vw, 40px);
+            background: linear-gradient(145deg, #172330, #0b1016);
+            border: 2px solid #ffd166;
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 25px rgba(255,209,102,0.25);
+            z-index: 1000;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .achievement-toast.show {
+            bottom: clamp(16px, 4vw, 40px);
+        }
+        .toast-icon { font-size: 2.8rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+        .toast-text h4 { margin: 0 0 4px 0; color: #ffd166; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; }
+        .toast-text p { margin: 0; color: #fff; font-size: 1.2rem; font-weight: 950; }
     </style>
 </head>
 <body class="font-arcade min-h-screen antialiased selection:bg-fuchsia-400/30">
+    <!-- Achievement Toast -->
+    <div id="achievement-toast" class="achievement-toast">
+        <div class="toast-icon" id="toast-icon">🏆</div>
+        <div class="toast-text">
+            <h4>Achievement Unlocked!</h4>
+            <p id="toast-title">Title</p>
+        </div>
+    </div>
     <div class="header">
         <div class="header-actions">
             <a href="gamedashboard.html" class="back-link">Back to Dashboard</a>
@@ -1085,6 +1115,11 @@
         function winLevel() {
             createExplosion();
             let beatGame = false;
+            
+            if (currentLevel === 1) unlockAchievement('color_first', '🎨', 'First Sort');
+            if (currentLevel === 5) unlockAchievement('color_lv5', '🧪', 'Apprentice Chemist');
+            if (currentLevel === 10) unlockAchievement('color_lv10', '🔬', 'Master Sorter');
+            
             if (currentLevel === 100) {
                 beatGame = true;
                 currentLevel = 1;
@@ -1096,9 +1131,12 @@
             localStorage.setItem('colorSortLevel', currentLevel);
             localStorage.setItem('colorSortMaxLevel', maxLevel);
             
+            let currentPoko = parseInt(localStorage.getItem('poko_points') || '0', 10);
+            localStorage.setItem('poko_points', currentPoko + 10);
+            
             document.getElementById('overlay-title').innerText = beatGame ? "You Beat All 100 Levels!" : "Level Cleared!";
             document.getElementById('overlay-title').style.color = "#a6c1ee";
-            document.getElementById('overlay-moves').innerText = `Solved in ${movesCount} moves`;
+            document.getElementById('overlay-moves').innerHTML = `Solved in ${movesCount} moves<br><span style="color:#2dfc8f; font-size:1.1rem; display:block; margin-top:10px;">+10 POKO POINTS!</span>`;
             document.getElementById('overlay-moves').style.display = "block";
             
             const btn = document.getElementById('overlay-btn');
@@ -1147,6 +1185,22 @@
 
         window.onload = () => loadLevel(currentLevel);
 
+        function unlockAchievement(id, icon, title) {
+            let achievements = JSON.parse(localStorage.getItem('arcade_achievements')) || {};
+            if (!achievements[id]) {
+                achievements[id] = true;
+                localStorage.setItem('arcade_achievements', JSON.stringify(achievements));
+                
+                const toast = document.getElementById('achievement-toast');
+                document.getElementById('toast-icon').innerText = icon;
+                document.getElementById('toast-title').innerText = title;
+                toast.classList.add('show');
+                
+                if (typeof playSound === 'function') playSound('go');
+                
+                setTimeout(() => toast.classList.remove('show'), 4000);
+            }
+        }
     </script>
 </body>
 </html>

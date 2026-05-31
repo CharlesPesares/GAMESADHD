@@ -1204,6 +1204,8 @@
                 unlockAchievement('simon_5', '🧠', 'Brain Warmup');
             } else if (level === 10) {
                 unlockAchievement('simon_10', '🔥', 'On Fire');
+            } else if (level === 20) {
+                unlockAchievement('simon_20', '🧠', 'Memory Master');
             }
         }
 
@@ -1315,7 +1317,17 @@
         function triggerGameOver() {
             playSound("wrong", 500);
             levelTitle.innerText = "Game Over";
-            statusText.innerText = `You reached level ${level}. Press start to run it back.`;
+            
+            // Calculate and award POKO Points
+            const earnedPoints = Math.floor(level / 2);
+            let pokoMessage = "";
+            if (earnedPoints > 0) {
+                let currentPoko = parseInt(localStorage.getItem('poko_points') || '0', 10);
+                localStorage.setItem('poko_points', currentPoko + earnedPoints);
+                pokoMessage = ` You earned +${earnedPoints} POKO Points!`;
+            }
+
+            statusText.innerText = `You reached level ${level}.${pokoMessage} Press start to run it back.`;
             board.classList.add("game-over-effect");
             setTimeout(() => board.classList.remove("game-over-effect"), 500);
             startButton.style.display = "block";
