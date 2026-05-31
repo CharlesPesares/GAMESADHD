@@ -91,10 +91,38 @@
         body[data-phase="4"] .leaf { filter: hue-rotate(150deg) brightness(1.5); text-shadow: 0 0 5px #f0f; }
         body[data-phase="5"] .leaf { filter: hue-rotate(280deg) brightness(1.8); text-shadow: 0 0 8px #fff; }
 
+        /* ── METEOR SHOWER ── */
+        .meteor-container {
+            position: absolute; inset: 0;
+            pointer-events: none; z-index: 2;
+            overflow: hidden;
+        }
+        .meteor {
+            position: absolute;
+            width: clamp(100px, 15vw, 200px);
+            height: 2px; border-radius: 2px;
+            transform: rotate(135deg);
+            animation: meteorFall linear forwards;
+            will-change: transform, opacity;
+        }
+        .meteor::after {
+            content: ''; position: absolute;
+            top: 50%; right: 0; transform: translateY(-50%);
+            width: 6px; height: 6px; border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
+        }
+        @keyframes meteorFall {
+            0% { opacity: 0; transform: translate(0, 0) rotate(135deg); }
+            10% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-1000px, 1000px) rotate(135deg); }
+        }
+
         /* ── FALLING LEAVES ── */
         .leaf {
             position: absolute; z-index: 5;
-            pointer-events: none; opacity: 0;
+            pointer-events: auto; opacity: 0;
             animation: leafFall linear infinite;
             will-change: transform, opacity;
         }
@@ -135,6 +163,26 @@
             padding: 10px 22px; border-radius: 50px;
             text-align: right;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .volume-ctrl {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 5px 15px; border-radius: 50px;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .vol-icon { font-size: 1.2rem; cursor: pointer; user-select: none; }
+        .vol-slider {
+            -webkit-appearance: none;
+            width: 80px; height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px; outline: none;
+        }
+        .vol-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: #ffd166; cursor: pointer;
         }
         .points-label { font-size: 0.75rem; font-weight: 900; color: #ffd166; text-transform: uppercase; letter-spacing: 0.18em; text-shadow: 0 1px 6px rgba(0,0,0,0.8); }
         .points-value { font-size: 1.8rem; font-weight: 900; color: #fff; line-height: 1; margin-top: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
@@ -673,6 +721,14 @@
         }
         .fruit.unlocked.tier-10:hover .fruit-orb, .fruit.unlocked.tier-20:hover .fruit-orb {
             transform: scale(1.4);
+            animation: divineJiggle 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes divineJiggle {
+            0%   { transform: scale(1.25) rotate(0deg); }
+            30%  { transform: scale(1.45) rotate(-8deg); }
+            60%  { transform: scale(1.4) rotate(6deg); }
+            80%  { transform: scale(1.4) rotate(-3deg); }
+            100% { transform: scale(1.4) rotate(0deg); }
         }
         .fruit.unlocked.tier-10 .fruit-orb, .fruit.unlocked.tier-20 .fruit-orb {
             transform: scale(1.25);
@@ -791,6 +847,8 @@
             .fruit-orb { width: 44px; height: 44px; font-size: 1.3rem; }
             .panel-title { font-size: 1.2rem; }
             .back-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .volume-ctrl { padding: 5px 10px; gap: 4px; }
+            .vol-slider { width: 50px; }
             .points-badge { padding: 8px 14px; }
             .points-value { font-size: 1.2rem; }
             .fruit-tag { font-size: 0.48rem; padding: 2px 6px; }
@@ -803,9 +861,15 @@
 
 <div class="top-bar">
     <a href="gamedashboard.html" class="back-btn">← Back</a>
-    <div class="points-badge">
-        <div class="points-label">POKO Points</div>
-        <div class="points-value" id="pts">0</div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <div class="volume-ctrl">
+            <span class="vol-icon" id="vol-icon">🔊</span>
+            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="0.35">
+        </div>
+        <div class="points-badge">
+            <div class="points-label">POKO Points</div>
+            <div class="points-value" id="pts">0</div>
+        </div>
     </div>
 </div>
 
@@ -827,6 +891,7 @@
 
 <div class="scene" id="scene">
     <div class="scene-bg" id="scene-bg"></div>
+    <div class="meteor-container" id="meteors"></div>
     <div class="scene-atmosphere atmosphere-2"></div>
     <div class="scene-atmosphere atmosphere-3"></div>
     <div class="scene-atmosphere atmosphere-4"></div>
@@ -892,6 +957,228 @@
         { left: '50%', bottom: '82%' },   // lv20 - crown
     ];
 
+    // ── AUDIO SYSTEM ──
+    let audioCtx;
+    let mainGain;
+    let bgmStarted = false;
+
+    const volSlider = document.getElementById('vol-slider');
+    const volIcon = document.getElementById('vol-icon');
+    let savedVol = localStorage.getItem('poko_volume');
+    if (savedVol !== null) {
+        volSlider.value = savedVol;
+    }
+
+    function updateVolume() {
+        const val = parseFloat(volSlider.value);
+        if (mainGain) mainGain.gain.value = val;
+        localStorage.setItem('poko_volume', val);
+        
+        if (val === 0) volIcon.textContent = '🔇';
+        else if (val < 0.5) volIcon.textContent = '🔉';
+        else volIcon.textContent = '🔊';
+    }
+
+    volSlider.addEventListener('input', () => {
+        initAudio();
+        updateVolume();
+    });
+
+    volIcon.addEventListener('click', () => {
+        initAudio();
+        if (parseFloat(volSlider.value) > 0) {
+            volSlider.dataset.prev = volSlider.value;
+            volSlider.value = 0;
+        } else {
+            volSlider.value = volSlider.dataset.prev || 0.35;
+        }
+        updateVolume();
+    });
+    updateVolume();
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            mainGain = audioCtx.createGain();
+            mainGain.connect(audioCtx.destination);
+            updateVolume();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume().then(() => {
+                if (!bgmStarted) startChillBGM();
+            });
+        } else {
+            if (!bgmStarted) startChillBGM();
+        }
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(mainGain);
+
+        if (type === 'click') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.4, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'hover') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+            osc.start(now); osc.stop(now + 0.05);
+        } else if (type === 'alert') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.setValueAtTime(450, now + 0.1);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.6, now + 0.05);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now); osc.stop(now + 0.3);
+        } else if (type === 'go') {
+            const freqs = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+            freqs.forEach((f, i) => {
+                const cOsc = audioCtx.createOscillator();
+                const cGain = audioCtx.createGain();
+                cOsc.type = 'sine';
+                const start = now + (i * 0.1);
+                cOsc.frequency.setValueAtTime(f, start);
+                cGain.gain.setValueAtTime(0, start);
+                cGain.gain.linearRampToValueAtTime(0.4, start + 0.05);
+                cGain.gain.exponentialRampToValueAtTime(0.01, start + 2);
+                cOsc.connect(cGain); cGain.connect(mainGain);
+                cOsc.start(start); cOsc.stop(start + 2);
+            });
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(261.63, now);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.6, now + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 2.5);
+            osc.start(now); osc.stop(now + 2.5);
+        } else if (type === 'rustle') {
+            // Generate a burst of filtered white noise for a rustling leaf sound
+            const bufferSize = audioCtx.sampleRate * 0.15;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 800 + Math.random() * 800; // randomize pitch slightly per leaf
+            noise.connect(filter); filter.connect(gain);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            noise.start(now);
+        }
+    }
+
+    function startChillBGM() {
+        if (bgmStarted || !audioCtx) return;
+        bgmStarted = true;
+
+        const bgmGain = audioCtx.createGain();
+        bgmGain.gain.value = 1.0; // mainGain handles the master volume now
+        
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 800;
+        
+        const delay = audioCtx.createDelay();
+        delay.delayTime.value = 0.5;
+        const feedback = audioCtx.createGain();
+        feedback.gain.value = 0.3;
+        delay.connect(feedback);
+        feedback.connect(delay);
+        
+        bgmGain.connect(filter);
+        filter.connect(delay);
+        filter.connect(mainGain);
+        delay.connect(mainGain);
+
+        const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
+        
+        function playNextAmbientNote() {
+            if (!bgmStarted) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const env = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            const freq = notes[Math.floor(Math.random() * notes.length)] * (Math.random() > 0.5 ? 0.5 : 1);
+            osc.frequency.value = freq;
+            
+            env.gain.setValueAtTime(0, now);
+            env.gain.linearRampToValueAtTime(0.4, now + 2); 
+            env.gain.exponentialRampToValueAtTime(0.01, now + 8); 
+            
+            osc.connect(env);
+            env.connect(bgmGain);
+            
+            osc.start(now);
+            osc.stop(now + 8);
+            
+            setTimeout(playNextAmbientNote, 1000 + Math.random() * 2000);
+        }
+        
+        playNextAmbientNote();
+        setTimeout(playNextAmbientNote, 1500);
+        setTimeout(playNextAmbientNote, 3000);
+        
+        function playDrone() {
+            if (!bgmStarted) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const env = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = 65.41;
+            
+            env.gain.setValueAtTime(0, now);
+            env.gain.linearRampToValueAtTime(0.3, now + 4);
+            env.gain.exponentialRampToValueAtTime(0.01, now + 12);
+            
+            osc.connect(env);
+            env.connect(bgmGain);
+            
+            osc.start(now);
+            osc.stop(now + 12);
+            setTimeout(playDrone, 10000);
+        }
+        playDrone();
+    }
+
+    document.addEventListener('pointerdown', (e) => {
+        initAudio();
+        if (e.target.closest('a, button, .alert-btn, .points-badge, .panel-title')) {
+            playSound('click');
+        }
+    });
+
+    document.addEventListener('mouseover', (e) => {
+        const target = e.target.closest('a, button, .fruit, .alert-btn, .points-badge, .leaf');
+        if (target && !target.dataset.hovered) {
+            target.dataset.hovered = true;
+            if (target.classList.contains('leaf')) {
+                playSound('rustle');
+            } else {
+                playSound('hover');
+            }
+            target.addEventListener('mouseleave', () => delete target.dataset.hovered, {once: true});
+        }
+    });
+
     function renderTree() {
         document.querySelectorAll('.leaf').forEach(e => e.remove());
         document.getElementById('fruits').innerHTML = '';
@@ -935,6 +1222,8 @@
             const lastPct = sessionStorage.getItem('last_bar_pct') || '0';
             bar.style.transition = 'none';
             bar.style.width = lastPct + '%';
+            bar.classList.remove('max-level');
+            bar.style.background = '';
             void bar.offsetWidth; 
 
             bar.style.transition = 'width 1s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -951,7 +1240,8 @@
 
             bar.style.transition = 'width 1s cubic-bezier(0.4, 0, 0.2, 1)';
             bar.style.width = '100%';
-            bar.style.background = 'linear-gradient(90deg, #ffd166, #f472b6, #fbbf24)';
+            bar.style.background = '';
+            bar.classList.add('max-level');
             sessionStorage.setItem('last_bar_pct', '100');
         }
 
@@ -1060,10 +1350,41 @@
         }
     }
 
+    // ── METEOR SHOWER ──
+    function spawnMeteor() {
+        const container = document.getElementById('meteors');
+        if (container) {
+            // Occasional cluster of meteors, otherwise single
+            const count = Math.random() > 0.85 ? Math.floor(Math.random() * 3) + 2 : 1;
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const meteor = document.createElement('div');
+                    meteor.className = 'meteor';
+                    meteor.style.left = (Math.random() * 100 + 20) + 'vw';
+                    meteor.style.top = (Math.random() * 50 - 50) + 'vh';
+                    
+                    const duration = 1 + Math.random() * 1.5;
+                    meteor.style.animationDuration = duration + 's';
+                    const colors = ['#ffffff', '#ffd166', '#a6c1ee', '#ff9b9b', '#2dfc8f'];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    meteor.style.color = color;
+                    meteor.style.background = `linear-gradient(to right, transparent, ${color})`;
+                    
+                    container.appendChild(meteor);
+                    setTimeout(() => meteor.remove(), duration * 1000);
+                }, i * (200 + Math.random() * 300)); 
+            }
+        }
+        setTimeout(spawnMeteor, Math.random() * 8000 + 4000);
+    }
+    spawnMeteor();
+
     renderTree();
 
     // ── SECRET TEST CHEATS (5 rapid clicks + custom alert) ──
     function showDevAlert(message, onConfirm) {
+        playSound('alert');
         const alertOverlay = document.getElementById('custom-alert');
         const alertMsg = document.getElementById('custom-alert-message');
         const btnConfirm = document.getElementById('alert-confirm');
