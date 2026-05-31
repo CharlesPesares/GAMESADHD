@@ -28,18 +28,42 @@
             touch-action: none; /* Prevent double-tap zoom on mobile */
         }
 
-        body::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: -1;
+        .synthwave-sun {
+            position: fixed;
+            top: 25vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: linear-gradient(to bottom, #ff007f 0%, #ff7700 45%, #ffd166 100%);
+            box-shadow: 0 0 80px rgba(255, 0, 127, 0.4), inset 0 0 20px rgba(255, 209, 102, 0.5);
+            z-index: -2;
+            mask-image: linear-gradient(to bottom, black 50%, transparent 95%);
+            -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 95%);
+        }
+
+        .synthwave-grid {
+            position: fixed;
+            top: 45vh;
+            left: -50%;
+            width: 200%;
+            height: 60vh;
             background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 30px 30px;
-            pointer-events: none;
-            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+                linear-gradient(to right, rgba(45, 252, 143, 0.3) 2px, transparent 2px),
+                linear-gradient(to bottom, rgba(45, 252, 143, 0.3) 2px, transparent 2px);
+            background-size: 60px 60px;
+            transform-origin: top center;
+            transform: perspective(300px) rotateX(75deg);
+            z-index: -1;
+            animation: gridMove 1.5s linear infinite;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 100%);
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(300px) rotateX(75deg) translateY(0); }
+            100% { transform: perspective(300px) rotateX(75deg) translateY(60px); }
         }
 
         .header {
@@ -244,7 +268,7 @@
             background: #0b0c10;
             overflow: hidden;
             margin-top: 10px;
-            width: min(400px, 95vw);
+            width: min(500px, 95vw);
         }
 
         .game-container::after {
@@ -438,13 +462,45 @@
                 font-size: 1rem;
             }
         }
+        .achievement-toast {
+            position: fixed;
+            bottom: -120px;
+            right: clamp(16px, 4vw, 40px);
+            background: linear-gradient(145deg, #172330, #0b1016);
+            border: 2px solid #ffd166;
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 25px rgba(255,209,102,0.25);
+            z-index: 1000;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .achievement-toast.show {
+            bottom: clamp(16px, 4vw, 40px);
+        }
+        .toast-icon { font-size: 2.8rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+        .toast-text h4 { margin: 0 0 4px 0; color: #ffd166; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; }
+        .toast-text p { margin: 0; color: #fff; font-size: 1.2rem; font-weight: 950; }
     </style>
 </head>
 <body class="font-arcade">
-    <div class="header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 440px; padding: 0 10px; margin: 15px auto 10px; box-sizing: border-box;">
+    <div id="achievement-toast" class="achievement-toast">
+        <div class="toast-icon" id="toast-icon">🏆</div>
+        <div class="toast-text">
+            <h4>Achievement Unlocked!</h4>
+            <p id="toast-title">Title</p>
+        </div>
+    </div>
+    <div class="synthwave-sun"></div>
+    <div class="synthwave-grid"></div>
+    <div class="header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; padding: 0 10px; margin: 15px auto 10px; box-sizing: border-box;">
         <a href="gamedashboard.html" class="back-link" style="margin: 0;">&larr; <span class="hide-mobile">Dashboard</span></a>
         <h1 style="font-size: clamp(1.1rem, 4vw, 1.6rem); margin: 0 5px;">Neon Pulse</h1>
         <div style="display: flex; gap: 6px; align-items: center;">
+            <button class="back-link" onclick="toggleFullscreen()" style="cursor: pointer; font-family: inherit; margin: 0;">Fullscreen</button>
             <button class="help-icon-btn" type="button" onclick="openGuide()" aria-label="Open how to play guide" title="How to play">?</button>
             <button class="back-link" id="pause-btn" onclick="togglePause()" style="cursor: pointer; font-family: inherit; border-color: #4dabff; color: #4dabff; background: rgba(77, 171, 255, 0.1); margin: 0; display: none;">PAUSE</button>
         </div>
@@ -466,7 +522,7 @@
             </div>
         </div>
 
-        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        <canvas id="gameCanvas" width="500" height="750"></canvas>
 
         <div class="overlay" id="start-overlay">
             <h2>Rhythm Ready?</h2>
@@ -557,12 +613,21 @@
     </div>
 
     <script>
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
         const colors = ['#ff5a76', '#4dabff', '#2dfc8f', '#ffd166'];
         const laneWidth = canvas.width / 4;
-        const hitZoneY = 500;
+        const hitZoneY = Math.floor(canvas.height * (5/6));
         
         let state = 'start';
         let score = 0;
@@ -617,70 +682,66 @@
             if (!audioCtx) return;
             const now = audioCtx.currentTime;
 
-            if (type === 'perfect') {
-                // Luscious glassy hit with a sharp transient
-                const freqs = [523.25, 783.99, 1046.50, 1567.98]; // C5, G5, C6, G6
-                freqs.forEach((f, i) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = i === 0 ? 'triangle' : 'sine'; // Base has slight body
-                    osc.frequency.setValueAtTime(f, now);
-                    gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(i === 0 ? 0.4 : 0.2, now + 0.01);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-                    osc.connect(gain); gain.connect(audioCtx.destination);
-                    osc.start(now); osc.stop(now + 0.4);
-                });
+            try {
+                if (type === 'perfect') {
+                    // Satisfying, crisp high-hat / shaker tick (ADHD-friendly ASMR texture)
+                    const bufferSize = Math.floor(audioCtx.sampleRate * 0.04);
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+                    
+                    const noiseFilter = audioCtx.createBiquadFilter();
+                    noiseFilter.type = 'bandpass';
+                    noiseFilter.frequency.value = 7000; // High, crisp, airy
+                    noiseFilter.Q.value = 1.0;
 
-                // Crisp timing click (transient)
-                const clickOsc = audioCtx.createOscillator();
-                const clickGain = audioCtx.createGain();
-                clickOsc.type = 'sine';
-                clickOsc.frequency.setValueAtTime(4000, now);
-                clickOsc.frequency.exponentialRampToValueAtTime(100, now + 0.04);
-                clickGain.gain.setValueAtTime(0, now);
-                clickGain.gain.linearRampToValueAtTime(0.3, now + 0.002);
-                clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-                clickOsc.connect(clickGain); clickGain.connect(audioCtx.destination);
-                clickOsc.start(now); clickOsc.stop(now + 0.04);
-            } else if (type === 'good') {
-                // Warmer, muted hit for 'good'
-                const freqs = [523.25, 783.99]; 
-                freqs.forEach((f, i) => {
+                    const noiseGain = audioCtx.createGain();
+                    noiseGain.gain.setValueAtTime(0, now);
+                    noiseGain.gain.linearRampToValueAtTime(0.6, now + 0.002); // Instant snap
+                    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035); // Sharp decay
+                    
+                    noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+                    noise.start(now);
+                } else if (type === 'good') {
+                    // Lower, softer shaker tick
+                    const bufferSize = Math.floor(audioCtx.sampleRate * 0.04);
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+                    
+                    const noiseFilter = audioCtx.createBiquadFilter();
+                    noiseFilter.type = 'bandpass';
+                    noiseFilter.frequency.value = 4000; // Slightly more mid-tone
+                    noiseFilter.Q.value = 0.8;
+
+                    const noiseGain = audioCtx.createGain();
+                    noiseGain.gain.setValueAtTime(0, now);
+                    noiseGain.gain.linearRampToValueAtTime(0.35, now + 0.002);
+                    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+                    
+                    noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+                    noise.start(now);
+                } else if (type === 'miss') {
+                    // Subdued low thud (won't interrupt the music much)
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(f, now);
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(50, now + 0.1);
                     gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(0.2, now + 0.02); // Slower attack
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    gain.gain.linearRampToValueAtTime(0.15, now + 0.01);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.1);
                     osc.connect(gain); gain.connect(audioCtx.destination);
-                    osc.start(now); osc.stop(now + 0.3);
-                });
-            } else if (type === 'miss') {
-                // Record scratch / deep thud error
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(200, now);
-                osc.frequency.exponentialRampToValueAtTime(20, now + 0.2);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.4, now + 0.01);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(now); osc.stop(now + 0.2);
-
-                const buzz = audioCtx.createOscillator();
-                const buzzGain = audioCtx.createGain();
-                buzz.type = 'sawtooth';
-                buzz.frequency.setValueAtTime(100, now);
-                buzz.frequency.exponentialRampToValueAtTime(10, now + 0.15);
-                buzzGain.gain.setValueAtTime(0, now);
-                buzzGain.gain.linearRampToValueAtTime(0.15, now + 0.01);
-                buzzGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                buzz.connect(buzzGain); buzzGain.connect(audioCtx.destination);
-                buzz.start(now); buzz.stop(now + 0.15);
-            } else if (type === 'tick') {
+                    osc.start(now); osc.stop(now + 0.1);
+                } else if (type === 'tick') {
                 // Sharp high hat tick
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -719,6 +780,9 @@
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
                 osc.connect(gain); gain.connect(audioCtx.destination);
                 osc.start(now); osc.stop(now + 0.04);
+            }
+            } catch (e) {
+                console.error('Audio playback error:', e);
             }
         }
 
@@ -1035,19 +1099,19 @@
                 });
             }
             
-            // Progressive level scaling
+            // Progressive level scaling (More balanced, ADHD friendly flow)
             if (gameMode === 'insane') {
-                notesLeftToSpawn = 40 + (currentLevel * 12); 
-                speed = 8.0 + (currentLevel * 0.35); 
-                spawnInterval = Math.max(100, 450 - (currentLevel * 20));
+                notesLeftToSpawn = 50 + (currentLevel * 15); 
+                speed = 9.0 + (currentLevel * 0.4); 
+                spawnInterval = Math.max(150, 350 - (currentLevel * 12));
             } else if (gameMode === 'hard') {
-                notesLeftToSpawn = 30 + (currentLevel * 8); 
-                speed = 6.0 + (currentLevel * 0.25); 
-                spawnInterval = Math.max(150, 600 - (currentLevel * 15));
+                notesLeftToSpawn = 40 + (currentLevel * 10); 
+                speed = 7.0 + (currentLevel * 0.3); 
+                spawnInterval = Math.max(200, 450 - (currentLevel * 15));
             } else {
-                notesLeftToSpawn = 20 + (currentLevel * 5); 
-                speed = 4.0 + (currentLevel * 0.15); 
-                spawnInterval = Math.max(250, 800 - (currentLevel * 10));
+                notesLeftToSpawn = 30 + (currentLevel * 8); 
+                speed = 5.0 + (currentLevel * 0.2); 
+                spawnInterval = Math.max(300, 600 - (currentLevel * 10));
             }
             
             stopBGM();
@@ -1069,8 +1133,20 @@
                 return true;
             }
 
+            let validLanes = [0, 1, 2, 3];
+            for (let i = 0; i < notes.length; i++) {
+                let note = notes[i];
+                if (note.active) {
+                    let tailY = note.type === 'hold' ? note.y - note.length : note.y;
+                    if (tailY < 120) {
+                        validLanes = validLanes.filter(l => l !== note.lane);
+                    }
+                }
+            }
+            if (validLanes.length === 0) return false;
+
             // Decide whether to generate a diagonal pattern (staircase / zig-zag)
-            if (Math.random() > 0.5 && notesLeftToSpawn >= 4) {
+            if (Math.random() > 0.5 && notesLeftToSpawn >= 4 && validLanes.length === 4) {
                 let r = Math.random();
                 if (r < 0.25) {
                     // Staircase up (0, 1, 2, 3)
@@ -1102,19 +1178,6 @@
                     return true;
                 }
             }
-
-            let validLanes = [0, 1, 2, 3];
-            for (let i = 0; i < notes.length; i++) {
-                let note = notes[i];
-                if (note.active) {
-                    let tailY = note.type === 'hold' ? note.y - note.length : note.y;
-                    if (tailY < 80) {
-                        validLanes = validLanes.filter(l => l !== note.lane);
-                    }
-                }
-            }
-            
-            if (validLanes.length === 0) return false;
 
             const lane = validLanes[Math.floor(Math.random() * validLanes.length)];
             const isHold = Math.random() > (gameMode === 'insane' ? 0.60 : (gameMode === 'hard' ? 0.70 : 0.85));
