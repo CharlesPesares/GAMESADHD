@@ -860,11 +860,14 @@
 <body>
 
 <div class="top-bar">
-    <a href="gamedashboard.html" class="back-btn">← Back</a>
+    <div style="display: flex; gap: 10px;">
+        <a href="gamedashboard.html" class="back-btn">← Back</a>
+        <button class="back-btn" onclick="toggleFullscreen()" style="cursor: pointer; font-family: inherit;">Fullscreen</button>
+    </div>
     <div style="display: flex; gap: 10px; align-items: center;">
         <div class="volume-ctrl">
             <span class="vol-icon" id="vol-icon">🔊</span>
-            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="0.35">
+            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="0.75">
         </div>
         <div class="points-badge">
             <div class="points-label">POKO Points</div>
@@ -910,6 +913,15 @@
 </div>
 
 <script>
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
+    }
     const LEVELS = [
         { lv:1,  pts:50,    icon:'🍎', name:'Seedling Apple' },
         { lv:2,  pts:100,   icon:'🍊', name:'Novice Orange' },
@@ -1025,7 +1037,7 @@
             osc.frequency.setValueAtTime(600, now);
             osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
             gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(0.4, now + 0.01);
+            gain.gain.linearRampToValueAtTime(0.8, now + 0.01);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
             osc.start(now); osc.stop(now + 0.1);
         } else if (type === 'hover') {
@@ -1033,7 +1045,7 @@
             osc.frequency.setValueAtTime(800, now);
             osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
             gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
+            gain.gain.linearRampToValueAtTime(0.4, now + 0.02);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
             osc.start(now); osc.stop(now + 0.05);
         } else if (type === 'alert') {
@@ -1041,7 +1053,7 @@
             osc.frequency.setValueAtTime(300, now);
             osc.frequency.setValueAtTime(450, now + 0.1);
             gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(0.6, now + 0.05);
+            gain.gain.linearRampToValueAtTime(1.0, now + 0.05);
             gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
             osc.start(now); osc.stop(now + 0.3);
         } else if (type === 'go') {
@@ -1053,7 +1065,7 @@
                 const start = now + (i * 0.1);
                 cOsc.frequency.setValueAtTime(f, start);
                 cGain.gain.setValueAtTime(0, start);
-                cGain.gain.linearRampToValueAtTime(0.4, start + 0.05);
+                cGain.gain.linearRampToValueAtTime(0.7, start + 0.05);
                 cGain.gain.exponentialRampToValueAtTime(0.01, start + 2);
                 cOsc.connect(cGain); cGain.connect(mainGain);
                 cOsc.start(start); cOsc.stop(start + 2);
@@ -1061,7 +1073,7 @@
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(261.63, now);
             gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(0.6, now + 0.1);
+            gain.gain.linearRampToValueAtTime(0.9, now + 0.1);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 2.5);
             osc.start(now); osc.stop(now + 2.5);
         } else if (type === 'rustle') {
@@ -1079,7 +1091,7 @@
             noise.connect(filter); filter.connect(gain);
             
             gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+            gain.gain.linearRampToValueAtTime(0.5, now + 0.05);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
             noise.start(now);
         }

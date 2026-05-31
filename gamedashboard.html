@@ -664,7 +664,7 @@
 
     <!-- Player Profile Button -->
     <button id="profile-btn" class="profile-btn">
-        👤 <span id="current-player-name" class="hide-mobile">Guest</span>
+        <span id="profile-fruit-icon">🌱</span> <span id="current-player-name" class="hide-mobile">Guest</span>
     </button>
     
     <!-- Leaderboard Button -->
@@ -730,7 +730,7 @@
     <!-- Name Prompt Modal (replaces browser alert) -->
     <div id="prompt-modal" class="db-modal">
         <div class="db-modal-content" style="max-width: 360px;">
-            <div style="font-size: 2.4rem; margin-bottom: 12px;">👤</div>
+            <div id="modal-fruit-icon" style="font-size: 2.4rem; margin-bottom: 12px;">🌱</div>
             <h2 style="margin-top: 0; color: #a6c1ee; font-size: 1.6rem;">Set Your Name First</h2>
             <p style="color: #bdc3c7; margin: 0 0 24px; font-size: 0.95rem; line-height: 1.5;">Please add your name so your highest score can be recorded on the leaderboards.</p>
             <button id="prompt-ok-btn" class="play-btn" style="position: relative; transform: none; bottom: 0; left: 0; width: 100%; padding: 15px; font-size: 1.1rem;">GOT IT — SET MY NAME</button>
@@ -1039,6 +1039,35 @@
             return game.localKeys.reduce((best, key) => Math.max(best, toScore(localStorage.getItem(key))), 0);
         }
 
+        const POKO_LEVELS = [
+            { lv:1, pts:50, icon:'🍎' }, { lv:2, pts:100, icon:'🍊' }, { lv:3, pts:300, icon:'🍋' },
+            { lv:4, pts:500, icon:'🍉' }, { lv:5, pts:750, icon:'🍇' }, { lv:6, pts:1000, icon:'🍓' },
+            { lv:7, pts:1250, icon:'🍒' }, { lv:8, pts:1500, icon:'🍑' }, { lv:9, pts:1750, icon:'🍍' },
+            { lv:10, pts:2000, icon:'🌟' }, { lv:11, pts:2500, icon:'🥝' }, { lv:12, pts:3000, icon:'🥭' },
+            { lv:13, pts:3750, icon:'🫐' }, { lv:14, pts:4500, icon:'🥥' }, { lv:15, pts:5500, icon:'💎' },
+            { lv:16, pts:7000, icon:'🔮' }, { lv:17, pts:9000, icon:'⚡' }, { lv:18, pts:11000, icon:'🔥' },
+            { lv:19, pts:13500, icon:'🌙' }, { lv:20, pts:16000, icon:'👑' }
+        ];
+
+        function getPlayerFruit(pts) {
+            let icon = '🌱'; // Default for 0 points
+            const ptsNum = parseInt(pts) || 0;
+            for (let i = 0; i < POKO_LEVELS.length; i++) {
+                if (ptsNum >= POKO_LEVELS[i].pts) icon = POKO_LEVELS[i].icon;
+                else break;
+            }
+            return icon;
+        }
+
+        function updatePlayerFruitIcon() {
+            const localPts = toScore(localStorage.getItem('poko_points'));
+            const icon = getPlayerFruit(localPts);
+            const iconEl = document.getElementById('profile-fruit-icon');
+            const modalIconEl = document.getElementById('modal-fruit-icon');
+            if (iconEl) iconEl.textContent = icon;
+            if (modalIconEl) modalIconEl.textContent = icon;
+        }
+
         function collectLocalScores() {
             return dashboardGames.reduce((scores, game) => {
                 const score = getBestLocalScore(game);
@@ -1167,6 +1196,7 @@
                 // Push merged data back down to localStorage
                 localStorage.setItem('arcade_achievements', JSON.stringify(mergedAchievements));
                 storeMergedScores(mergedScores);
+                updatePlayerFruitIcon();
 
                 // Write to Firestore under the UID document.
                 // displayName is cosmetic — changing it does NOT change the doc path,
@@ -1224,6 +1254,7 @@
         localStorage.setItem('currentPlayer', currentPlayer);
         currentPlayerName.innerText = currentPlayer;
         updateScoreRecordNote();
+        updatePlayerFruitIcon();
 
         profileBtn.addEventListener('click', () => {
             playerNameInput.value = currentPlayer === 'Guest' ? '' : currentPlayer;
@@ -1415,11 +1446,12 @@
                 const data = playerDoc.data();
                 const score = toScore(data.highScores && data.highScores[game.scoreKey]);
                 if (score > 0) {
+                    const pokoPts = data.highScores && data.highScores['poko_points'] || 0;
+                    const fruitIcon = getPlayerFruit(pokoPts);
+                    const baseName = data.displayName || ('Player-' + playerDoc.id.slice(0, 6));
                     rows.push({
                         rank: rows.length + 1,
-                        // Use displayName (cosmetic) for the leaderboard label.
-                        // Falls back to a truncated UID so there is always something.
-                        name: data.displayName || ('Player-' + playerDoc.id.slice(0, 6)),
+                        name: `${fruitIcon} ${baseName}`,
                         score
                     });
                 }
