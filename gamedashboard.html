@@ -301,6 +301,35 @@
             transform: translateY(-2px);
         }
 
+        .fullscreen-btn {
+            position: absolute;
+            top: 130px;
+            right: clamp(16px, 4vw, 40px);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 10px 20px;
+            border-radius: 999px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+        .fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #ff5a76;
+            color: #ff5a76;
+            transform: translateY(-2px);
+        }
+
         .selected-rank-panel {
             position: absolute;
             right: clamp(16px, 4vw, 40px);
@@ -587,7 +616,7 @@
         
         @media (max-width: 600px) {
             .hide-mobile { display: none; }
-            .trophy-btn, .profile-btn, .leaderboard-btn, .help-btn { padding: 10px; }
+            .trophy-btn, .profile-btn, .leaderboard-btn, .help-btn, .fullscreen-btn { padding: 10px; }
 
             .eyebrow {
                 top: 10px;
@@ -670,6 +699,11 @@
     <!-- Leaderboard Button -->
     <button id="leaderboard-btn" class="leaderboard-btn">
         🏅 <span class="hide-mobile">Rankings</span>
+    </button>
+
+    <!-- Fullscreen Button -->
+    <button id="fullscreen-btn" class="fullscreen-btn" onclick="toggleFullscreen()">
+        🖥️ <span class="hide-mobile">Fullscreen</span>
     </button>
 
     <!-- Trophy Room Modal -->
@@ -839,6 +873,16 @@
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
         });
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
 
         const helpModal = document.getElementById('help-modal');
         const helpBtn = document.getElementById('help-btn');
